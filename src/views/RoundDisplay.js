@@ -24,6 +24,7 @@ export function mount(el, params) {
   let isManagingAttendees = false;
   let showingAlternativesFor = null; // index
   let pickingSitterFor = null; // index
+  let numAlternativesToShow = 3;
 
   function render() {
     if (isManagingAttendees) {
@@ -239,10 +240,10 @@ export function mount(el, params) {
   }
 
   function renderAlternatives() {
-    const alternatives = SessionService.getAlternativeRounds(3, showingAlternativesFor);
+    const alternatives = SessionService.getAlternativeRounds(numAlternativesToShow, showingAlternativesFor);
 
     el.innerHTML = `
-      <div class="p-4 space-y-6 pb-24">
+      <div class="p-4 space-y-6 pb-48">
         <header class="flex items-center space-x-4">
           <button id="back-to-rounds" class="p-2 -ml-2">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
@@ -288,11 +289,21 @@ export function mount(el, params) {
             </div>
           `).join('')}
         </div>
+
+        <button id="show-more-alts" class="w-full py-4 bg-gray-100 text-gray-600 rounded-xl font-bold border border-gray-200 hover:bg-gray-200 transition">
+          Show More Options
+        </button>
       </div>
     `;
 
     el.querySelector('#back-to-rounds').addEventListener('click', () => {
       showingAlternativesFor = null;
+      numAlternativesToShow = 3; // Reset
+      render();
+    });
+
+    el.querySelector('#show-more-alts').addEventListener('click', () => {
+      numAlternativesToShow += 3;
       render();
     });
 
@@ -302,6 +313,7 @@ export function mount(el, params) {
         const newRound = alternatives[altIndex].round;
         SessionService.replaceRound(showingAlternativesFor, newRound);
         showingAlternativesFor = null;
+        numAlternativesToShow = 3; // Reset
         render();
       });
     });
@@ -480,13 +492,6 @@ export function mount(el, params) {
         if (effectiveStrat === strategy) return; // Sync logic here too
 
         SessionService.updateSettings({ oddPlayerFallback: strategy });
-        
-        // Regenerate the latest round if it hasn't been played
-        const currentRoundIdx = session.rounds.length - 1;
-        if (currentRoundIdx >= 0 && !session.rounds[currentRoundIdx].played) {
-          SessionService.regenerateRound(currentRoundIdx);
-        }
-        
         render();
       });
     });

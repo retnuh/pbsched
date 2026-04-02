@@ -1,20 +1,19 @@
 # Project State: Pickleball Practice Scheduler
 
-## Milestone: Milestone 4 - Advanced Features & Polish
-**Phase:** Phase 6 - Settings and Polish
-**Status:** Phase 5 complete. Manual controls (sitter picking, undo) and flexible strategies are fully operational.
+## Milestone: Milestone 5 - Offline & Persistence
+**Phase:** Phase 7 - PWA & Offline Support
+**Status:** Milestone 4 complete. The app is a polished, feature-rich scheduler with manual overrides, alternative pickers, and mobile optimizations.
 
 ## Active Phase
-- **ID:** P6-POLISH
-- **Goal:** Tunable weights, mobile optimization, and visual flair.
+- **ID:** P7-PWA
+- **Goal:** Full offline functionality and Service Worker caching.
 - **Started:** 2026-04-02
-- **Progress:** 80% (Weights, Sit Counts, Icons, iOS meta, and Help page complete)
+- **Progress:** 0%
 
 ## Key Files
-- src/views/Settings.js: Scoring weights and backup
-- src/views/RoundDisplay.js: Session matchups and sitter picking
-- src/views/Help.js: User guide
-- index.html: Meta tags and nav structure
+- index.html: PWA link tags
+- public/manifest.json: App metadata
+- src/main.js: Service Worker registration
 
 ## Blockers / Risks
 - (None)

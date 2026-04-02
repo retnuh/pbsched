@@ -61,14 +61,32 @@
 - [x] Implement Manual Sitter Selection ("Pick Sitter").
 - [x] Implement Undo for played rounds.
 
-### Phase 6: Settings and Polish (CURRENT)
+### Phase 6: Settings and Polish
 - **ID:** P6-POLISH
 - **Goal:** Tunable weights, mobile optimization, and visual flair.
+- [x] Implement scoring weight sliders in Settings.
+- [x] Add "Sit Count" transparency in Player Manager.
+- [x] Add SVG Icons to Bottom Navigation.
+- [x] Add iOS Web App meta tags and `manifest.json`.
+- [x] Apply `100dvh` CSS fixes for mobile Safari.
+- [x] Add Help & Guide page.
+- [x] Final UI/UX transition polish.
+
+## Milestone 5: Offline & Persistence
+**Goal:** Bulletproof performance in low-connectivity areas (common at pickleball courts).
+
+### Phase 7: PWA & Offline Support
+- **ID:** P7-PWA
+- **Goal:** Full offline functionality.
 - **Tasks:**
-  - [x] Implement scoring weight sliders in Settings.
-  - [x] Add "Sit Count" transparency in Player Manager.
-  - [x] Add SVG Icons to Bottom Navigation.
-  - [x] Add iOS Web App meta tags and `manifest.json`.
-  - [x] Apply `100dvh` CSS fixes for mobile Safari.
-  - [x] Add Help & Guide page.
-  - [ ] Final UI/UX transition polish.
+  - [ ] Implement Service Worker for asset caching.
+  - [ ] Add "Install App" prompt logic.
+  - [ ] Ensure `localStorage` state is robust against unexpected closures.
+
+### Phase 8: Session History & Statistics
+- **ID:** P8-HISTORY
+- **Goal:** Review past sessions and player trends.
+- **Tasks:**
+  - [ ] Create Session History view.
+  - [ ] Implement Session deletion/archiving.
+  - [ ] Add player-level stats (total rounds played, sit frequency).

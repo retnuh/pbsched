@@ -22,6 +22,8 @@ Tunable weights, mobile optimization, and visual flair.
 - [x] Implement subtle CSS transitions for view mounting/unmounting.
 - [x] Add Help & Guide page.
 - [x] Improve empty states for Clubs and Members.
+- [x] Implement non-destructive strategy switching (morphing).
+- [x] Add "Show More" for alternatives.
 
 ### 4. Technical Polish
 - [x] Add iOS `apple-mobile-web-app-capable` and related meta tags to `index.html`.
