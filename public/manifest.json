@@ -1,0 +1,17 @@
+{
+  "name": "Pickleball Practice Scheduler",
+  "short_name": "PB Sched",
+  "description": "Optimized matchups for pickleball practice sessions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

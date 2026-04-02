@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@layer base {
+  /* Prevent overscroll bounce on mobile Safari */
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+#app {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ensure sticky buttons aren't hidden by browser chrome */
+.fixed-safe-bottom {
+  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
