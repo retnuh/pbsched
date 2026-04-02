@@ -21,8 +21,12 @@ build:
     npm run build
 
 # Preview the production build locally
-preview:
+preview: build
     npm run preview
+
+# Deploy to GitHub Pages (triggers the Action by pushing to main)
+deploy: check
+    git push origin main
 
 # Clean up build artifacts and node_modules
 clean:
