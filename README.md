@@ -47,5 +47,9 @@ This project was built with a collaborative AI workflow:
 - **[Google Gemini](https://gemini.google.com/):** For high-speed context handling, architectural decisions, and the heavy lifting of the initial implementation.
 - **[Anthropic Claude](https://claude.ai/):** For the initial project research, UX brainstorming, and high-fidelity project specification.
 
+## 📄 License
+
+This project is released into the public domain under the [Unlicense](./UNLICENSE). Feel free to use, modify, and distribute it however you like.
+
 ---
 *Built for the love of the game. See you on the courts!*
