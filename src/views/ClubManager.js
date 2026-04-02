@@ -26,14 +26,22 @@ export function mount(el, params) {
 
     clubListEl.innerHTML = clubs.map(club => {
       const isCurrent = club.id === activeClubId;
+      const hasMembers = club.members.length > 0;
+
       return `
-        <div class="bg-white p-4 rounded-xl shadow-sm border ${isCurrent ? 'border-blue-500 bg-blue-50/30' : 'border-gray-100'} flex justify-between items-center group">
+        <div class="bg-white p-4 rounded-xl shadow-sm border ${isCurrent ? 'border-blue-500 bg-blue-50/30' : 'border-gray-100'} ${!hasMembers ? 'ring-2 ring-blue-100 animate-pulse-subtle' : ''} flex justify-between items-center group">
           <div class="flex-grow cursor-pointer" data-id="${club.id}" data-action="view-club">
             <div class="flex items-center space-x-2">
               <h3 class="font-bold text-lg">${club.name}</h3>
               ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Active Today</span>' : ''}
             </div>
-            <p class="text-sm text-gray-500">${club.members.length} members</p>
+            ${hasMembers ? 
+              `<p class="text-sm text-gray-500">${club.members.length} members</p>` :
+              `<p class="text-sm text-blue-600 font-bold flex items-center">
+                <span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                Tap to add members &rarr;
+              </p>`
+            }
           </div>
           <div class="flex items-center space-x-2">
             ${isCurrent ? `
