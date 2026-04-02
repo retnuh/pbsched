@@ -28,6 +28,13 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Handle update messages
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Fetch: Network first, fallback to cache for dynamic assets
 // But for static assets (like the built JS/CSS), cache first is better.
 self.addEventListener('fetch', (event) => {

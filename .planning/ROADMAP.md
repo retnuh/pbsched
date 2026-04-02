@@ -81,6 +81,7 @@
 - [x] Implement Service Worker for asset caching.
 - [x] Add manifest.json for "Install App" support.
 - [x] Ensure robustness against connectivity drops.
+- [x] Implement "New Version Available" update notification.
 
 ### Phase 8: Session History & Statistics (DEFERRED)
 - **ID:** P8-HISTORY

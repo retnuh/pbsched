@@ -6,7 +6,7 @@ Ensure the app works perfectly at courts with zero connectivity.
 ## Tasks
 
 ### 1. Service Worker Implementation
-- [x] Install `vite-plugin-pwa` to automate service worker generation.
+- [x] Install `vite-plugin-pwa` (Note: Manual SW used due to Vite 8 compat)
 - [x] Configure Vite to cache all assets (JS, CSS, HTML, SVG).
 - [x] Add update logic to `main.js` to notify users when a new version is available.
 
