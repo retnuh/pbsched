@@ -2,13 +2,13 @@
 
 ## Milestone: Milestone 5 - Offline & Persistence
 **Phase:** Phase 7 - PWA & Offline Support
-**Status:** Milestone 4 complete. The app is a polished, feature-rich scheduler with manual overrides, alternative pickers, and mobile optimizations.
+**Status:** Milestone 5 complete. The app is a full-featured, offline-capable PWA with haptic feedback, automated versioning, and a seamless update flow.
 
 ## Active Phase
 - **ID:** P7-PWA
 - **Goal:** Full offline functionality and Service Worker caching.
 - **Started:** 2026-04-02
-- **Progress:** 100% (Offline caching and update notifications complete)
+- **Progress:** 100% (Offline caching, update notifications, versioning, and haptics complete)
 
 ## Key Files
 - public/sw.js: Service Worker logic

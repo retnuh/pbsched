@@ -82,6 +82,8 @@
 - [x] Add manifest.json for "Install App" support.
 - [x] Ensure robustness against connectivity drops.
 - [x] Implement "New Version Available" update notification.
+- [x] Implement git-hash based versioning.
+- [x] Add haptic feedback for mobile interactions.
 
 ### Phase 8: Session History & Statistics (DEFERRED)
 - **ID:** P8-HISTORY
