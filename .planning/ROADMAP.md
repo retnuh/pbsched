@@ -78,15 +78,16 @@
 ### Phase 7: PWA & Offline Support
 - **ID:** P7-PWA
 - **Goal:** Full offline functionality.
-- **Tasks:**
-  - [ ] Implement Service Worker for asset caching.
-  - [ ] Add "Install App" prompt logic.
-  - [ ] Ensure `localStorage` state is robust against unexpected closures.
+- [x] Implement Service Worker for asset caching.
+- [x] Add manifest.json for "Install App" support.
+- [x] Ensure robustness against connectivity drops.
 
-### Phase 8: Session History & Statistics
+### Phase 8: Session History & Statistics (DEFERRED)
 - **ID:** P8-HISTORY
 - **Goal:** Review past sessions and player trends.
-- **Tasks:**
-  - [ ] Create Session History view.
-  - [ ] Implement Session deletion/archiving.
-  - [ ] Add player-level stats (total rounds played, sit frequency).
+- **Status:** On hold pending feedback.
+
+### Phase 9: Score Tracking (DEFERRED)
+- **ID:** P9-SCORES
+- **Goal:** Optional win/loss tracking.
+- **Status:** On hold pending feedback.

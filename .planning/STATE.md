@@ -8,12 +8,12 @@
 - **ID:** P7-PWA
 - **Goal:** Full offline functionality and Service Worker caching.
 - **Started:** 2026-04-02
-- **Progress:** 0%
+- **Progress:** 100% (Service Worker implemented and registered)
 
 ## Key Files
-- index.html: PWA link tags
-- public/manifest.json: App metadata
-- src/main.js: Service Worker registration
+- public/sw.js: Service Worker logic
+- src/main.js: SW registration
+- public/manifest.json: PWA metadata
 
 ## Blockers / Risks
 - (None)
