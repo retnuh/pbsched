@@ -1,4 +1,5 @@
 import { StorageAdapter } from '../storage.js';
+import { Haptics } from '../services/haptics.js';
 
 export function mount(el, params) {
   const settings = StorageAdapter.get('settings') || {};
@@ -108,19 +109,30 @@ export function mount(el, params) {
     StorageAdapter.set('settings', settings);
   }
 
-  partnerInput.addEventListener('input', updateWeights);
-  opponentInput.addEventListener('input', updateWeights);
-  sitoutInput.addEventListener('input', updateWeights);
+  partnerInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
+  opponentInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
+  sitoutInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
 
   el.querySelector('#reset-weights').addEventListener('click', () => {
     partnerInput.value = 5;
     opponentInput.value = 10;
     sitoutInput.value = 3;
+    Haptics.medium();
     updateWeights();
   });
 
   el.querySelector('#reset-data').addEventListener('click', () => {
     if (confirm('Are you absolutely sure? This will delete all your clubs and sessions. This cannot be undone.')) {
+      Haptics.error();
       StorageAdapter.reset();
       window.location.hash = '#/';
       window.location.reload();
@@ -142,12 +154,14 @@ export function mount(el, params) {
             title: 'Pickleball Scheduler Backup',
             text: 'Here is my Pickleball Practice Scheduler data backup.'
           });
+          Haptics.success();
           return;
         } else {
           await navigator.share({
             title: 'Pickleball Scheduler Backup',
             text: jsonString
           });
+          Haptics.success();
           return;
         }
       } catch (err) {
@@ -164,6 +178,7 @@ export function mount(el, params) {
     a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
+    Haptics.light();
   });
 
   // Import File
@@ -183,10 +198,12 @@ export function mount(el, params) {
           const json = JSON.parse(event.target.result);
           if (confirm('Importing will overwrite your current data. Continue?')) {
             StorageAdapter.importData(json);
+            Haptics.success();
             window.location.hash = '#/';
             window.location.reload();
           }
         } catch (err) {
+          Haptics.error();
           alert('Failed to parse backup file. Is it a valid JSON?');
         }
       };
@@ -203,10 +220,12 @@ export function mount(el, params) {
       const json = JSON.parse(raw);
       if (confirm('Importing will overwrite your current data. Continue?')) {
         StorageAdapter.importData(json);
+        Haptics.success();
         window.location.hash = '#/';
         window.location.reload();
       }
     } catch (err) {
+      Haptics.error();
       alert('Invalid data. Please make sure you pasted the entire JSON string.');
     }
   });

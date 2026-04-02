@@ -1,6 +1,7 @@
 import { ClubService } from '../services/club.js';
 import { SessionService } from '../services/session.js';
 import { navigate } from '../router.js';
+import { Haptics } from '../services/haptics.js';
 
 export function mount(el, params) {
   const { clubId } = params;
@@ -84,6 +85,7 @@ export function mount(el, params) {
       const id = e.target.value;
       if (e.target.checked) selectedIds.add(id);
       else selectedIds.delete(id);
+      Haptics.light();
       updateStartButton();
     }
   });
@@ -95,6 +97,7 @@ export function mount(el, params) {
       if (!selectedIds.has(id)) newSelection.add(id);
     });
     selectedIds = newSelection;
+    Haptics.medium();
     renderAttendance();
   });
 
@@ -102,7 +105,10 @@ export function mount(el, params) {
     if (selectedIds.size >= 4) {
       SessionService.createSession(clubId, Array.from(selectedIds));
       SessionService.generateNextRound(); 
+      Haptics.success();
       navigate('/active');
+    } else {
+      Haptics.error();
     }
   });
 }

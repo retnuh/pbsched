@@ -1,6 +1,7 @@
 import { ClubService } from '../services/club.js';
 import { SessionService } from '../services/session.js';
 import { navigate } from '../router.js';
+import { Haptics } from '../services/haptics.js';
 
 export function mount(el, params) {
   function renderClubs() {
@@ -84,6 +85,7 @@ export function mount(el, params) {
     const name = input.value.trim();
     if (name) {
       ClubService.createClub(name);
+      Haptics.success();
       input.value = '';
       renderClubs();
     }
@@ -97,11 +99,14 @@ export function mount(el, params) {
     const id = target.getAttribute('data-id');
 
     if (action === 'view-club') {
+      Haptics.light();
       navigate(`/club/${id}`);
     } else if (action === 'resume-session') {
+      Haptics.success();
       navigate('/active');
     } else if (action === 'delete-club') {
       if (confirm('Are you sure you want to delete this club and all its data?')) {
+        Haptics.error();
         ClubService.deleteClub(id);
         renderClubs();
       }

@@ -1,5 +1,6 @@
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
+import { Haptics } from '../services/haptics.js';
 
 export function mount(el, params) {
   const { clubId } = params;
@@ -76,6 +77,7 @@ export function mount(el, params) {
     const name = nameInput.value.trim();
     if (name) {
       ClubService.addMember(clubId, name);
+      Haptics.light();
       nameInput.value = '';
       renderMembers();
     }
@@ -88,9 +90,11 @@ export function mount(el, params) {
   // Start Session
   el.querySelector('#start-session').addEventListener('click', () => {
     if (ClubService.getClub(clubId).members.length < 4) {
+      Haptics.error();
       alert('You need at least 4 members in the club to start a session.');
       return;
     }
+    Haptics.success();
     navigate(`/setup/${clubId}`);
   });
 
@@ -105,6 +109,7 @@ export function mount(el, params) {
     if (action === 'remove-member') {
       if (confirm('Remove this member from the roster?')) {
         ClubService.removeMember(clubId, memberId);
+        Haptics.medium();
         renderMembers();
       }
     } else if (action === 'rename-member') {
@@ -114,6 +119,7 @@ export function mount(el, params) {
       const newName = prompt('Rename member:', member.name);
       if (newName && newName.trim()) {
         ClubService.renameMember(clubId, memberId, newName.trim());
+        Haptics.light();
         renderMembers();
       }
     }

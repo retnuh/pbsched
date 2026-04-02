@@ -1,6 +1,7 @@
 import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
+import { Haptics } from '../services/haptics.js';
 
 export function mount(el, params) {
   const session = SessionService.getActiveSession();
@@ -117,6 +118,7 @@ export function mount(el, params) {
         // Automatically add them to the session attendees too
         session.attendeeIds.push(newMember.id);
         SessionService.updateAttendees(session.attendeeIds);
+        Haptics.light();
         renderAttendeeManager(); 
         
         // Return focus to the input for the next player
@@ -135,6 +137,7 @@ export function mount(el, params) {
       }
 
       SessionService.updateAttendees(newIds);
+      Haptics.success();
       
       // Regenerate the latest round if it hasn't been played
       const currentRoundIdx = session.rounds.length - 1;
@@ -239,15 +242,23 @@ export function mount(el, params) {
       const isSingle = requiredSitOutCount === 1;
       if (isSingle) {
         sitters = new Set([e.target.value]);
+        Haptics.light();
       } else {
-        if (e.target.checked) sitters.add(e.target.value);
-        else sitters.delete(e.target.value);
+        if (e.target.checked) {
+          sitters.add(e.target.value);
+          Haptics.light();
+        }
+        else {
+          sitters.delete(e.target.value);
+          Haptics.light();
+        }
       }
       updateSitterUI();
     });
 
     el.querySelector('#confirm-sitters').addEventListener('click', () => {
       SessionService.regenerateRound(pickingSitterFor, Array.from(sitters));
+      Haptics.success();
       pickingSitterFor = null;
       render();
     });
@@ -313,11 +324,13 @@ export function mount(el, params) {
     el.querySelector('#back-to-rounds').addEventListener('click', () => {
       showingAlternativesFor = null;
       numAlternativesToShow = 3; // Reset
+      Haptics.light();
       render();
     });
 
     el.querySelector('#show-more-alts').addEventListener('click', () => {
       numAlternativesToShow += 3;
+      Haptics.light();
       render();
     });
 
@@ -326,6 +339,7 @@ export function mount(el, params) {
         const altIndex = parseInt(btn.getAttribute('data-index'));
         const newRound = alternatives[altIndex].round;
         SessionService.replaceRound(showingAlternativesFor, newRound);
+        Haptics.success();
         showingAlternativesFor = null;
         numAlternativesToShow = 3; // Reset
         render();
@@ -427,6 +441,7 @@ export function mount(el, params) {
       const btn = listEl.querySelector('#gen-first');
       if (btn) btn.addEventListener('click', () => {
         SessionService.generateNextRound();
+        Haptics.light();
         render();
       });
     } else {
@@ -497,6 +512,7 @@ export function mount(el, params) {
     // Attach Listeners
     el.querySelector('#next-round').addEventListener('click', () => {
       SessionService.generateNextRound();
+      Haptics.light();
       render();
     });
 
@@ -506,18 +522,21 @@ export function mount(el, params) {
         if (effectiveStrat === strategy) return; // Sync logic here too
 
         SessionService.updateSettings({ oddPlayerFallback: strategy });
+        Haptics.medium();
         render();
       });
     });
 
     el.querySelector('#manage-attendees').addEventListener('click', () => {
       isManagingAttendees = true;
+      Haptics.light();
       render();
     });
 
     el.querySelector('#close-session').addEventListener('click', () => {
       if (confirm('End this session? You can always review past sessions in history later.')) {
         SessionService.closeActiveSession();
+        Haptics.medium();
         navigate('/');
       }
     });
@@ -527,6 +546,7 @@ export function mount(el, params) {
       if (playBtn) {
         const idx = parseInt(playBtn.getAttribute('data-index'));
         SessionService.markRoundPlayed(idx);
+        Haptics.success();
         
         // Auto-generate the next round if this was the latest round
         if (idx === session.rounds.length - 1) {
@@ -542,6 +562,7 @@ export function mount(el, params) {
         const idx = parseInt(undoBtn.getAttribute('data-index'));
         SessionService.markRoundUnplayed(idx);
         SessionService.deleteUnplayedRoundsAfter(idx);
+        Haptics.medium();
         render();
         return;
       }
@@ -550,6 +571,7 @@ export function mount(el, params) {
       if (altBtn) {
         const idx = parseInt(altBtn.getAttribute('data-index'));
         showingAlternativesFor = idx;
+        Haptics.light();
         render();
         return;
       }
@@ -560,6 +582,7 @@ export function mount(el, params) {
         const round = session.rounds[idx];
         if (!round.played && round.sittingOut.length > 0) {
           pickingSitterFor = idx;
+          Haptics.light();
           render();
         }
         return;
