@@ -80,7 +80,7 @@ export function mount(el, params) {
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-2">
           <h2 class="font-bold text-gray-700">About</h2>
           <p class="text-sm text-gray-500">Pickleball Practice Scheduler</p>
-          <p class="text-xs text-gray-400 font-mono">Build 2026.04.02</p>
+          <p class="text-xs text-gray-400 font-mono">Build ${__APP_VERSION__}</p>
         </div>
       </div>
     </div>

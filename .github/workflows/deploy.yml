@@ -39,7 +39,13 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build
-        run: npm run build
+        run: |
+          VERSION=$(git rev-parse --short HEAD)
+          echo "VITE_APP_VERSION=$VERSION" >> $GITHUB_ENV
+          # Inject into Service Worker file
+          sed -i "s/pbsched-v1/pbsched-$VERSION/g" public/sw.js
+          export VITE_APP_VERSION=$VERSION
+          npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
