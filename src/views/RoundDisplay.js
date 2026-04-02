@@ -383,7 +383,7 @@ export function mount(el, params) {
 
         <!-- Sticky Bottom Controls -->
         <div class="fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
-          ${oddCount > 0 ? `
+          ${oddCount > 1 ? `
             <!-- Strategy Quick Toggle -->
             <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
               ${oddCount === 3 ? `
