@@ -151,6 +151,16 @@ export function mount(el, params) {
     const round = session.rounds[pickingSitterFor];
     const attendees = session.attendeeIds;
     
+    // Calculate sit counts for the current session up to this round
+    const sitCounts = {};
+    session.rounds.forEach(r => {
+      if (r.index < pickingSitterFor && r.played) {
+        r.sittingOut.forEach(id => {
+          sitCounts[id] = (sitCounts[id] || 0) + 1;
+        });
+      }
+    });
+
     // Calculate how many people MUST sit out based on current strategy
     const oddCount = attendees.length % 4;
     const strat = session.settings.oddPlayerFallback;
@@ -170,10 +180,14 @@ export function mount(el, params) {
         const isChecked = sitters.has(id);
         const isDisabled = !isSingle && !isChecked && limitReached;
         const inputType = isSingle ? 'radio' : 'checkbox';
+        const sitCount = sitCounts[id] || 0;
         
         return `
           <label class="flex items-center justify-between p-4 bg-white rounded-xl border ${isChecked ? 'border-blue-500 bg-blue-50' : 'border-gray-100'} ${isDisabled ? 'opacity-40 grayscale' : 'cursor-pointer'}">
-            <span class="font-bold ${isDisabled ? 'text-gray-400' : ''}">${getPlayerName(id)}</span>
+            <div class="flex flex-col">
+              <span class="font-bold ${isDisabled ? 'text-gray-400' : ''}">${getPlayerName(id)}</span>
+              ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
+            </div>
             <input type="${inputType}" name="sitter" value="${id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
           </label>
         `;
