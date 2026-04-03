@@ -399,7 +399,7 @@ export function mount(el, params) {
         <div class="fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
           ${oddCount > 1 ? `
             <!-- Strategy Quick Toggle -->
-            <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm mb-4">
               ${oddCount === 3 ? `
                 <button data-strat="three-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'three-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
                   Play 2v1
@@ -418,10 +418,9 @@ export function mount(el, params) {
               </button>
             </div>
           ` : ''}
-
-          <button id="next-round" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
-            Generate Next Round
-          </button>
+          <div class="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest pb-2">
+            Tap "Mark Played" to advance
+          </div>
         </div>
       </div>
     `;
@@ -510,12 +509,6 @@ export function mount(el, params) {
     }
 
     // Attach Listeners
-    el.querySelector('#next-round').addEventListener('click', () => {
-      SessionService.generateNextRound();
-      Haptics.light();
-      render();
-    });
-
     el.querySelectorAll('[data-strat]').forEach(btn => {
       btn.addEventListener('click', () => {
         const strategy = btn.getAttribute('data-strat');
