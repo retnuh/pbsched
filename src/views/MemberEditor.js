@@ -71,8 +71,10 @@ export function mount(el, params) {
     memberListEl.innerHTML = freshClub.members.map(member => `
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center group">
         <span data-member-name="${member.id}" class="font-medium text-lg flex-grow min-w-0 truncate mr-2"></span>
-        <div class="flex space-x-1 flex-shrink-0">
-          <button data-id="${member.id}" data-action="rename-member" class="px-3 py-1 text-sm text-blue-600 font-medium">Rename</button>
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <button data-id="${member.id}" data-action="rename-member" aria-label="Rename member"
+            class="text-gray-400 text-lg leading-none"
+            style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
           <button data-id="${member.id}" data-action="remove-member" class="px-3 py-1 text-sm text-red-500 font-medium">Remove</button>
         </div>
       </div>
@@ -89,7 +91,7 @@ export function mount(el, params) {
       <header class="flex items-center space-x-4">
         <a href="#/" class="text-blue-600 font-medium text-lg">&larr;</a>
         <div id="club-name-display" class="flex items-center gap-2 flex-grow min-w-0">
-          <h1 id="club-name-heading" class="text-2xl font-bold truncate">${club.name}</h1>
+          <h1 id="club-name-heading" class="text-2xl font-bold truncate flex-grow">${club.name}</h1>
           <button id="edit-club-name" aria-label="Edit club name"
             class="text-gray-400 text-lg leading-none flex-shrink-0"
             style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
@@ -174,7 +176,7 @@ export function mount(el, params) {
 
     function restore(displayName) {
       nameDisplay.innerHTML = `
-        <h1 id="club-name-heading" class="text-2xl font-bold truncate"></h1>
+        <h1 id="club-name-heading" class="text-2xl font-bold truncate flex-grow"></h1>
         <button id="edit-club-name" aria-label="Edit club name"
           class="text-gray-400 text-lg leading-none flex-shrink-0"
           style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
