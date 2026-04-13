@@ -75,7 +75,9 @@ export function mount(el, params) {
           <button data-id="${member.id}" data-action="rename-member" aria-label="Rename member"
             class="text-gray-400 text-lg leading-none"
             style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
-          <button data-id="${member.id}" data-action="remove-member" class="px-3 py-1 text-sm text-red-500 font-medium">Remove</button>
+          <button data-id="${member.id}" data-action="remove-member" aria-label="Remove member"
+            class="text-red-400 text-lg leading-none"
+            style="background:none;border:none;cursor:pointer;padding:2px 4px;">🗑️</button>
         </div>
       </div>
     `).join('');
