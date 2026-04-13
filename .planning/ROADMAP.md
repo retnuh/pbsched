@@ -117,7 +117,9 @@
   1. A test adds a player mid-session and asserts every played round's courts and player assignments are byte-for-byte identical before and after
   2. A test removes a player who appeared in a played court and asserts that played round is unchanged
   3. A test asserts that only rounds with `played: false` are regenerated; played rounds retain their original structure
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 09-01-PLAN.md — Fix localStorage regression and write TEST-01, TEST-02, TEST-03
 
 ### Phase 10: Scheduling Penalties for Short-Sided Matches
 **Goal**: The scheduler penalizes players who already had a singles or 3-way solo/pair match, and those penalties are configurable and schema-safe
@@ -135,5 +137,5 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 8. Club Name Editing | 0/? | Not started | - |
-| 9. Player-Change Test Coverage | 0/? | Not started | - |
+| 9. Player-Change Test Coverage | 0/1 | Planned | - |
 | 10. Scheduling Penalties for Short-Sided Matches | 0/? | Not started | - |
