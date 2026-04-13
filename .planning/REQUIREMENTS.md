@@ -50,9 +50,9 @@
 ## Milestone 6 Requirements
 
 ### Club Management
-- [ ] **CLUB-07**: Organizer can tap the club name to edit it inline (MemberEditor view)
-- [ ] **CLUB-08**: Inline edit saves on blur or confirm; change persists to localStorage
-- [ ] **CLUB-09**: Inline edit input uses ≥16px font size to prevent iOS Safari auto-zoom
+- [x] **CLUB-07**: Organizer can tap the club name to edit it inline (MemberEditor view)
+- [x] **CLUB-08**: Inline edit saves on blur or confirm; change persists to localStorage
+- [x] **CLUB-09**: Inline edit input uses ≥16px font size to prevent iOS Safari auto-zoom
 
 ### Scheduler Improvements
 - [ ] **SCHED-01**: Scheduling engine applies a configurable penalty when a player has played a singles (1v1) match this session
@@ -117,9 +117,9 @@
 | SETT-03 | P6-POLISH | Done |
 | DEVP-01 | P1-FOUNDATION | Done |
 
-| CLUB-07 | Phase 8 | Pending |
-| CLUB-08 | Phase 8 | Pending |
-| CLUB-09 | Phase 8 | Pending |
+| CLUB-07 | Phase 8 | Complete |
+| CLUB-08 | Phase 8 | Complete |
+| CLUB-09 | Phase 8 | Complete |
 | TEST-01 | Phase 9 | Pending |
 | TEST-02 | Phase 9 | Pending |
 | TEST-03 | Phase 9 | Pending |
