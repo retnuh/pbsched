@@ -2,26 +2,42 @@ import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { Haptics } from '../services/haptics.js';
 
-function showToast(message) {
+function showToast(message, anchorEl) {
   const toast = document.createElement('div');
   toast.textContent = message;
+
+  let positionStyles;
+  if (anchorEl) {
+    const rect = anchorEl.getBoundingClientRect();
+    positionStyles = [
+      'position:fixed',
+      `top:${rect.bottom + 8}px`,
+      `left:${rect.left + rect.width / 2}px`,
+      'transform:translateX(-50%)',
+    ];
+  } else {
+    positionStyles = [
+      'position:fixed',
+      'bottom:24px',
+      'left:50%',
+      'transform:translateX(-50%)',
+    ];
+  }
+
   toast.style.cssText = [
-    'position:fixed',
-    'bottom:24px',
-    'left:50%',
-    'transform:translateX(-50%)',
+    ...positionStyles,
     'background:#1f2937',
     'color:#fff',
-    'padding:10px 20px',
+    'padding:8px 16px',
     'border-radius:8px',
     'font-size:14px',
     'z-index:9999',
     'pointer-events:none',
     'opacity:1',
     'transition:opacity 0.4s ease',
+    'white-space:nowrap',
   ].join(';');
   document.body.appendChild(toast);
-  // Begin fade after 1.6 s, remove after 2 s total
   setTimeout(() => { toast.style.opacity = '0'; }, 1600);
   setTimeout(() => { toast.remove(); }, 2000);
 }
@@ -141,7 +157,7 @@ export function mount(el, params) {
       saved = true;
       const newName = input.value.trim();
       if (!newName) {
-        showToast("Club name can't be empty");
+        showToast("Club name can't be empty", input);
         restore(currentName);
         return;
       }
@@ -265,7 +281,7 @@ export function mount(el, params) {
         saved = true;
         const newName = input.value.trim();
         if (!newName) {
-          showToast("Member name can't be empty");
+          showToast("Member name can't be empty", input);
           restoreSpan(currentName);
           return;
         }
