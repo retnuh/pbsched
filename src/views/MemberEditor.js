@@ -54,13 +54,18 @@ export function mount(el, params) {
 
     memberListEl.innerHTML = freshClub.members.map(member => `
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center group">
-        <span class="font-medium text-lg">${member.name}</span>
-        <div class="flex space-x-1">
+        <span data-member-name="${member.id}" class="font-medium text-lg flex-grow min-w-0 truncate mr-2"></span>
+        <div class="flex space-x-1 flex-shrink-0">
           <button data-id="${member.id}" data-action="rename-member" class="px-3 py-1 text-sm text-blue-600 font-medium">Rename</button>
           <button data-id="${member.id}" data-action="remove-member" class="px-3 py-1 text-sm text-red-500 font-medium">Remove</button>
         </div>
       </div>
     `).join('');
+    // Set member names via textContent to avoid XSS from localStorage values
+    freshClub.members.forEach(member => {
+      const span = memberListEl.querySelector(`[data-member-name="${member.id}"]`);
+      if (span) span.textContent = member.name;
+    });
   }
 
   el.innerHTML = `
@@ -222,15 +227,64 @@ export function mount(el, params) {
         renderMembers();
       }
     } else if (action === 'rename-member') {
-      const currentClub = ClubService.getClub(clubId);
-      const member = currentClub.members.find(m => m.id === memberId);
+      const member = ClubService.getClub(clubId).members.find(m => m.id === memberId);
       if (!member) return;
-      const newName = prompt('Rename member:', member.name);
-      if (newName && newName.trim()) {
-        ClubService.renameMember(clubId, memberId, newName.trim());
+      const nameSpan = el.querySelector(`[data-member-name="${memberId}"]`);
+      if (!nameSpan) return;
+
+      const currentName = member.name;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentName;
+      input.setAttribute('aria-label', 'Member name');
+      input.className = 'font-medium flex-grow min-w-0 bg-transparent outline-none';
+      input.style.cssText = [
+        'font-size:1.125rem',  // text-lg = 18px, satisfies iOS ≥16px
+        'border:none',
+        'border-bottom:2px solid #6b7280',
+        'padding-bottom:2px',
+        'width:100%',
+      ].join(';');
+
+      nameSpan.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let saved = false;
+
+      function restoreSpan(name) {
+        const span = document.createElement('span');
+        span.setAttribute('data-member-name', memberId);
+        span.className = 'font-medium text-lg flex-grow min-w-0 truncate mr-2';
+        span.textContent = name;
+        input.replaceWith(span);
+      }
+
+      function saveMember() {
+        if (saved) return;
+        saved = true;
+        const newName = input.value.trim();
+        if (!newName) {
+          showToast("Member name can't be empty");
+          restoreSpan(currentName);
+          return;
+        }
+        ClubService.renameMember(clubId, memberId, newName);
         Haptics.light();
         renderMembers();
       }
+
+      function cancelMember() {
+        if (saved) return;
+        saved = true;
+        restoreSpan(currentName);
+      }
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter')  { e.preventDefault(); saveMember(); }
+        if (e.key === 'Escape') { e.preventDefault(); cancelMember(); }
+      });
+      input.addEventListener('blur', saveMember);
     }
   });
 }
