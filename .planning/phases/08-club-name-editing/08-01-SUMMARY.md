@@ -51,19 +51,27 @@ completed: 2026-04-13
 - **Duration:** ~15 min
 - **Started:** 2026-04-13T23:00:20Z
 - **Completed:** 2026-04-13T23:15:00Z
-- **Tasks:** 2 of 3 (Task 3 is checkpoint:human-verify — awaiting human approval)
+- **Tasks:** 3 of 3 (checkpoint:human-verify approved)
 - **Files modified:** 1
 
 ## Accomplishments
-- Added `showToast` module-level helper: fixed-position dark pill, fades after 1.6s, auto-removed at 2s
+- Added `showToast` module-level helper: fixed-position dark pill, fades after 1.6s, auto-removed at 2s — toast anchored 8px below the triggering input element
 - Replaced static `<h1>` with `#club-name-display` wrapper containing `#club-name-heading` and a pencil icon button; layout unchanged for the user
 - Wired full inline edit lifecycle: `activateEdit()` builds a styled 1.5rem input, `save()` calls `ClubService.updateClub` + `Haptics.light()`, `cancel()` restores silently, `restore()` rebuilds DOM and re-binds listeners
 - Applied T-08-02 XSS mitigation: `restore()` sets innerHTML to an empty skeleton, then assigns `.textContent = displayName` — club names from localStorage never reach innerHTML
+- Extended inline edit pattern to member rename: replaced "Rename" button with pencil icon using same save/cancel/empty guard pattern
+- Replaced "Remove" text button with trash icon on member rows for cleaner UI
+- Club pencil icon right-aligned via flex-grow on h1 to match member row pencil position
 
 ## Task Commits
 
 1. **Task 1: Add showToast helper and replace static h1 with editable header markup** - `af60414` (feat)
 2. **Task 2: Wire inline edit — activate, save, cancel, and empty-guard logic** - `af60414` (feat — committed together with Task 1 as one atomic implementation commit per plan instructions)
+3. **Task 3: checkpoint:human-verify** - Approved by user
+4. **Bonus: Replace prompt() member rename with inline edit pattern** - `0b77ac4` (feat)
+5. **Bonus: Position toast near the field being edited** - `460d176` (feat)
+6. **Bonus: Pencil icon for member rename, align club pencil to right edge** - `a8fab41` (feat)
+7. **Bonus: Replace Remove text with trash icon on member rows** - `0e83eb3` (feat)
 
 ## Files Created/Modified
 - `src/views/MemberEditor.js` - Added showToast, replaced h1 with pencil-icon wrapper, added full inline edit logic (110 lines net new)
@@ -97,9 +105,9 @@ completed: 2026-04-13
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- Inline club name editing is fully implemented and committed
-- Awaiting human verification at Task 3 checkpoint before marking plan complete
-- Once approved, Phase 9 (Vitest tests for mid-session roster changes) can proceed
+- Inline club name editing fully implemented, verified, and approved
+- Member rename and remove UI also updated to match the new inline edit pattern
+- Phase 9 (Vitest tests for mid-session roster changes) can proceed immediately
 
 ---
 *Phase: 08-club-name-editing*
