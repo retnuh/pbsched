@@ -2,10 +2,10 @@
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 8 — Club name editing
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-13 — Milestone 6 started
+Status: Ready to plan
+Last activity: 2026-04-13 — Milestone 6 roadmap created
 
 ## Milestone: Milestone 6 — UX Polish & Scheduler Improvements
 
@@ -15,3 +15,6 @@ Last activity: 2026-04-13 — Milestone 6 started
 - Scheduler uses random-generate + score candidates with penalty-based variety optimization
 - localStorage only — no backend
 - Mobile-first (organizer's phone)
+- Phase 8: inline club name edit in MemberEditor view; 16px minimum font size to prevent iOS Safari auto-zoom
+- Phase 9: Vitest tests for mid-session roster changes not mutating played round state
+- Phase 10: configurable penalties for singles and 3-way short-sided matches; backward-compatible schema (sessions without penalty values fall back to defaults)
