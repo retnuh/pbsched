@@ -2,6 +2,30 @@ import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { Haptics } from '../services/haptics.js';
 
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = [
+    'position:fixed',
+    'bottom:24px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:#1f2937',
+    'color:#fff',
+    'padding:10px 20px',
+    'border-radius:8px',
+    'font-size:14px',
+    'z-index:9999',
+    'pointer-events:none',
+    'opacity:1',
+    'transition:opacity 0.4s ease',
+  ].join(';');
+  document.body.appendChild(toast);
+  // Begin fade after 1.6 s, remove after 2 s total
+  setTimeout(() => { toast.style.opacity = '0'; }, 1600);
+  setTimeout(() => { toast.remove(); }, 2000);
+}
+
 export function mount(el, params) {
   const { clubId } = params;
   const club = ClubService.getClub(clubId);
@@ -43,7 +67,12 @@ export function mount(el, params) {
     <div class="p-4 space-y-6">
       <header class="flex items-center space-x-4">
         <a href="#/" class="text-blue-600 font-medium text-lg">&larr;</a>
-        <h1 class="text-2xl font-bold flex-grow truncate">${club.name}</h1>
+        <div id="club-name-display" class="flex items-center gap-2 flex-grow min-w-0">
+          <h1 id="club-name-heading" class="text-2xl font-bold truncate">${club.name}</h1>
+          <button id="edit-club-name" aria-label="Edit club name"
+            class="text-gray-400 text-lg leading-none flex-shrink-0"
+            style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
+        </div>
       </header>
 
       <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
@@ -69,6 +98,86 @@ export function mount(el, params) {
   `;
 
   renderMembers();
+
+  // ── Inline club name editing ──────────────────────────────────────────────
+  const nameDisplay  = el.querySelector('#club-name-display');
+  const nameHeading  = el.querySelector('#club-name-heading');
+  const editBtn      = el.querySelector('#edit-club-name');
+
+  function activateEdit() {
+    const currentName = ClubService.getClub(clubId).name;
+
+    // Build input that visually matches the h1
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.setAttribute('aria-label', 'Club name');
+    // Match h1 styling; font-size 1.5rem = 24px — satisfies iOS ≥16px requirement (CLUB-09)
+    input.className = 'flex-grow min-w-0 font-bold bg-transparent outline-none';
+    input.style.cssText = [
+      'font-size:1.5rem',       // text-2xl = 24px
+      'font-weight:700',
+      'border:none',
+      'border-bottom:2px solid #6b7280',
+      'padding-bottom:2px',
+      'width:100%',
+    ].join(';');
+
+    // Swap heading + button for input
+    nameDisplay.innerHTML = '';
+    nameDisplay.appendChild(input);
+    input.focus();
+    input.select();
+
+    let saved = false;
+
+    function save() {
+      if (saved) return;
+      saved = true;
+      const newName = input.value.trim();
+      if (!newName) {
+        showToast("Club name can't be empty");
+        restore(currentName);
+        return;
+      }
+      ClubService.updateClub(clubId, { name: newName });
+      Haptics.light();
+      restore(newName);
+    }
+
+    function cancel() {
+      if (saved) return;
+      saved = true;
+      restore(currentName);
+    }
+
+    function restore(displayName) {
+      nameDisplay.innerHTML = `
+        <h1 id="club-name-heading" class="text-2xl font-bold truncate"></h1>
+        <button id="edit-club-name" aria-label="Edit club name"
+          class="text-gray-400 text-lg leading-none flex-shrink-0"
+          style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
+      `;
+      // T-08-02: set text via textContent to prevent XSS from crafted localStorage values
+      nameDisplay.querySelector('#club-name-heading').textContent = displayName;
+      // Re-bind the edit button after innerHTML replacement
+      nameDisplay.querySelector('#edit-club-name').addEventListener('click', activateEdit);
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter')  { e.preventDefault(); save(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    });
+
+    // blur fires after keydown, so the saved flag prevents double-fire
+    input.addEventListener('blur', save);
+  }
+
+  // Initial bind
+  editBtn.addEventListener('click', activateEdit);
+  // Also allow tapping the heading text itself to activate edit
+  nameHeading.addEventListener('click', activateEdit);
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Add Member
   const addBtn = el.querySelector('#add-member');
