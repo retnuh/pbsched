@@ -22,7 +22,7 @@
 
 - [x] **Phase 11: Service Layer & Data Model** — Add `SessionService.updateRound` and the `source: 'edited'` field; wire history invalidation so edited played rounds regenerate subsequent unplayed rounds (completed 2026-04-14)
 - [x] **Phase 12: Editor Scaffold & Entry Points** — New `MatchEditor` view + `#/edit/:roundIndex` route; static court layout renders current lineup; entry points from proposed and most recently played rounds (completed 2026-04-14)
-- [ ] **Phase 13: Drag Interactions & Validation** — SortableJS drag-and-drop (touch-native); player swap, bench drag-in/out, confirm/cancel; save blocked when validation fails
+- [x] **Phase 13: Drag Interactions & Validation** — SortableJS drag-and-drop (touch-native); player swap, bench drag-in/out, confirm/cancel; save blocked when validation fails (completed 2026-04-14)
 - [ ] **Phase 14: Court Management & Polish** — Add/remove courts in editor; empty-court pruning on save; sit-out count badges on bench chips; haptic feedback on successful drop
 
 ## Phase Details
@@ -70,7 +70,7 @@ Plans:
 
 Plans:
 - [x] 13-01-PLAN.md — Install SortableJS, scaffold test stubs, implement drag zones and draft state (DRAG-01, DRAG-02, DRAG-03, DRAG-04, VIS-01)
-- [ ] 13-02-PLAN.md — Validation, Confirm, Cancel wiring + human verify checkpoint (DRAG-05, DRAG-06, VALID-01, VALID-02, VIS-01)
+- [x] 13-02-PLAN.md — Validation, Confirm, Cancel wiring + human verify checkpoint (DRAG-05, DRAG-06, VALID-01, VALID-02, VIS-01)
 
 ### Phase 14: Court Management & Polish
 **Goal**: The organizer can add or remove courts inside the editor and receives tactile feedback on each successful drop
@@ -94,5 +94,5 @@ Plans:
 | 10. Scheduling Penalties for Short-Sided Matches | Milestone 6 | 2/2 | Complete | 2026-04-14 |
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
-| 13. Drag Interactions & Validation | Milestone 7 | 1/2 | In Progress|  |
+| 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete   | 2026-04-14 |
 | 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
