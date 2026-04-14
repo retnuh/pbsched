@@ -35,7 +35,10 @@
   1. Calling `updateRound` on a proposed round replaces its assignments and the scheduler uses those assignments for subsequent round generation
   2. Calling `updateRound` on a played round writes `source: 'edited'` on that round's record in session history
   3. After editing a played round, all subsequent unplayed rounds are invalidated and regenerated using the updated history
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 11-01-PLAN.md — Add SessionService.updateRound with TDD (HIST-01, HIST-02, HIST-03)
 
 ### Phase 12: Editor Scaffold & Entry Points
 **Goal**: The organizer can open a visual court layout editor from either an unplayed or a most recently played round
@@ -84,7 +87,7 @@
 | 8. Club Name Editing | Milestone 6 | 1/1 | Complete | 2026-04-14 |
 | 9. Player-Change Test Coverage | Milestone 6 | 1/1 | Complete | 2026-04-14 |
 | 10. Scheduling Penalties for Short-Sided Matches | Milestone 6 | 2/2 | Complete | 2026-04-14 |
-| 11. Service Layer & Data Model | Milestone 7 | 0/? | Not started | - |
+| 11. Service Layer & Data Model | Milestone 7 | 0/1 | Not started | - |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 0/? | Not started | - |
 | 13. Drag Interactions & Validation | Milestone 7 | 0/? | Not started | - |
 | 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
