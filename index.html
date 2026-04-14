@@ -2,6 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('pb:theme');
+          if (mode === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (mode !== 'light') {
+            try {
+              if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+              }
+            } catch (e2) { /* matchMedia unavailable — light is default */ }
+          }
+        } catch (e) {
+          try {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              document.documentElement.classList.add('dark');
+            }
+          } catch (e2) { /* matchMedia unavailable — do nothing */ }
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -10,7 +32,7 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Pickleball Practice Scheduler</title>
   </head>
-  <body class="bg-gray-50 text-gray-900 font-sans min-h-[100dvh] flex flex-col overflow-x-hidden">
+  <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans min-h-[100dvh] flex flex-col overflow-x-hidden">
     <!-- Main Content Area -->
     <main id="app" class="flex-grow pb-32 max-w-lg mx-auto w-full"></main>
 

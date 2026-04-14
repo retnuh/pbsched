@@ -1,5 +1,9 @@
 import './style.css'
 import { initRouter } from './router.js'
+import { ThemeService } from './services/theme.js'
+
+// Initialize theme before router mounts any view
+ThemeService.init();
 
 // Initialize the Hash Router
 const appEl = document.querySelector('#app');
