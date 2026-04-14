@@ -2,24 +2,26 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-last_updated: "2026-04-14T10:51:42.566Z"
+status: Phase 11 Complete — Advancing to Phase 12
+last_updated: "2026-04-14T12:15:00.000Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State: Pickleball Practice Scheduler
 
 ## Current Position
 
-**Milestone 7 — Match Editor** | Phase 11 (next) | Status: Roadmap ready, planning Phase 11
+Phase: 11 (Service Layer & Data Model) — COMPLETE ✓
+**Next:** Phase 12 — Editor Scaffold & Entry Points
+**Milestone 7 — Match Editor** | Phase 12 (next) | Status: Phase 11 verified, advancing
 
 ```
-Milestone 7 progress: [----------] 0% (0/4 phases)
+Milestone 7 progress: [##--------] 25% (1/4 phases)
 ```
 
 ## Project Reference
@@ -27,7 +29,7 @@ Milestone 7 progress: [----------] 0% (0/4 phases)
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
-**Current focus:** Milestone 7 — Match Editor (let organizer manually reassign players between courts and bench)
+**Current focus:** Phase 12 — Editor Scaffold & Entry Points
 
 ## Performance Metrics
 
@@ -55,6 +57,8 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 ## Session Continuity
 
-- Phase 11 is next — build `SessionService.updateRound` and history invalidation before any UI
-- Build order: service layer (Phase 11) → static scaffold + routes (Phase 12) → SortableJS drag + validation (Phase 13) → court add/remove + polish (Phase 14)
+- Phase 11 complete — `SessionService.updateRound` ships with tests; HIST-01/02/03 verified
+- Phase 12 is next — static MatchEditor scaffold, route `#/edit/:roundIndex`, entry point wiring (Edit button on round cards)
+- Build order: ~~service layer (Phase 11)~~ → static scaffold + routes (Phase 12) → SortableJS drag + validation (Phase 13) → court add/remove + polish (Phase 14)
 - Test SortableJS touch behavior on real iOS device during Phase 13 — emulator does not reproduce iOS drag bugs
+- Stale worktrees from Phase 11 executor were cleaned up (agent-afb05e13, agent-afd7819b) — actual test count is 15 (3 files), not 89

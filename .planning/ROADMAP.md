@@ -20,7 +20,7 @@
 
 ### Milestone 7: Match Editor
 
-- [ ] **Phase 11: Service Layer & Data Model** — Add `SessionService.updateRound` and the `source: 'edited'` field; wire history invalidation so edited played rounds regenerate subsequent unplayed rounds
+- [x] **Phase 11: Service Layer & Data Model** — Add `SessionService.updateRound` and the `source: 'edited'` field; wire history invalidation so edited played rounds regenerate subsequent unplayed rounds (completed 2026-04-14)
 - [ ] **Phase 12: Editor Scaffold & Entry Points** — New `MatchEditor` view + `#/edit/:roundIndex` route; static court layout renders current lineup; entry points from proposed and most recently played rounds
 - [ ] **Phase 13: Drag Interactions & Validation** — SortableJS drag-and-drop (touch-native); player swap, bench drag-in/out, confirm/cancel; save blocked when validation fails
 - [ ] **Phase 14: Court Management & Polish** — Add/remove courts in editor; empty-court pruning on save; sit-out count badges on bench chips; haptic feedback on successful drop
@@ -38,7 +38,7 @@
 **Plans**: 1 plan
 
 Plans:
-- [ ] 11-01-PLAN.md — Add SessionService.updateRound with TDD (HIST-01, HIST-02, HIST-03)
+- [x] 11-01-PLAN.md — Add SessionService.updateRound with TDD (HIST-01, HIST-02, HIST-03)
 
 ### Phase 12: Editor Scaffold & Entry Points
 **Goal**: The organizer can open a visual court layout editor from either an unplayed or a most recently played round
@@ -87,7 +87,7 @@ Plans:
 | 8. Club Name Editing | Milestone 6 | 1/1 | Complete | 2026-04-14 |
 | 9. Player-Change Test Coverage | Milestone 6 | 1/1 | Complete | 2026-04-14 |
 | 10. Scheduling Penalties for Short-Sided Matches | Milestone 6 | 2/2 | Complete | 2026-04-14 |
-| 11. Service Layer & Data Model | Milestone 7 | 0/1 | Not started | - |
+| 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete   | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 0/? | Not started | - |
 | 13. Drag Interactions & Validation | Milestone 7 | 0/? | Not started | - |
 | 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
