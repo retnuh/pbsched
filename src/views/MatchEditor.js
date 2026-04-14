@@ -2,6 +2,63 @@ import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { escapeHTML } from '../utils/html.js';
+import Sortable, { Swap } from 'sortablejs';
+
+// Mount Swap plugin once at module load (not inside mount())
+Sortable.mount(new Swap());
+
+// Module-scope state — initialized in mount(), nulled in unmount()
+let _sortableInstances = [];
+let _draft = null;
+let _originalRound = null;
+let _roundIndex = null;
+let _el = null;
+
+// --- Private helpers ---
+
+function readZoneIds(el, zoneKey) {
+  const zone = el.querySelector(`[data-zone="${zoneKey}"]`);
+  if (!zone) return [];
+  return [...zone.querySelectorAll('[data-player-id]')]
+    .map(chip => chip.dataset.playerId);
+}
+
+function reconcileDraftFromDOM(el) {
+  _draft.courts = _draft.courts.map((court, i) => ({
+    ...court,
+    teamA: readZoneIds(el, `court-${i}-a`),
+    teamB: readZoneIds(el, `court-${i}-b`),
+  }));
+  _draft.sittingOut = readZoneIds(el, 'bench');
+}
+
+function validateAndUpdateUI(el) {
+  // Implemented in Phase 13, Plan 02
+}
+
+function handleDragEnd() {
+  reconcileDraftFromDOM(_el);
+  validateAndUpdateUI(_el);
+}
+
+function initSortables(el) {
+  const zones = el.querySelectorAll('[data-zone]');
+  zones.forEach(zone => {
+    const instance = new Sortable(zone, {
+      group: 'players',
+      swap: true,
+      swapClass: 'sortable-swap-highlight',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      delay: 150,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 5,
+      filter: '.bench-empty-marker',
+      onEnd: handleDragEnd,
+    });
+    _sortableInstances.push(instance);
+  });
+}
 
 export function mount(el, params) {
   const session = SessionService.getActiveSession();
@@ -41,32 +98,41 @@ export function mount(el, params) {
     `;
     return;
   }
+
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
-  // Render Team A pill chip (blue)
+  // Chip helpers — include data-player-id for SortableJS reconciliation and cursor-grab
   const teamAChip = (id) =>
-    `<div class="px-3 py-3 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800 text-center min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
+    `<div data-player-id="${escapeHTML(id)}"
+          class="px-3 py-3 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800 text-center min-h-[44px] flex items-center justify-center cursor-grab">
+       ${escapeHTML(getPlayerName(id))}
+     </div>`;
 
-  // Render Team B pill chip (orange)
   const teamBChip = (id) =>
-    `<div class="px-3 py-3 bg-orange-50 border border-orange-200 rounded-full text-sm font-medium text-orange-800 text-center min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
+    `<div data-player-id="${escapeHTML(id)}"
+          class="px-3 py-3 bg-orange-50 border border-orange-200 rounded-full text-sm font-medium text-orange-800 text-center min-h-[44px] flex items-center justify-center cursor-grab">
+       ${escapeHTML(getPlayerName(id))}
+     </div>`;
 
-  // Render bench chip (neutral gray)
   const benchChip = (id) =>
-    `<div class="px-3 py-3 bg-gray-200 border border-gray-300 rounded-full text-sm font-medium text-gray-700 min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
+    `<div data-player-id="${escapeHTML(id)}"
+          class="px-3 py-3 bg-gray-200 border border-gray-300 rounded-full text-sm font-medium text-gray-700 min-h-[44px] flex items-center justify-center cursor-grab">
+       ${escapeHTML(getPlayerName(id))}
+     </div>`;
 
-  // Court zones
+  // Court zones — data-court for validation, data-zone for SortableJS init
   const courtsHTML = round.courts.map((court, i) => `
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-3 bg-gray-50 flex items-center">
+    <div data-court="${i}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-3 bg-gray-50 flex items-center justify-between">
         <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Court ${i + 1}</span>
+        <span data-court-error class="hidden text-xs font-bold text-red-600">needs 2+ players</span>
       </div>
       <div class="p-4">
         <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-2">
+          <div data-zone="court-${i}-a" class="space-y-2">
             ${court.teamA.map(teamAChip).join('')}
           </div>
-          <div class="space-y-2">
+          <div data-zone="court-${i}-b" class="space-y-2">
             ${court.teamB.map(teamBChip).join('')}
           </div>
         </div>
@@ -74,14 +140,34 @@ export function mount(el, params) {
     </div>
   `).join('');
 
-  // Rest Bench zone
+  // Rest Bench zone — data-zone="bench"; empty-state marker has bench-empty-marker class
+  // so SortableJS filter excludes it from being draggable
   const benchHTML = `
     <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
       <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
-      <div class="flex flex-wrap gap-2">
+      <div data-zone="bench" class="flex flex-wrap gap-2">
         ${round.sittingOut.length > 0
           ? round.sittingOut.map(benchChip).join('')
-          : '<span class="text-sm text-gray-400 italic">--|--</span>'}
+          : '<span class="bench-empty-marker text-sm text-gray-400 italic">--|--</span>'}
+      </div>
+    </div>
+  `;
+
+  // Bottom bar — fixed above nav bar, always visible
+  const bottomBarHTML = `
+    <div class="fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
+                bg-white/90 backdrop-blur-sm border-t border-gray-100">
+      <div class="flex items-center gap-3 p-4">
+        <button id="cancel-btn"
+                class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl
+                       font-bold border border-gray-200">
+          Cancel
+        </button>
+        <button id="confirm-btn"
+                class="flex-1 py-4 bg-blue-600 text-white rounded-xl
+                       font-bold shadow-lg shadow-blue-200">
+          Confirm
+        </button>
       </div>
     </div>
   `;
@@ -97,12 +183,31 @@ export function mount(el, params) {
       </header>
       ${courtsHTML}
       ${benchHTML}
+      ${bottomBarHTML}
     </div>
   `;
 
+  // Initialize module-scope state
+  _el = el;
+  _roundIndex = parseInt(params.roundIndex, 10);
+  _draft = JSON.parse(JSON.stringify(round));
+  _originalRound = JSON.parse(JSON.stringify(round));
+
+  // Wire navigation buttons
   el.querySelector('#back-btn').addEventListener('click', () => {
     navigate('/active');
   });
+
+  // Cancel and Confirm will be fully wired in Plan 02
+  // (initSortables must come after el.innerHTML is set)
+  initSortables(el);
 }
 
-export function unmount() {}
+export function unmount() {
+  _sortableInstances.forEach(s => s.destroy());
+  _sortableInstances = [];
+  _draft = null;
+  _originalRound = null;
+  _roundIndex = null;
+  _el = null;
+}

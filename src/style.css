@@ -41,3 +41,20 @@
 .fixed-safe-bottom {
   bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
+
+/* SortableJS drag states — Phase 13 */
+.sortable-ghost {
+  opacity: 0.4;
+  border: 2px dashed #93C5FD; /* blue-300 */
+}
+
+.sortable-chosen {
+  opacity: 0.9;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.sortable-swap-highlight {
+  background-color: #EFF6FF; /* blue-50 */
+  border: 2px dashed #60A5FA; /* blue-400 */
+}
