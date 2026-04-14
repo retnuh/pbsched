@@ -1,9 +1,9 @@
 ---
 phase: 15
 slug: dark-mode-foundation
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: approved
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-14
 ---
 
@@ -50,8 +50,8 @@ created: 2026-04-14
 
 ## Wave 0 Requirements
 
-- [ ] `src/services/theme.test.js` — stubs for DARK-01, DARK-02, DARK-04 (ThemeService unit tests)
-- [ ] `src/test-setup.js` — add `window.matchMedia` mock (happy-dom does not implement it)
+- [x] `src/services/theme.test.js` — stubs for DARK-01, DARK-02, DARK-04 (ThemeService unit tests)
+- [x] `src/test-setup.js` — add `window.matchMedia` mock (happy-dom does not implement it)
 
 *Note: vitest and happy-dom are already installed. No new packages required.*
 
@@ -68,11 +68,11 @@ created: 2026-04-14
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-04-14

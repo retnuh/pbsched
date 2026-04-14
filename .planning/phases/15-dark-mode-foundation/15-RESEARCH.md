@@ -446,17 +446,19 @@ document.documentElement.classList.toggle('dark', isDark);
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the matchMedia mock be added to the global `test-setup.js` or per-test-file?**
    - What we know: `test-setup.js` currently sets up localStorage globally; adding matchMedia there benefits all test files
    - What's unclear: Whether any existing tests would be disrupted by a global matchMedia mock (currently no existing code uses matchMedia)
    - Recommendation: Add matchMedia mock to `test-setup.js` to keep it consistent with the localStorage mock pattern already there. Risk is minimal since no existing code uses matchMedia.
+   RESOLVED: Mock added globally to src/test-setup.js, matching the localStorage mock pattern already in place.
 
 2. **Does the `@custom-variant` line interact with the existing `@layer base` block?**
    - What we know: Tailwind v4 docs show `@custom-variant` placed after `@import "tailwindcss"` — same location as `@layer base`
    - What's unclear: Whether declaration order matters (before vs after `@layer base`)
    - Recommendation: Place `@custom-variant` immediately after `@import "tailwindcss"` and before `@layer base`, matching the Tailwind docs example. [ASSUMED — documentation example ordering]
+   RESOLVED: @custom-variant dark line placed immediately after @import "tailwindcss" and before the existing @layer base block in style.css.
 
 ---
 
