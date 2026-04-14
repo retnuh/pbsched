@@ -16,9 +16,9 @@ export function mount(el, params) {
 
     if (clubs.length === 0) {
       clubListEl.innerHTML = `
-        <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-200">
-          <p class="text-gray-500">No clubs created yet.</p>
-          <p class="text-sm text-gray-400">Add a club to manage your rosters.</p>
+        <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600">
+          <p class="text-gray-500 dark:text-gray-400">No clubs created yet.</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500">Add a club to manage your rosters.</p>
         </div>
       `;
       return;
@@ -29,14 +29,14 @@ export function mount(el, params) {
       const hasMembers = club.members.length > 0;
 
       return `
-        <div class="bg-white p-4 rounded-xl shadow-sm border ${isCurrent ? 'border-blue-500 bg-blue-50/30' : 'border-gray-100'} ${!hasMembers ? 'ring-2 ring-blue-100 animate-pulse-subtle' : ''} flex justify-between items-center group">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border ${isCurrent ? 'border-blue-500 bg-blue-50/30 dark:border-blue-400 dark:bg-blue-900/20' : 'border-gray-100 dark:border-gray-700'} ${!hasMembers ? 'ring-2 ring-blue-100 animate-pulse-subtle' : ''} flex justify-between items-center group">
           <div class="flex-grow cursor-pointer" data-id="${club.id}" data-action="view-club">
             <div class="flex items-center space-x-2">
-              <h3 class="font-bold text-lg">${club.name}</h3>
+              <h3 class="font-bold text-lg dark:text-gray-100">${club.name}</h3>
               ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Active Today</span>' : ''}
             </div>
             ${hasMembers ? 
-              `<p class="text-sm text-gray-500">${club.members.length} members</p>` :
+              `<p class="text-sm text-gray-500 dark:text-gray-400">${club.members.length} members</p>` :
               `<p class="text-sm text-blue-600 font-bold flex items-center">
                 <span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
                 Tap to add members &rarr;
@@ -49,7 +49,7 @@ export function mount(el, params) {
                 Resume
               </button>
             ` : ''}
-            <button data-id="${club.id}" data-action="delete-club" class="p-2 text-gray-400 hover:text-red-600 transition text-xs font-medium">
+            <button data-id="${club.id}" data-action="delete-club" class="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition text-xs font-medium">
                Delete
             </button>
           </div>
@@ -65,12 +65,12 @@ export function mount(el, params) {
       </header>
       
       <!-- New Club Form -->
-      <form id="new-club-form" class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex space-x-2">
-        <input 
-          id="club-name-input" 
-          type="text" 
-          placeholder="New Club Name" 
-          class="flex-grow bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <form id="new-club-form" class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex space-x-2">
+        <input
+          id="club-name-input"
+          type="text"
+          placeholder="New Club Name"
+          class="flex-grow bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         >
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">

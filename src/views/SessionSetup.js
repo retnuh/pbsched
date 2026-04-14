@@ -29,12 +29,12 @@ export function mount(el, params) {
   function renderAttendance() {
     const attendeesEl = el.querySelector('#attendees-list');
     attendeesEl.innerHTML = sortedMembers.map(member => `
-      <label class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm cursor-pointer select-none">
+      <label class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm cursor-pointer select-none">
         <div class="flex flex-col">
-          <span class="text-lg font-medium">${member.name}</span>
-          ${member.lastPlayed ? 
-            `<span class="text-[10px] text-gray-400 uppercase font-bold">Last: ${new Date(member.lastPlayed).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>` 
-            : '<span class="text-[10px] text-gray-300 uppercase font-bold">Never Played</span>'}
+          <span class="text-lg font-medium dark:text-gray-100">${member.name}</span>
+          ${member.lastPlayed ?
+            `<span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold">Last: ${new Date(member.lastPlayed).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>`
+            : '<span class="text-[10px] text-gray-300 dark:text-gray-500 uppercase font-bold">Never Played</span>'}
         </div>
         <input type="checkbox" value="${member.id}" ${selectedIds.has(member.id) ? 'checked' : ''} 
                class="w-6 h-6 rounded-lg text-blue-600 border-gray-300 focus:ring-blue-500">
@@ -62,14 +62,14 @@ export function mount(el, params) {
       </header>
 
       <div class="flex justify-between items-center text-sm">
-        <p class="text-gray-500">Pick attending players from <strong>${club.name}</strong></p>
-        <button id="toggle-all" class="text-blue-600 font-bold">Invert</button>
+        <p class="text-gray-500 dark:text-gray-400">Pick attending players from <strong>${club.name}</strong></p>
+        <button id="toggle-all" class="text-blue-600 dark:text-blue-400 font-bold">Invert</button>
       </div>
 
       <div id="attendees-list" class="space-y-2 pb-24"></div>
 
       <!-- Sticky Start Button -->
-      <div class="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto">
+      <div class="fixed bottom-16 left-0 right-0 p-4 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 max-w-lg mx-auto">
         <button id="start-btn" class="w-full py-4 rounded-xl text-white font-bold shadow-lg transition transform active:scale-95 disabled:active:scale-100">
           Start Session
         </button>
