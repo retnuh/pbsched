@@ -107,7 +107,7 @@ export function mount(el, params) {
           }).join('')}
         </div>
 
-        <div class="fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
+        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
           <button id="save-attendees" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
             Update Practice List
           </button>
@@ -239,7 +239,7 @@ export function mount(el, params) {
 
         <div id="sitter-list" class="space-y-2"></div>
 
-        <div class="fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
+        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
           <button id="confirm-sitters" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
             Regenerate Round
           </button>
@@ -412,7 +412,7 @@ export function mount(el, params) {
         <div id="rounds-list" class="space-y-4 pb-48"></div>
 
         <!-- Sticky Bottom Controls -->
-        <div class="fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
+        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
           ${oddCount > 1 ? `
             <!-- Strategy Quick Toggle -->
             <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm mb-4">

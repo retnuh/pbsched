@@ -37,9 +37,26 @@
   animation: pulseSubtle 2s infinite ease-in-out;
 }
 
-/* Ensure sticky buttons aren't hidden by browser chrome */
+/* Ensure sticky buttons aren't hidden by browser chrome (nav bar = h-20 = 5rem) */
 .fixed-safe-bottom {
-  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Zone-based chip colors — color follows position, not original team assignment */
+[data-zone$="-a"] [data-player-id] {
+  background-color: #EFF6FF; /* blue-50 */
+  border-color: #BFDBFE;     /* blue-200 */
+  color: #1E40AF;            /* blue-800 */
+}
+[data-zone$="-b"] [data-player-id] {
+  background-color: #FFF7ED; /* orange-50 */
+  border-color: #FED7AA;     /* orange-200 */
+  color: #9A3412;            /* orange-800 */
+}
+[data-zone="bench"] [data-player-id] {
+  background-color: #E5E7EB; /* gray-200 */
+  border-color: #D1D5DB;     /* gray-300 */
+  color: #374151;            /* gray-700 */
 }
 
 /* SortableJS drag states — Phase 13 */

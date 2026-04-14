@@ -79,6 +79,12 @@ function handleConfirm() {
 function handleDragEnd() {
   reconcileDraftFromDOM(_el);
   validateAndUpdateUI(_el);
+  // Remove the empty-bench marker once a chip lands there
+  const benchZone = _el.querySelector('[data-zone="bench"]');
+  const marker = benchZone?.querySelector('.bench-empty-marker');
+  if (marker && benchZone.querySelectorAll('[data-player-id]').length > 0) {
+    marker.remove();
+  }
 }
 
 function initSortables(el) {
@@ -141,22 +147,11 @@ export function mount(el, params) {
 
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
-  // Chip helpers — include data-player-id for SortableJS reconciliation and cursor-grab
-  const teamAChip = (id) =>
+  // Chip helper — color is driven by CSS zone selectors ([data-zone$="-a/b"], [data-zone="bench"])
+  // so chips always reflect their current position, not their original team assignment
+  const playerChip = (id) =>
     `<div data-player-id="${escapeHTML(id)}"
-          class="px-3 py-3 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800 text-center min-h-[44px] flex items-center justify-center cursor-grab">
-       ${escapeHTML(getPlayerName(id))}
-     </div>`;
-
-  const teamBChip = (id) =>
-    `<div data-player-id="${escapeHTML(id)}"
-          class="px-3 py-3 bg-orange-50 border border-orange-200 rounded-full text-sm font-medium text-orange-800 text-center min-h-[44px] flex items-center justify-center cursor-grab">
-       ${escapeHTML(getPlayerName(id))}
-     </div>`;
-
-  const benchChip = (id) =>
-    `<div data-player-id="${escapeHTML(id)}"
-          class="px-3 py-3 bg-gray-200 border border-gray-300 rounded-full text-sm font-medium text-gray-700 min-h-[44px] flex items-center justify-center cursor-grab">
+          class="px-3 py-3 border rounded-full text-sm font-medium text-center min-h-[44px] flex items-center justify-center cursor-grab">
        ${escapeHTML(getPlayerName(id))}
      </div>`;
 
@@ -168,12 +163,12 @@ export function mount(el, params) {
         <span data-court-error class="hidden text-xs font-bold text-red-600">needs 2+ players</span>
       </div>
       <div class="p-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div data-zone="court-${i}-a" class="space-y-2">
-            ${court.teamA.map(teamAChip).join('')}
+        <div class="grid grid-cols-2">
+          <div data-zone="court-${i}-a" class="space-y-2 pr-3">
+            ${court.teamA.map(playerChip).join('')}
           </div>
-          <div data-zone="court-${i}-b" class="space-y-2">
-            ${court.teamB.map(teamBChip).join('')}
+          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200">
+            ${court.teamB.map(playerChip).join('')}
           </div>
         </div>
       </div>
@@ -185,9 +180,9 @@ export function mount(el, params) {
   const benchHTML = `
     <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
       <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
-      <div data-zone="bench" class="flex flex-wrap gap-2">
+      <div data-zone="bench" class="flex flex-wrap gap-2 min-h-[52px]">
         ${round.sittingOut.length > 0
-          ? round.sittingOut.map(benchChip).join('')
+          ? round.sittingOut.map(playerChip).join('')
           : '<span class="bench-empty-marker text-sm text-gray-400 italic">--|--</span>'}
       </div>
     </div>
@@ -195,7 +190,7 @@ export function mount(el, params) {
 
   // Bottom bar — fixed above nav bar, always visible
   const bottomBarHTML = `
-    <div class="fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
+    <div class="fixed fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
                 bg-white/90 backdrop-blur-sm border-t border-gray-100">
       <div class="flex items-center gap-3 p-4">
         <button id="cancel-btn"
