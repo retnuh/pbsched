@@ -16,6 +16,12 @@ export function buildPairHistory(playedRounds) {
     partnerStreak: {}, // { playerA: { playerB: streak } }
     opponentStreak: {}, // { playerA: { playerB: streak } }
     sitOutStreak: {}, // { player: streak }
+    singlesCount: {}, // { player: count }
+    singlesStreak: {}, // { player: streak }
+    threeWaySoloCount: {}, // { player: count }
+    threeWaySoloStreak: {}, // { player: streak }
+    threeWayPairCount: {}, // { player: count }
+    threeWayPairStreak: {}, // { player: streak }
   };
 
   const increment = (obj, p1, p2) => {
@@ -41,6 +47,23 @@ export function buildPairHistory(playedRounds) {
       teamA.forEach((a) => teamB.forEach((b) => {
         increment(history.opponentCount, a, b);
       }));
+
+      const isSingles = teamA.length === 1 && teamB.length === 1;
+      const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
+
+      if (isSingles) {
+        [teamA[0], teamB[0]].forEach(p => {
+          history.singlesCount[p] = (history.singlesCount[p] || 0) + 1;
+        });
+      }
+      if (isThreeWay) {
+        const soloSide = teamA.length === 1 ? teamA : teamB;
+        const pairSide = teamA.length === 2 ? teamA : teamB;
+        history.threeWaySoloCount[soloSide[0]] = (history.threeWaySoloCount[soloSide[0]] || 0) + 1;
+        pairSide.forEach(p => {
+          history.threeWayPairCount[p] = (history.threeWayPairCount[p] || 0) + 1;
+        });
+      }
     });
   });
 
@@ -63,6 +86,9 @@ export function buildPairHistory(playedRounds) {
     history.sitOutStreak[p] = 0;
     history.partnerStreak[p] = {};
     history.opponentStreak[p] = {};
+    history.singlesStreak[p] = 0;
+    history.threeWaySoloStreak[p] = 0;
+    history.threeWayPairStreak[p] = 0;
   });
 
   // Helper to check relationship in a round
@@ -89,6 +115,39 @@ export function buildPairHistory(playedRounds) {
       // Sit out streak
       if (history.sitOutStreak[p] === (playedRounds.length - 1 - i)) {
         if (round.sittingOut.includes(p)) history.sitOutStreak[p]++;
+      }
+
+      const expectedStreak = playedRounds.length - 1 - i;
+
+      // singles streak
+      const inSingles = round.courts.some(c =>
+        c.teamA.length === 1 && c.teamB.length === 1 &&
+        (c.teamA.includes(p) || c.teamB.includes(p))
+      );
+      if (history.singlesStreak[p] === expectedStreak && inSingles) {
+        history.singlesStreak[p]++;
+      }
+
+      // 3-way solo streak
+      const inThreeWaySolo = round.courts.some(c => {
+        const isThreeWay = c.teamA.length + c.teamB.length === 3 && !(c.teamA.length === 1 && c.teamB.length === 1);
+        if (!isThreeWay) return false;
+        const soloSide = c.teamA.length === 1 ? c.teamA : c.teamB;
+        return soloSide.includes(p);
+      });
+      if (history.threeWaySoloStreak[p] === expectedStreak && inThreeWaySolo) {
+        history.threeWaySoloStreak[p]++;
+      }
+
+      // 3-way pair streak
+      const inThreeWayPair = round.courts.some(c => {
+        const isThreeWay = c.teamA.length + c.teamB.length === 3 && !(c.teamA.length === 1 && c.teamB.length === 1);
+        if (!isThreeWay) return false;
+        const pairSide = c.teamA.length === 2 ? c.teamA : c.teamB;
+        return pairSide.includes(p);
+      });
+      if (history.threeWayPairStreak[p] === expectedStreak && inThreeWayPair) {
+        history.threeWayPairStreak[p]++;
       }
 
       for (let j = idx + 1; j < playerList.length; j++) {

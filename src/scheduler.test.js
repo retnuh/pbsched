@@ -5,6 +5,9 @@ const MOCK_SETTINGS = {
   penaltyRepeatedPartner: 5,
   penaltyRepeatedOpponent: 10,
   penaltyRepeatedSitOut: 3,
+  penaltySingles: 15,
+  penaltyThreeWaySolo: 20,
+  penaltyThreeWayPair: 15,
   candidateCount: 100,
   oddPlayerFallback: 'sit-out',
 };
@@ -179,13 +182,118 @@ describe('Scheduler Logic', () => {
     }
 
     const history = buildPairHistory(played);
-    
+
     // p1 should not have p2 as partner in all 5 rounds
-    // Total partnership opportunities for p1 is 5 rounds. 
+    // Total partnership opportunities for p1 is 5 rounds.
     // If it were random, they'd partner ~1.4 times (5 * 1/7).
     // If variety optimization works, it should be 1 or 2 max.
     Object.values(history.partnerCount['p1'] || {}).forEach(count => {
-      expect(count).toBeLessThan(3); 
+      expect(count).toBeLessThan(3);
+    });
+  });
+
+  describe('short-sided history tracking', () => {
+    test('buildPairHistory tracks singlesCount for 1v1 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesCount['p1']).toBe(1);
+      expect(history.singlesCount['p2']).toBe(1);
+    });
+
+    test('buildPairHistory tracks threeWaySoloCount and threeWayPairCount for 2v1 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWaySoloCount['p3']).toBe(1);
+      expect(history.threeWayPairCount['p1']).toBe(1);
+      expect(history.threeWayPairCount['p2']).toBe(1);
+    });
+
+    test('buildPairHistory tracks singlesStreak for two consecutive singles rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesStreak['p1']).toBe(2);
+      expect(history.singlesStreak['p2']).toBe(2);
+    });
+
+    test('buildPairHistory tracks threeWaySoloStreak for two consecutive solo rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWaySoloStreak['p3']).toBe(2);
+    });
+
+    test('buildPairHistory tracks threeWayPairStreak for two consecutive pair rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWayPairStreak['p1']).toBe(2);
+      expect(history.threeWayPairStreak['p2']).toBe(2);
+    });
+
+    test('buildPairHistory does NOT increment short-sided counts for standard 2v2 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesCount['p1']).toBeUndefined();
+      expect(history.threeWaySoloCount['p1']).toBeUndefined();
+      expect(history.threeWayPairCount['p1']).toBeUndefined();
     });
   });
 });
