@@ -29,7 +29,7 @@ vi.mock('sortablejs', () => ({
 
 // Import mocked navigate for assertions
 import { navigate } from '../router.js'
-import { mount } from './MatchEditor.js'
+import { mount, unmount } from './MatchEditor.js'
 import { mount as mountRoundDisplay } from './RoundDisplay.js'
 
 function makeSession(rounds = []) {
@@ -433,6 +433,155 @@ describe('Phase 13: Drag interactions', () => {
       el.querySelector('#discard-keep-btn').click()
       expect(navigate).not.toHaveBeenCalled()
       expect(el.querySelector('#discard-modal').classList.contains('hidden')).toBe(true)
+    })
+  })
+
+  describe('DRAG-FLOW: Full drag flow — draft updates after onEnd', () => {
+    test('court→bench: player leaves court and appears in sittingOut in saved draft', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      setupEditor(makeRoundWithBench()) // p1+p2 vs p3+p4
+      // Move p4 from court-0-b to bench
+      const p4Chip = el.querySelector('[data-player-id="p4"]')
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      benchZone.appendChild(p4Chip)
+      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      // court-0-b now has [p3] only — total=3, valid
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(0, expect.objectContaining({
+        sittingOut: ['p4'],
+        courts: [expect.objectContaining({ teamB: ['p3'] })],
+      }))
+    })
+
+    test('bench→court: player leaves bench and appears in court zone in saved draft', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
+      // Move p4 from bench to court-0-b (which has 1 player — allowed)
+      const p4Chip = el.querySelector('[data-player-id="p4"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      zoneB.appendChild(p4Chip)
+      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(0, expect.objectContaining({
+        sittingOut: [],
+        courts: [expect.objectContaining({ teamB: ['p3', 'p4'] })],
+      }))
+    })
+
+    test('court→court: player moves between sides and draft reflects new positions', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      // Move p1 from zone-a to zone-b: result is teamA=[p2], teamB=[p1]
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      zoneB.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(0, expect.objectContaining({
+        courts: [expect.objectContaining({ teamA: ['p2'], teamB: ['p1'] })],
+      }))
+    })
+  })
+
+  describe('DRAG-06: Confirm guard — updateRound never called when invalid', () => {
+    test('does not call updateRound when court has exactly 1 player', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: [] }], sittingOut: ['p2', 'p3', 'p4'] }
+      setupEditor(round)
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).not.toHaveBeenCalled()
+    })
+
+    test('does not call updateRound when a court side is oversized (>2)', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2', 'p3'], teamB: ['p4'] }], sittingOut: [] }
+      setupEditor(round)
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('RENDER: Layout, zones, and round display', () => {
+    test('header shows correct round number (1-based from round.index)', () => {
+      setupEditor(makeRoundWithBench()) // round.index = 0
+      expect(el.innerHTML).toContain('Edit Round 1')
+    })
+
+    test('players are rendered inside their correct court zones', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      expect(zoneA.querySelector('[data-player-id="p1"]')).not.toBeNull()
+      expect(zoneA.querySelector('[data-player-id="p2"]')).not.toBeNull()
+      expect(zoneB.querySelector('[data-player-id="p3"]')).not.toBeNull()
+      expect(zoneB.querySelector('[data-player-id="p4"]')).not.toBeNull()
+    })
+
+    test('round with 2 courts renders Court 1 and Court 2 with correct data-court attributes', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      expect(el.innerHTML).toContain('Court 1')
+      expect(el.innerHTML).toContain('Court 2')
+      expect(el.querySelector('[data-court="0"]')).not.toBeNull()
+      expect(el.querySelector('[data-court="1"]')).not.toBeNull()
+    })
+
+    test('Sortable is initialised for every zone (2 court zones + bench per court, plus bench)', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      // 2 courts × 2 sides + 1 bench = 5 zones
+      expect(mockSortable.instances.length).toBe(5)
+    })
+
+    test('discard modal is hidden on initial mount', () => {
+      setupEditor(makeRoundWithBench())
+      expect(el.querySelector('#discard-modal').classList.contains('hidden')).toBe(true)
+    })
+  })
+
+  describe('SORTABLE-CONFIG: SortableJS is configured correctly', () => {
+    test('instances use correct group, delay, ghostClass, and emptyInsertThreshold', () => {
+      setupEditor(makeRoundWithBench())
+      const opts = mockSortable.instances[0].options
+      expect(opts.group).toBe('players')
+      expect(opts.delay).toBe(150)
+      expect(opts.delayOnTouchOnly).toBe(true)
+      expect(opts.ghostClass).toBe('sortable-ghost')
+      expect(opts.emptyInsertThreshold).toBe(20)
+    })
+
+    test('filter excludes bench-empty-marker but NOT empty-slot (removed to prevent ghost expansion)', () => {
+      setupEditor(makeRoundWithBench())
+      const filter = mockSortable.instances[0].options.filter
+      expect(filter).toContain('bench-empty-marker')
+      expect(filter).not.toContain('empty-slot')
+    })
+  })
+
+  describe('UNMOUNT: cleanup on navigation away', () => {
+    test('unmount() calls destroy() on every Sortable instance', () => {
+      setupEditor(makeRoundWithBench())
+      const destroySpies = mockSortable.instances.map(inst => vi.spyOn(inst, 'destroy'))
+      unmount()
+      destroySpies.forEach(spy => expect(spy).toHaveBeenCalledOnce())
     })
   })
 

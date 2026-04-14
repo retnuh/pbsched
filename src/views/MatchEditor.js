@@ -225,7 +225,7 @@ export function mount(el, params) {
   `;
 
   const discardModalHTML = `
-    <div id="discard-modal" class="hidden fixed inset-0 z-50 flex items-end justify-center">
+    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center">
       <div class="absolute inset-0 bg-black/40"></div>
       <div class="relative bg-white rounded-t-2xl p-6 w-full max-w-lg space-y-4">
         <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
