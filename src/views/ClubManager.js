@@ -80,9 +80,36 @@ export function mount(el, params) {
 
       <div id="club-list" class="space-y-3"></div>
     </div>
+
+    <!-- Delete club confirmation modal -->
+    <div id="delete-club-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+      <div id="delete-club-backdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Delete club?</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">All members and session history for this club will be permanently deleted.</p>
+        <div class="flex gap-3 pt-2">
+          <button id="delete-club-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
+          <button id="delete-club-confirm" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">Delete</button>
+        </div>
+      </div>
+    </div>
   `;
 
   renderClubs();
+
+  let pendingDeleteClubId = null;
+  const deleteModal = el.querySelector('#delete-club-modal');
+  const showDeleteModal = (id) => { pendingDeleteClubId = id; deleteModal.classList.remove('hidden'); };
+  const hideDeleteModal = () => { pendingDeleteClubId = null; deleteModal.classList.add('hidden'); };
+  el.querySelector('#delete-club-backdrop').addEventListener('click', hideDeleteModal);
+  el.querySelector('#delete-club-cancel').addEventListener('click', hideDeleteModal);
+  el.querySelector('#delete-club-confirm').addEventListener('click', () => {
+    if (!pendingDeleteClubId) return;
+    Haptics.error();
+    ClubService.deleteClub(pendingDeleteClubId);
+    hideDeleteModal();
+    renderClubs();
+  });
 
   // Event Listeners
   const form = el.querySelector('#new-club-form');
@@ -113,11 +140,7 @@ export function mount(el, params) {
       Haptics.success();
       navigate('/active');
     } else if (action === 'delete-club') {
-      if (confirm('Are you sure you want to delete this club and all its data?')) {
-        Haptics.error();
-        ClubService.deleteClub(id);
-        renderClubs();
-      }
+      showDeleteModal(id);
     }
   });
 }

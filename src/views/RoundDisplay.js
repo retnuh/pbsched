@@ -265,7 +265,30 @@ export function mount(el, params) {
 
         <div id="rounds-list" class="space-y-4 pb-8"></div>
       </div>
+
+      <!-- End session confirmation modal -->
+      <div id="end-session-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+        <div id="end-session-backdrop" class="absolute inset-0 bg-black/40"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">End session?</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400">You can always review past sessions in history later.</p>
+          <div class="flex gap-3 pt-2">
+            <button id="end-session-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
+            <button id="end-session-confirm" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">End Session</button>
+          </div>
+        </div>
+      </div>
     `;
+
+    const endModal = el.querySelector('#end-session-modal');
+    const hideEndModal = () => endModal.classList.add('hidden');
+    el.querySelector('#end-session-backdrop').addEventListener('click', hideEndModal);
+    el.querySelector('#end-session-cancel').addEventListener('click', hideEndModal);
+    el.querySelector('#end-session-confirm').addEventListener('click', () => {
+      SessionService.closeActiveSession();
+      Haptics.medium();
+      navigate('/');
+    });
 
     const rounds = [...session.rounds].reverse(); // Show newest first
     const listEl = el.querySelector('#rounds-list');
@@ -360,11 +383,7 @@ export function mount(el, params) {
     });
 
     el.querySelector('#close-session').addEventListener('click', () => {
-      if (confirm('End this session? You can always review past sessions in history later.')) {
-        SessionService.closeActiveSession();
-        Haptics.medium();
-        navigate('/');
-      }
+      endModal.classList.remove('hidden');
     });
 
     listEl.addEventListener('click', (e) => {

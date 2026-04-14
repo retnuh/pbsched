@@ -138,9 +138,44 @@ export function mount(el, params) {
         </div>
       </div>
     </div>
+
+    <!-- Settings confirmation modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+      <div id="settings-modal-backdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+        <h2 id="settings-modal-title" class="text-lg font-bold text-gray-900 dark:text-gray-100"></h2>
+        <p id="settings-modal-body" class="text-sm text-gray-500 dark:text-gray-400"></p>
+        <div class="flex gap-3 pt-2">
+          <button id="settings-modal-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
+          <button id="settings-modal-confirm" class="flex-1 py-3 rounded-xl font-bold text-sm text-white">Confirm</button>
+        </div>
+      </div>
+    </div>
   `;
 
   // --- Theme Toggle ---
+
+  // ── Settings confirmation modal ───────────────────────────────────────────
+  let pendingSettingsAction = null;
+  const settingsModal = el.querySelector('#settings-modal');
+  const settingsModalTitle = el.querySelector('#settings-modal-title');
+  const settingsModalBody = el.querySelector('#settings-modal-body');
+  const settingsModalConfirm = el.querySelector('#settings-modal-confirm');
+  const hideSettingsModal = () => { pendingSettingsAction = null; settingsModal.classList.add('hidden'); };
+  const showSettingsModal = (title, body, destructive, onConfirm) => {
+    settingsModalTitle.textContent = title;
+    settingsModalBody.textContent = body;
+    settingsModalConfirm.className = `flex-1 py-3 rounded-xl font-bold text-sm text-white ${destructive ? 'bg-red-600' : 'bg-blue-600'}`;
+    pendingSettingsAction = onConfirm;
+    settingsModal.classList.remove('hidden');
+  };
+  el.querySelector('#settings-modal-backdrop').addEventListener('click', hideSettingsModal);
+  el.querySelector('#settings-modal-cancel').addEventListener('click', hideSettingsModal);
+  settingsModalConfirm.addEventListener('click', () => {
+    if (pendingSettingsAction) pendingSettingsAction();
+    hideSettingsModal();
+  });
+  // ─────────────────────────────────────────────────────────────────────────
 
   el.querySelector('#theme-toggle').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-mode]');
@@ -229,12 +264,17 @@ export function mount(el, params) {
   });
 
   el.querySelector('#reset-data').addEventListener('click', () => {
-    if (confirm('Are you absolutely sure? This will delete all your clubs and sessions. This cannot be undone.')) {
-      Haptics.error();
-      StorageAdapter.reset();
-      window.location.hash = '#/';
-      window.location.reload();
-    }
+    showSettingsModal(
+      'Delete all data?',
+      'This will permanently delete all your clubs and sessions. This cannot be undone.',
+      true,
+      () => {
+        Haptics.error();
+        StorageAdapter.reset();
+        window.location.hash = '#/';
+        window.location.reload();
+      }
+    );
   });
 
   // Export / Share
@@ -294,12 +334,12 @@ export function mount(el, params) {
       reader.onload = (event) => {
         try {
           const json = JSON.parse(event.target.result);
-          if (confirm('Importing will overwrite your current data. Continue?')) {
-            StorageAdapter.importData(json);
-            Haptics.success();
-            window.location.hash = '#/';
-            window.location.reload();
-          }
+          showSettingsModal(
+            'Overwrite your data?',
+            'Importing will replace all current clubs and sessions with the backup file.',
+            false,
+            () => { StorageAdapter.importData(json); Haptics.success(); window.location.hash = '#/'; window.location.reload(); }
+          );
         } catch (err) {
           Haptics.error();
           alert('Failed to parse backup file. Is it a valid JSON?');
@@ -316,12 +356,12 @@ export function mount(el, params) {
 
     try {
       const json = JSON.parse(raw);
-      if (confirm('Importing will overwrite your current data. Continue?')) {
-        StorageAdapter.importData(json);
-        Haptics.success();
-        window.location.hash = '#/';
-        window.location.reload();
-      }
+      showSettingsModal(
+        'Overwrite your data?',
+        'Importing will replace all current clubs and sessions with the pasted data.',
+        false,
+        () => { StorageAdapter.importData(json); Haptics.success(); window.location.hash = '#/'; window.location.reload(); }
+      );
     } catch (err) {
       Haptics.error();
       alert('Invalid data. Please make sure you pasted the entire JSON string.');

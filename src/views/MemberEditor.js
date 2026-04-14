@@ -120,12 +120,47 @@ export function mount(el, params) {
         <div id="member-list" class="space-y-2"></div>
       </div>
     </div>
+
+    <!-- Remove member confirmation modal -->
+    <div id="remove-member-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+      <div id="remove-member-backdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Remove member?</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">They'll be removed from the roster. This can't be undone.</p>
+        <div class="flex gap-3 pt-2">
+          <button id="remove-member-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
+          <button id="remove-member-confirm" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">Remove</button>
+        </div>
+      </div>
+    </div>
   `;
 
   // Set club name via textContent to prevent XSS (T-08-02)
   el.querySelector('#club-name-heading').textContent = club.name;
 
   renderMembers();
+
+  // ── Remove member modal ───────────────────────────────────────────────────
+  let pendingRemoveMemberId = null;
+  const removeModal = el.querySelector('#remove-member-modal');
+  const showRemoveModal = (memberId) => {
+    pendingRemoveMemberId = memberId;
+    removeModal.classList.remove('hidden');
+  };
+  const hideRemoveModal = () => {
+    pendingRemoveMemberId = null;
+    removeModal.classList.add('hidden');
+  };
+  el.querySelector('#remove-member-backdrop').addEventListener('click', hideRemoveModal);
+  el.querySelector('#remove-member-cancel').addEventListener('click', hideRemoveModal);
+  el.querySelector('#remove-member-confirm').addEventListener('click', () => {
+    if (!pendingRemoveMemberId) return;
+    ClubService.removeMember(clubId, pendingRemoveMemberId);
+    Haptics.medium();
+    hideRemoveModal();
+    renderMembers();
+  });
+  // ─────────────────────────────────────────────────────────────────────────
 
   // ── Inline club name editing ──────────────────────────────────────────────
   const nameDisplay  = el.querySelector('#club-name-display');
@@ -244,11 +279,7 @@ export function mount(el, params) {
     const memberId = target.getAttribute('data-id');
 
     if (action === 'remove-member') {
-      if (confirm('Remove this member from the roster?')) {
-        ClubService.removeMember(clubId, memberId);
-        Haptics.medium();
-        renderMembers();
-      }
+      showRemoveModal(memberId);
     } else if (action === 'rename-member') {
       const member = ClubService.getClub(clubId).members.find(m => m.id === memberId);
       if (!member) return;
