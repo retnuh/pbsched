@@ -44,6 +44,41 @@ export function mount(el, params) {
               <p class="text-[10px] text-gray-400">Higher = forces everyone to sit out equally.</p>
             </div>
 
+            <p class="text-xs font-bold text-gray-600 uppercase tracking-wide mt-2">Short-Sided Matches</p>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm font-bold">
+                <label>Singles Match</label>
+                <span id="val-singles" class="text-blue-600">${settings.penaltySingles || 15}</span>
+              </div>
+              <input type="range" id="weight-singles" min="1" max="50"
+                value="${settings.penaltySingles || 15}"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">Higher = avoids scheduling repeated 1v1 singles matches.</p>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm font-bold">
+                <label>3-Way Solo</label>
+                <span id="val-threeway-solo" class="text-blue-600">${settings.penaltyThreeWaySolo || 20}</span>
+              </div>
+              <input type="range" id="weight-threeway-solo" min="1" max="50"
+                value="${settings.penaltyThreeWaySolo || 20}"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">Higher = avoids putting the same player alone on the short side of a 3-player court.</p>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm font-bold">
+                <label>3-Way Pair</label>
+                <span id="val-threeway-pair" class="text-blue-600">${settings.penaltyThreeWayPair || 15}</span>
+              </div>
+              <input type="range" id="weight-threeway-pair" min="1" max="50"
+                value="${settings.penaltyThreeWayPair || 15}"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">Higher = avoids repeating the same players on the pair side of a 3-player court.</p>
+            </div>
+
             <button id="reset-weights" class="text-xs font-bold text-blue-600 hover:underline">Reset to Defaults</button>
           </div>
         </div>
@@ -97,15 +132,29 @@ export function mount(el, params) {
   const opponentVal = el.querySelector('#val-opponent');
   const sitoutVal = el.querySelector('#val-sitout');
 
+  const singlesInput = el.querySelector('#weight-singles');
+  const threeWaySoloInput = el.querySelector('#weight-threeway-solo');
+  const threeWayPairInput = el.querySelector('#weight-threeway-pair');
+
+  const singlesVal = el.querySelector('#val-singles');
+  const threeWaySoloVal = el.querySelector('#val-threeway-solo');
+  const threeWayPairVal = el.querySelector('#val-threeway-pair');
+
   function updateWeights() {
     settings.penaltyRepeatedPartner = parseInt(partnerInput.value);
     settings.penaltyRepeatedOpponent = parseInt(opponentInput.value);
     settings.penaltyRepeatedSitOut = parseInt(sitoutInput.value);
-    
+    settings.penaltySingles = parseInt(singlesInput.value);
+    settings.penaltyThreeWaySolo = parseInt(threeWaySoloInput.value);
+    settings.penaltyThreeWayPair = parseInt(threeWayPairInput.value);
+
     partnerVal.innerText = partnerInput.value;
     opponentVal.innerText = opponentInput.value;
     sitoutVal.innerText = sitoutInput.value;
-    
+    singlesVal.innerText = singlesInput.value;
+    threeWaySoloVal.innerText = threeWaySoloInput.value;
+    threeWayPairVal.innerText = threeWayPairInput.value;
+
     StorageAdapter.set('settings', settings);
   }
 
@@ -121,11 +170,26 @@ export function mount(el, params) {
     updateWeights();
     Haptics.light();
   });
+  singlesInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
+  threeWaySoloInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
+  threeWayPairInput.addEventListener('input', () => {
+    updateWeights();
+    Haptics.light();
+  });
 
   el.querySelector('#reset-weights').addEventListener('click', () => {
     partnerInput.value = 5;
     opponentInput.value = 10;
     sitoutInput.value = 3;
+    singlesInput.value = 15;
+    threeWaySoloInput.value = 20;
+    threeWayPairInput.value = 15;
     Haptics.medium();
     updateWeights();
   });
