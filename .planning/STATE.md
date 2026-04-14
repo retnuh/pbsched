@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
+milestone: "7"
 milestone_name: next
 status: planning
 last_updated: "2026-04-14T09:30:00.000Z"
-last_activity: 2026-04-14 — v1.0 milestone archived
+last_activity: 2026-04-14 — Milestone 6 archived
 progress:
   total_phases: 0
   completed_phases: 0
@@ -17,11 +17,11 @@ progress:
 
 ## Current Position
 
-Milestone v1.0 (UX Polish & Scheduler Improvements) — **COMPLETE**
+Milestone 6 (UX Polish & Scheduler Improvements) — **COMPLETE**
 Archived: .planning/milestones/v1.0-ROADMAP.md
 
 Status: Planning next milestone
-Last activity: 2026-04-14 — v1.0 milestone archived
+Last activity: 2026-04-14 — Milestone 6 archived
 
 ## Project Reference
 

@@ -1,6 +1,6 @@
 # Milestones
 
-## v1.0 UX Polish & Scheduler Improvements (Shipped: 2026-04-14)
+## Milestone 6: UX Polish & Scheduler Improvements (Shipped: 2026-04-14)
 
 **Phases completed:** 3 phases, 4 plans, 5 tasks
 
