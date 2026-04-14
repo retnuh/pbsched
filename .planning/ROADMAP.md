@@ -23,7 +23,7 @@
 - [x] **Phase 11: Service Layer & Data Model** — Add `SessionService.updateRound` and the `source: 'edited'` field; wire history invalidation so edited played rounds regenerate subsequent unplayed rounds (completed 2026-04-14)
 - [x] **Phase 12: Editor Scaffold & Entry Points** — New `MatchEditor` view + `#/edit/:roundIndex` route; static court layout renders current lineup; entry points from proposed and most recently played rounds (completed 2026-04-14)
 - [x] **Phase 13: Drag Interactions & Validation** — SortableJS drag-and-drop (touch-native); player swap, bench drag-in/out, confirm/cancel; save blocked when validation fails (completed 2026-04-14)
-- [ ] **Phase 14: Court Management & Polish** — Add/remove courts in editor; empty-court pruning on save; sit-out count badges on bench chips; haptic feedback on successful drop
+- [x] **Phase 14: Court Management & Polish** — Add/remove courts in editor; empty-court pruning on save; sit-out count badges on bench chips; haptic feedback on successful drop (completed 2026-04-14)
 
 ## Phase Details
 
@@ -86,7 +86,7 @@ Plans:
 
 Plans:
 - [x] 14-01-PLAN.md — All MatchEditor.js implementation: add/remove courts, pruning, bench badges, haptics, toast (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
-- [ ] 14-02-PLAN.md — Phase 14 test suite + human verify checkpoint (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
+- [x] 14-02-PLAN.md — Phase 14 test suite + human verify checkpoint (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
 
 ## Backlog
 
@@ -94,7 +94,7 @@ Plans:
 
 **Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
 **Requirements:** TBD
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
@@ -109,4 +109,4 @@ Plans:
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete   | 2026-04-14 |
-| 14. Court Management & Polish | Milestone 7 | 1/2 | In Progress|  |
+| 14. Court Management & Polish | Milestone 7 | 2/2 | Complete   | 2026-04-14 |
