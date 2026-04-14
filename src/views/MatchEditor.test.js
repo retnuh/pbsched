@@ -1,5 +1,6 @@
 import { expect, test, describe, beforeEach, vi } from 'vitest'
 import { StorageAdapter } from '../storage.js'
+import { SessionService } from '../services/session.js'
 
 // Mock navigate so tests do not trigger actual hash routing
 vi.mock('../router.js', () => ({
@@ -258,6 +259,63 @@ describe('Phase 13: Drag interactions', () => {
       setupEditor(makeRoundWithBench())
       expect(el.querySelector('#confirm-btn')).not.toBeNull()
       expect(el.querySelector('#cancel-btn')).not.toBeNull()
+    })
+  })
+
+  describe('VALID-01 + VALID-02: Validation state', () => {
+    test('confirm button is enabled when all courts have 2+ players', () => {
+      setupEditor(makeRoundWithBench())
+      const confirmBtn = el.querySelector('#confirm-btn')
+      expect(confirmBtn.disabled).toBe(false)
+      expect(confirmBtn.className).toContain('bg-blue-600')
+    })
+
+    test('confirm button is disabled when a court has exactly 1 player', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: [] }], sittingOut: ['p2', 'p3', 'p4'] }
+      setupEditor(round)
+      const confirmBtn = el.querySelector('#confirm-btn')
+      expect(confirmBtn.disabled).toBe(true)
+      expect(confirmBtn.className).toContain('bg-gray-300')
+    })
+
+    test('invalid court card has border-red-400 class', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: [] }], sittingOut: ['p2', 'p3', 'p4'] }
+      setupEditor(round)
+      const courtCard = el.querySelector('[data-court="0"]')
+      expect(courtCard.className).toContain('border-red-400')
+    })
+
+    test('invalid court shows error label (not hidden)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: [] }], sittingOut: ['p2', 'p3', 'p4'] }
+      setupEditor(round)
+      const errorLabel = el.querySelector('[data-court-error]')
+      expect(errorLabel.className).not.toContain('hidden')
+      expect(errorLabel.textContent.trim()).toBe('needs 2+ players')
+    })
+
+    test('valid court (0 players) has border-gray-200 and error hidden', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: [] }], sittingOut: ['p1', 'p2', 'p3', 'p4'] }
+      setupEditor(round)
+      const courtCard = el.querySelector('[data-court="0"]')
+      expect(courtCard.className).toContain('border-gray-200')
+      const errorLabel = el.querySelector('[data-court-error]')
+      expect(errorLabel.className).toContain('hidden')
+    })
+  })
+
+  describe('DRAG-05: Confirm and Cancel wiring', () => {
+    test('clicking Confirm (when valid) calls SessionService.updateRound and navigate(/active)', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      setupEditor(makeRoundWithBench())
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(0, expect.any(Object))
+      expect(navigate).toHaveBeenCalledWith('/active')
+    })
+
+    test('clicking Cancel with no changes navigates directly to /active', () => {
+      setupEditor(makeRoundWithBench())
+      el.querySelector('#cancel-btn').click()
+      expect(navigate).toHaveBeenCalledWith('/active')
     })
   })
 })
