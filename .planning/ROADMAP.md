@@ -49,8 +49,10 @@ Plans:
   2. Tapping "Edit" on the most recently played round opens the match editor pre-populated with that round's lineup
   3. The editor renders each court as a named zone with player chips in their slots and a Rest Bench area for sitting-out players
   4. The editor is accessible on a phone screen with all player chips readable and tappable
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 1 plan
+
+Plans:
+- [ ] 12-01-PLAN.md — RoundDisplay refactor + MatchEditor view + router wiring (MEDIT-01, MEDIT-02)
 
 ### Phase 13: Drag Interactions & Validation
 **Goal**: The organizer can freely rearrange players between court slots and the bench, then confirm or cancel
@@ -88,6 +90,6 @@ Plans:
 | 9. Player-Change Test Coverage | Milestone 6 | 1/1 | Complete | 2026-04-14 |
 | 10. Scheduling Penalties for Short-Sided Matches | Milestone 6 | 2/2 | Complete | 2026-04-14 |
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete   | 2026-04-14 |
-| 12. Editor Scaffold & Entry Points | Milestone 7 | 0/? | Not started | - |
+| 12. Editor Scaffold & Entry Points | Milestone 7 | 0/1 | Not started | - |
 | 13. Drag Interactions & Validation | Milestone 7 | 0/? | Not started | - |
 | 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
