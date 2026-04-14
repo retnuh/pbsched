@@ -322,43 +322,81 @@ describe('Phase 13: Drag interactions', () => {
   })
 
   describe('MAXPLAYERS-01: Max 2 players per court side', () => {
-    test('onMove prevents a 3rd chip being dragged into a court zone with 2 players', () => {
+    test('onMove blocks a bench chip being dragged into a full court zone (2 players)', () => {
       setupEditor(makeRoundWithBench())
-      // court-0-a starts with p1 and p2 (2 chips)
       const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const benchZone = el.querySelector('[data-zone="bench"]')
       expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
-      const instance = mockSortable.instances.find(s => s._el === zoneA)
-      const result = instance.options.onMove({ to: zoneA })
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA })
       expect(result).toBe(false)
     })
 
-    test('onMove allows a chip into a court zone with only 1 player', () => {
+    test('onMove allows a bench chip into a court zone with 1 player', () => {
       const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
       setupEditor(round)
       const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(1)
-      const instance = mockSortable.instances.find(s => s._el === zoneA)
-      const result = instance.options.onMove({ to: zoneA })
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA })
       expect(result).not.toBe(false)
     })
 
-    test('onMove allows a chip into a court zone with 0 players', () => {
+    test('onMove allows a bench chip into an empty court zone', () => {
       const round = { index: 0, played: false, courts: [{ teamA: [], teamB: ['p1', 'p2'] }], sittingOut: ['p3', 'p4'] }
       setupEditor(round)
       const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(0)
-      const instance = mockSortable.instances.find(s => s._el === zoneA)
-      const result = instance.options.onMove({ to: zoneA })
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA })
       expect(result).not.toBe(false)
     })
 
-    test('onMove always allows drops onto the bench regardless of chip count', () => {
-      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
-      setupEditor(round)
+    test('onMove always allows drops onto the bench', () => {
+      setupEditor(makeRoundWithBench())
       const benchZone = el.querySelector('[data-zone="bench"]')
-      const instance = mockSortable.instances.find(s => s._el === benchZone)
-      const result = instance.options.onMove({ to: benchZone })
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ from: zoneA, to: benchZone })
       expect(result).not.toBe(false)
+    })
+
+    test('SWAP: onMove allows court→court move even when target already has 2 players', () => {
+      // This is the swap scenario: p1 from court-0-a into court-0-b (which has p3+p4)
+      // Both sides are full, but court↔court moves must never be blocked
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      expect(zoneB.querySelectorAll('[data-player-id]').length).toBe(2)
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ from: zoneA, to: zoneB })
+      expect(result).not.toBe(false)
+    })
+  })
+
+  describe('VALID-03: Oversized side (>2 players) is flagged as invalid', () => {
+    test('confirm button is disabled when a court side has 3 players', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2', 'p3'], teamB: ['p4'] }], sittingOut: [] }
+      setupEditor(round)
+      expect(el.querySelector('#confirm-btn').disabled).toBe(true)
+    })
+
+    test('invalid court shows "max 2 per side" error when side is oversized', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2', 'p3'], teamB: ['p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const errorLabel = el.querySelector('[data-court-error]')
+      expect(errorLabel.className).not.toContain('hidden')
+      expect(errorLabel.textContent.trim()).toBe('max 2 per side')
+    })
+
+    test('after simulated drag creating oversized side, validateAndUpdateUI disables Confirm', () => {
+      setupEditor(makeRoundWithBench())
+      // Physically move p3 into court-0-a (now 3 players) and fire onEnd
+      const p3Chip = el.querySelector('[data-player-id="p3"]')
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      zoneA.appendChild(p3Chip)
+      mockSortable.instances[0].options.onEnd({ item: p3Chip })
+      expect(el.querySelector('#confirm-btn').disabled).toBe(true)
     })
   })
 
@@ -398,45 +436,24 @@ describe('Phase 13: Drag interactions', () => {
     })
   })
 
-  describe('BENCH-01: Bench is always a valid drop target', () => {
+  describe('SLOT-01: Court zones are always droppable (min-h, no ghost-expanding placeholders)', () => {
+    test('court zones have min-h class so empty zones remain drop targets', () => {
+      setupEditor(makeRoundWithBench())
+      expect(el.querySelector('[data-zone="court-0-a"]').className).toContain('min-h')
+      expect(el.querySelector('[data-zone="court-0-b"]').className).toContain('min-h')
+    })
+
+    test('court zones contain only player chips — no extra placeholder elements', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      // All direct children that are not player chips should not exist
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(0)
+      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
+    })
+
     test('bench zone has min-h class ensuring it is always droppable', () => {
       setupEditor(makeRoundWithBench())
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      expect(benchZone.className).toContain('min-h')
-    })
-  })
-
-  describe('SLOT-01: Empty-slot placeholders reflect chip count', () => {
-    test('court zone with 2 players has no empty-slot placeholders', () => {
-      setupEditor(makeRoundWithBench())
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(0)
-    })
-
-    test('court zone with 1 player has exactly 1 empty-slot placeholder', () => {
-      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
-      setupEditor(round)
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
-    })
-
-    test('court zone with 0 players has 2 empty-slot placeholders', () => {
-      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: ['p1', 'p2'] }], sittingOut: ['p3', 'p4'] }
-      setupEditor(round)
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(2)
-    })
-
-    test('after onEnd removes a chip from a zone, syncEmptySlots adds a placeholder back', () => {
-      setupEditor(makeRoundWithBench())
-      // Simulate moving p1 from court-0-a to bench in the DOM
-      const p1Chip = el.querySelector('[data-player-id="p1"]')
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      benchZone.appendChild(p1Chip)
-      mockSortable.instances[0].options.onEnd({ item: p1Chip })
-      // court-0-a now has only p2 → should have 1 empty-slot
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
+      expect(el.querySelector('[data-zone="bench"]').className).toContain('min-h')
     })
   })
 })

@@ -11,9 +11,6 @@ let _originalRound = null;
 let _roundIndex = null;
 let _el = null;
 
-// Empty slot placeholder — filtered so it can't be dragged, but accepts drops
-const EMPTY_SLOT_HTML = '<div class="empty-slot border-2 border-dashed border-gray-300 rounded-full min-h-[44px]"></div>';
-
 // --- Private helpers ---
 
 function readZoneIds(el, zoneKey) {
@@ -32,39 +29,24 @@ function reconcileDraftFromDOM(el) {
   _draft.sittingOut = readZoneIds(el, 'bench');
 }
 
-// Keep empty slot count at (2 - chipCount) per court column, 0 for bench
-function syncEmptySlots(el) {
-  el.querySelectorAll('[data-zone^="court-"]').forEach(zone => {
-    const chipCount = zone.querySelectorAll('[data-player-id]').length;
-    const slots = [...zone.querySelectorAll('.empty-slot')];
-    const needed = Math.max(0, 2 - chipCount);
-    slots.slice(needed).forEach(s => s.remove());
-    for (let i = slots.length; i < needed; i++) {
-      zone.insertAdjacentHTML('beforeend', EMPTY_SLOT_HTML);
-    }
-  });
-  // Bench: remove marker once chips arrive; no placeholder needed (min-h handles it)
-  const benchZone = el.querySelector('[data-zone="bench"]');
-  if (benchZone) {
-    const marker = benchZone.querySelector('.bench-empty-marker');
-    if (marker && benchZone.querySelectorAll('[data-player-id]').length > 0) {
-      marker.remove();
-    }
-  }
-}
 
 function validateAndUpdateUI(el) {
   let anyInvalid = false;
   _draft.courts.forEach((court, i) => {
     const total = court.teamA.length + court.teamB.length;
-    const isInvalid = total === 1;
+    const oversized = court.teamA.length > 2 || court.teamB.length > 2;
+    const isInvalid = total === 1 || oversized;
     if (isInvalid) anyInvalid = true;
     const card = el.querySelector('[data-court="' + i + '"]');
     if (!card) return;
     card.classList.toggle('border-red-400', isInvalid);
     card.classList.toggle('border-gray-200', !isInvalid);
     const errorLabel = card.querySelector('[data-court-error]');
-    if (errorLabel) errorLabel.classList.toggle('hidden', !isInvalid);
+    if (errorLabel) {
+      errorLabel.classList.toggle('hidden', !isInvalid);
+      if (oversized) errorLabel.textContent = 'max 2 per side';
+      else if (total === 1) errorLabel.textContent = 'needs 2+ players';
+    }
   });
   const confirmBtn = el.querySelector('#confirm-btn');
   if (confirmBtn) {
@@ -96,7 +78,9 @@ function handleDiscardKeep() {
 }
 
 function handleConfirm() {
-  const anyInvalid = _draft.courts.some(c => (c.teamA.length + c.teamB.length) === 1);
+  const anyInvalid = _draft.courts.some(c =>
+    (c.teamA.length + c.teamB.length) === 1 || c.teamA.length > 2 || c.teamB.length > 2
+  );
   if (anyInvalid) return;
   SessionService.updateRound(_roundIndex, _draft);
   navigate('/active');
@@ -104,7 +88,6 @@ function handleConfirm() {
 
 function handleDragEnd(evt) {
   reconcileDraftFromDOM(_el);
-  syncEmptySlots(_el);
   validateAndUpdateUI(_el);
   // Pop animation on the dropped chip
   if (evt?.item) {
@@ -124,10 +107,13 @@ function initSortables(el) {
       delay: 150,
       delayOnTouchOnly: true,
       touchStartThreshold: 5,
-      filter: '.bench-empty-marker, .empty-slot',
+      emptyInsertThreshold: 20,
+      filter: '.bench-empty-marker',
       onMove: (evt) => {
+        const fromZone = evt.from?.dataset?.zone || '';
         const toZone = evt.to?.dataset?.zone || '';
-        if (toZone.startsWith('court-')) {
+        // Only block bench → full court side; court↔court moves are always allowed
+        if (fromZone === 'bench' && toZone.startsWith('court-')) {
           if (evt.to.querySelectorAll('[data-player-id]').length >= 2) return false;
         }
       },
@@ -185,12 +171,7 @@ export function mount(el, params) {
        ${escapeHTML(getPlayerName(id))}
      </div>`;
 
-  // Court column: chips + empty-slot placeholders to fill up to 2 slots
-  const courtCol = (players) => {
-    const chips = players.map(playerChip);
-    while (chips.length < 2) chips.push(EMPTY_SLOT_HTML);
-    return chips.join('');
-  };
+  const courtCol = (players) => players.map(playerChip).join('');
 
   // Court zones — data-court for validation, data-zone for SortableJS init
   const courtsHTML = round.courts.map((court, i) => `
@@ -201,10 +182,10 @@ export function mount(el, params) {
       </div>
       <div class="p-4">
         <div class="grid grid-cols-2">
-          <div data-zone="court-${i}-a" class="space-y-2 pr-3">
+          <div data-zone="court-${i}-a" class="space-y-2 pr-3 min-h-[96px]">
             ${courtCol(court.teamA)}
           </div>
-          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200">
+          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200 min-h-[96px]">
             ${courtCol(court.teamB)}
           </div>
         </div>
