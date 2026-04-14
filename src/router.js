@@ -32,17 +32,19 @@ function resolveRoute() {
   for (const path in routes) {
     const routeParts = path.split('/');
     const hashParts = hash.split('/');
+    const candidateParams = {}; // fresh object per attempt — avoids stale param bleed
 
     if (routeParts.length === hashParts.length) {
       const isMatch = routeParts.every((part, i) => {
         if (part.startsWith(':')) {
-          params[part.slice(1)] = hashParts[i];
+          candidateParams[part.slice(1)] = hashParts[i];
           return true;
         }
         return part === hashParts[i];
       });
 
       if (isMatch) {
+        params = candidateParams;
         matchedRoute = routes[path];
         break;
       }
