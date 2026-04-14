@@ -134,14 +134,14 @@ describe('MatchEditor', () => {
   })
 
   describe('Rest Bench zone', () => {
-    test('renders None sitting out when sittingOut is empty', () => {
+    test('renders empty bench marker when sittingOut is empty', () => {
       const session = makeSession([makeRound(0, false)])
       StorageAdapter.set('clubs', CLUBS_DATA)
       StorageAdapter.set('sessions', [session])
 
       mount(el, { roundIndex: '0' })
 
-      expect(el.innerHTML).toContain('None sitting out')
+      expect(el.innerHTML).toContain('--|--')
     })
 
     test('renders sitting-out player names in bench zone', () => {

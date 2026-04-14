@@ -70,7 +70,7 @@ export function mount(el, params) {
       <div class="flex flex-wrap gap-2">
         ${round.sittingOut.length > 0
           ? round.sittingOut.map(benchChip).join('')
-          : '<span class="text-sm text-gray-400 italic">None sitting out</span>'}
+          : '<span class="text-sm text-gray-400 italic">--|--</span>'}
       </div>
     </div>
   `;
