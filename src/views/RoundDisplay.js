@@ -163,6 +163,11 @@ export function mount(el, params) {
 
   function renderSitterPicker() {
     const round = session.rounds[pickingSitterFor];
+    if (!round) {
+      pickingSitterFor = null;
+      render();
+      return;
+    }
     const attendees = session.attendeeIds;
     
     // Calculate sit counts for the current session up to this round
