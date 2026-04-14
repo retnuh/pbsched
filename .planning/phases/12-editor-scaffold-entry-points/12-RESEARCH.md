@@ -386,17 +386,19 @@ All other claims were verified directly against codebase source files or locked 
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the MatchEditor test mock `navigate()` or test actual hash changes?**
    - What we know: `navigate()` sets `window.location.hash`. happy-dom supports `window.location`.
    - What's unclear: Whether happy-dom's hash routing triggers the router's `hashchange` listener in test context.
    - Recommendation: Mock `navigate` with `vi.mock('../router.js', ...)` to keep MatchEditor tests fast and isolated. Test navigation calls rather than actual routing.
+   - **RESOLVED:** Plan Task 0 uses `vi.mock('../router.js', () => ({ navigate: vi.fn(), isSession: vi.fn() }))` — navigation is mocked for isolation.
 
 2. **RoundDisplay test coverage for refactored button layout**
    - What we know: No existing DOM tests for RoundDisplay.js exist — it is only visually tested.
    - What's unclear: Whether the planner should add RoundDisplay tests in Phase 12 or treat the visual diff as sufficient given the service-layer tests cover data integrity.
    - Recommendation: Write at least smoke tests for the presence of `data-action="edit"` and `data-action="alternatives"` and `data-action="play"` in the rendered HTML to catch regressions. Can be light — not full interaction tests.
+   - **RESOLVED:** Plan Task 1 verifies via existing session/scheduler/storage tests (service-layer integrity) plus acceptance_criteria requiring exact `data-action` attributes in RoundDisplay.js source. Visual smoke tests deferred to Phase 13 when interactivity is added.
 
 ---
 
