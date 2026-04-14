@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
 milestone: "7"
-milestone_name: next
+milestone_name: "Match Editor"
 status: planning
-last_updated: "2026-04-14T09:30:00.000Z"
-last_activity: 2026-04-14 — Milestone 6 archived
+last_updated: "2026-04-14T00:00:00.000Z"
+last_activity: 2026-04-14 — Milestone 7 roadmap created
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,18 +17,25 @@ progress:
 
 ## Current Position
 
-Milestone 6 (UX Polish & Scheduler Improvements) — **COMPLETE**
-Archived: .planning/milestones/v1.0-ROADMAP.md
+**Milestone 7 — Match Editor** | Phase 11 (next) | Status: Roadmap ready, planning Phase 11
 
-Status: Defining requirements
-Last activity: 2026-04-14 — Milestone 7 started
+```
+Milestone 7 progress: [----------] 0% (0/4 phases)
+```
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
-**Current focus:** Milestone 7 — Match Editor
+**Current focus:** Milestone 7 — Match Editor (let organizer manually reassign players between courts and bench)
+
+## Performance Metrics
+
+| Milestone | Phases | Plans | Outcome |
+|-----------|--------|-------|---------|
+| Milestone 6 | 3 | 4 | Shipped 2026-04-14 |
+| Milestone 7 | 4 | TBD | In progress |
 
 ## Accumulated Context
 
@@ -37,13 +44,18 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 - Short-sided match penalties (singles, 3-way solo/pair) configurable via Settings sliders (0=disable, max 50)
 - localStorage only — no backend; mobile-first (organizer's phone)
 - Fairness-over-equality semantics: sit-out penalty uses base * 100^count to prevent repeated sit-outs before others have had a turn
-- Active requirements deferred to next milestone: JSON export/import (CLUB-05/06), in-session player change UI (SESS-03/04), alternative schedule picker (RGEN-03), default odd-player policy (SETT-02)
+- Active requirements deferred: JSON export/import (CLUB-05/06), in-session player change UI (SESS-03/04), alternative schedule picker (RGEN-03), default odd-player policy (SETT-02)
 
-## Quick Tasks (Milestone 6)
+### Milestone 7 Key Decisions
 
-| # | Description | Date | Commit |
-|---|-------------|------|--------|
-| 260414-dx9 | All fairness sliders to 0-50 range with plain-English copy | 2026-04-14 | 044450b |
-| 260414-e5s | Sitout fairness intent clarified in code and UI | 2026-04-14 | f83bbf9 |
-| 260414-eau | Restored phase 10 sliders lost in e5s regression | 2026-04-14 | bf282fe |
-| 260414-ezp | Update instructions — no semver unless explicit | 2026-04-14 | — | [260414-ezp](./quick/260414-ezp-update-the-instructions-to-not-use-semve/) |
+- **Drag library:** SortableJS 1.15.7 — handles touch natively; HTML5 DnD API is broken on iOS and must not be used
+- **Draft model:** All edits on a deep clone; Confirm writes back, Cancel discards — no intermediate persistence
+- **New service method:** `SessionService.updateRound(roundIndex, updatedRound)` — single entry point for all editor saves
+- **New view:** `MatchEditor.js` mounted at route `#/edit/:roundIndex`
+- **History integration:** `source: 'edited'` field on edited rounds (backward-compatible); editing a played round invalidates + regenerates all subsequent unplayed rounds
+
+## Session Continuity
+
+- Phase 11 is next — build `SessionService.updateRound` and history invalidation before any UI
+- Build order: service layer (Phase 11) → static scaffold + routes (Phase 12) → SortableJS drag + validation (Phase 13) → court add/remove + polish (Phase 14)
+- Test SortableJS touch behavior on real iOS device during Phase 13 — emulator does not reproduce iOS drag bugs

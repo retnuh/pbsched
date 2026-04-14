@@ -30,6 +30,7 @@
 
 - [ ] **VALID-01**: Saving is blocked if any court has exactly 1 player; 0 (empty/removed), 2 (singles), 3 (3-way), and 4 (2v2) are all valid
 - [ ] **VALID-02**: Non-attendees cannot be placed on a court slot
+- [ ] **VIS-01**: The drop target slot shows a clear visual indicator when a chip is being dragged over it (SortableJS ghostClass/dragClass — verify visually clear on mobile)
 
 ### Data & Scheduler Integration
 
@@ -62,4 +63,24 @@
 
 ## Traceability
 
-*(Filled by roadmapper)*
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| HIST-01 | Phase 11 | Pending |
+| HIST-02 | Phase 11 | Pending |
+| HIST-03 | Phase 11 | Pending |
+| MEDIT-01 | Phase 12 | Pending |
+| MEDIT-02 | Phase 12 | Pending |
+| DRAG-01 | Phase 13 | Pending |
+| DRAG-02 | Phase 13 | Pending |
+| DRAG-03 | Phase 13 | Pending |
+| DRAG-04 | Phase 13 | Pending |
+| DRAG-05 | Phase 13 | Pending |
+| DRAG-06 | Phase 13 | Pending |
+| VALID-01 | Phase 13 | Pending |
+| VALID-02 | Phase 13 | Pending |
+| VIS-01 | Phase 13 | Pending |
+| COURT-01 | Phase 14 | Pending |
+| COURT-02 | Phase 14 | Pending |
+| COURT-03 | Phase 14 | Pending |
+| BENCH-01 | Phase 14 | Pending |
+| BENCH-02 | Phase 14 | Pending |
