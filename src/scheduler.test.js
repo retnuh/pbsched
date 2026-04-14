@@ -5,7 +5,11 @@ const MOCK_SETTINGS = {
   penaltyRepeatedPartner: 5,
   penaltyRepeatedOpponent: 10,
   penaltyRepeatedSitOut: 3,
+  penaltySingles: 15,
+  penaltyThreeWaySolo: 20,
+  penaltyThreeWayPair: 15,
   candidateCount: 100,
+  oddPlayerFallback: 'sit-out',
 };
 
 describe('Scheduler Logic', () => {
@@ -180,7 +184,217 @@ describe('Scheduler Logic', () => {
     // If it were random, they'd partner ~1.4 times (5 * 1/7).
     // If variety optimization works, it should be 1 or 2 max.
     Object.values(history.partnerCount['p1'] || {}).forEach(count => {
-      expect(count).toBeLessThan(3); 
+      expect(count).toBeLessThan(3);
+    });
+  });
+
+  describe('short-sided history tracking', () => {
+    test('buildPairHistory tracks singlesCount for 1v1 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesCount['p1']).toBe(1);
+      expect(history.singlesCount['p2']).toBe(1);
+    });
+
+    test('buildPairHistory tracks threeWaySoloCount and threeWayPairCount for 2v1 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWaySoloCount['p3']).toBe(1);
+      expect(history.threeWayPairCount['p1']).toBe(1);
+      expect(history.threeWayPairCount['p2']).toBe(1);
+    });
+
+    test('buildPairHistory tracks singlesStreak for two consecutive singles rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1'], teamB: ['p2'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesStreak['p1']).toBe(2);
+      expect(history.singlesStreak['p2']).toBe(2);
+    });
+
+    test('buildPairHistory tracks threeWaySoloStreak for two consecutive solo rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWaySoloStreak['p3']).toBe(2);
+    });
+
+    test('buildPairHistory tracks threeWayPairStreak for two consecutive pair rounds', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+        {
+          index: 1,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.threeWayPairStreak['p1']).toBe(2);
+      expect(history.threeWayPairStreak['p2']).toBe(2);
+    });
+
+    test('buildPairHistory does NOT increment short-sided counts for standard 2v2 courts', () => {
+      const played = [
+        {
+          index: 0,
+          courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }],
+          sittingOut: [],
+          played: true,
+        },
+      ];
+      const history = buildPairHistory(played);
+      expect(history.singlesCount['p1']).toBeUndefined();
+      expect(history.threeWaySoloCount['p1']).toBeUndefined();
+      expect(history.threeWayPairCount['p1']).toBeUndefined();
+    });
+  });
+
+  describe('scoreRound short-sided penalties', () => {
+    test('scoreRound penalizes both players in a 1v1 court with singles history', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: { p1: 1, p2: 1 },
+        singlesStreak: { p1: 1, p2: 1 },
+        threeWaySoloCount: {}, threeWaySoloStreak: {},
+        threeWayPairCount: {}, threeWayPairStreak: {},
+      };
+      const round = { courts: [{ teamA: ['p1'], teamB: ['p2'] }], sittingOut: [] };
+      const score = scoreRound(round, history, MOCK_SETTINGS);
+      // p1: 15 * 2^1 = 30, p2: 15 * 2^1 = 30 => total 60
+      expect(score).toBe(60);
+    });
+
+    test('scoreRound returns 0 for singles clause when no singles history', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: {}, singlesStreak: {},
+        threeWaySoloCount: {}, threeWaySoloStreak: {},
+        threeWayPairCount: {}, threeWayPairStreak: {},
+      };
+      const round = { courts: [{ teamA: ['p1'], teamB: ['p2'] }], sittingOut: [] };
+      const score = scoreRound(round, history, MOCK_SETTINGS);
+      expect(score).toBe(0);
+    });
+
+    test('scoreRound penalizes only solo player in 2v1 court for solo penalty', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: {}, singlesStreak: {},
+        threeWaySoloCount: { p3: 1 },
+        threeWaySoloStreak: { p3: 0 },
+        threeWayPairCount: {}, threeWayPairStreak: {},
+      };
+      const round = { courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: [] };
+      const score = scoreRound(round, history, MOCK_SETTINGS);
+      // p3 solo: 20 * 2^0 = 20; p1,p2 pair: no pair history so 0
+      expect(score).toBe(20);
+    });
+
+    test('scoreRound penalizes pair players in 2v1 court for pair penalty', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: {}, singlesStreak: {},
+        threeWaySoloCount: {}, threeWaySoloStreak: {},
+        threeWayPairCount: { p1: 1, p2: 1 },
+        threeWayPairStreak: { p1: 0, p2: 0 },
+      };
+      const round = { courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: [] };
+      const score = scoreRound(round, history, MOCK_SETTINGS);
+      // p1: 15 * 2^0 = 15, p2: 15 * 2^0 = 15 => total 30
+      expect(score).toBe(30);
+    });
+
+    test('scoreRound uses ?? fallbacks when penalty keys are missing (no NaN/crash)', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: { p1: 1, p2: 1 },
+        singlesStreak: { p1: 0, p2: 0 },
+        threeWaySoloCount: {}, threeWaySoloStreak: {},
+        threeWayPairCount: {}, threeWayPairStreak: {},
+      };
+      const settingsWithoutPenaltyKeys = {
+        penaltyRepeatedPartner: 5,
+        penaltyRepeatedOpponent: 10,
+        penaltyRepeatedSitOut: 3,
+        candidateCount: 100,
+        oddPlayerFallback: 'sit-out',
+      };
+      const round = { courts: [{ teamA: ['p1'], teamB: ['p2'] }], sittingOut: [] };
+      const score = scoreRound(round, history, settingsWithoutPenaltyKeys);
+      expect(typeof score).toBe('number');
+      expect(isNaN(score)).toBe(false);
+      // p1: 15 * 2^0 = 15, p2: 15 * 2^0 = 15 => total 30
+      expect(score).toBe(30);
+    });
+
+    test('scoreRound with custom penaltySingles scores higher than lower penaltySingles', () => {
+      const history = {
+        partnerCount: {}, partnerStreak: {},
+        opponentCount: {}, opponentStreak: {},
+        sitOutCount: {}, sitOutStreak: {},
+        singlesCount: { p1: 1, p2: 1 },
+        singlesStreak: { p1: 0, p2: 0 },
+        threeWaySoloCount: {}, threeWaySoloStreak: {},
+        threeWayPairCount: {}, threeWayPairStreak: {},
+      };
+      const round = { courts: [{ teamA: ['p1'], teamB: ['p2'] }], sittingOut: [] };
+      const highSettings = { ...MOCK_SETTINGS, penaltySingles: 25 };
+      const lowSettings = { ...MOCK_SETTINGS, penaltySingles: 5 };
+      expect(scoreRound(round, history, highSettings)).toBeGreaterThan(scoreRound(round, history, lowSettings));
     });
   });
 });
