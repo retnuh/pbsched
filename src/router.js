@@ -83,6 +83,8 @@ export function initRouter(el) {
         
         link.classList.toggle('text-blue-600', isClubs || isSession || isSettings);
         link.classList.toggle('text-gray-400', !(isClubs || isSession || isSettings));
+        link.classList.toggle('dark:text-blue-400', isClubs || isSession || isSettings);
+        link.classList.toggle('dark:text-gray-500', !(isClubs || isSession || isSettings));
       });
     } else {
       el.innerHTML = '<div class="p-4 text-red-500 font-bold">404 - Not Found</div>';
