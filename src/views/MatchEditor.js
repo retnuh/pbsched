@@ -1,6 +1,7 @@
 import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
+import { escapeHTML } from '../utils/html.js';
 
 export function mount(el, params) {
   const session = SessionService.getActiveSession();
@@ -30,19 +31,29 @@ export function mount(el, params) {
   }
 
   const club = ClubService.getClub(session.clubId);
+  if (!club) {
+    el.innerHTML = `
+      <div class="p-8 text-center space-y-4">
+        <h1 class="text-2xl font-bold">Club Not Found</h1>
+        <p class="text-gray-500">This session references a club that no longer exists.</p>
+        <a href="#/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md">Go to Clubs</a>
+      </div>
+    `;
+    return;
+  }
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
   // Render Team A pill chip (blue)
   const teamAChip = (id) =>
-    `<div class="px-3 py-3 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800 text-center min-h-[44px] flex items-center justify-center">${getPlayerName(id)}</div>`;
+    `<div class="px-3 py-3 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-800 text-center min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
 
   // Render Team B pill chip (orange)
   const teamBChip = (id) =>
-    `<div class="px-3 py-3 bg-orange-50 border border-orange-200 rounded-full text-sm font-medium text-orange-800 text-center min-h-[44px] flex items-center justify-center">${getPlayerName(id)}</div>`;
+    `<div class="px-3 py-3 bg-orange-50 border border-orange-200 rounded-full text-sm font-medium text-orange-800 text-center min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
 
   // Render bench chip (neutral gray)
   const benchChip = (id) =>
-    `<div class="px-3 py-3 bg-gray-200 border border-gray-300 rounded-full text-sm font-medium text-gray-700 min-h-[44px] flex items-center justify-center">${getPlayerName(id)}</div>`;
+    `<div class="px-3 py-3 bg-gray-200 border border-gray-300 rounded-full text-sm font-medium text-gray-700 min-h-[44px] flex items-center justify-center">${escapeHTML(getPlayerName(id))}</div>`;
 
   // Court zones
   const courtsHTML = round.courts.map((court, i) => `
