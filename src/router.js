@@ -4,6 +4,7 @@ import * as SessionSetup from './views/SessionSetup.js';
 import * as RoundDisplay from './views/RoundDisplay.js';
 import * as Settings from './views/Settings.js';
 import * as Help from './views/Help.js';
+import * as MatchEditor from './views/MatchEditor.js';
 
 /**
  * Basic Hash Router
@@ -15,7 +16,8 @@ const routes = {
   '/setup/:clubId': SessionSetup,
   '/active': RoundDisplay,
   '/settings': Settings,
-  '/help': Help
+  '/help': Help,
+  '/edit/:roundIndex': MatchEditor,
 };
 
 let currentView = null;
@@ -73,7 +75,7 @@ export function initRouter(el) {
         const hash = window.location.hash;
         
         const isClubs = (hashIsHome() || hash.startsWith('#/club') || hash.startsWith('#/setup')) && navTarget === 'ClubManager';
-        const isSession = hash.startsWith('#/active') && navTarget === 'RoundDisplay';
+        const isSession = (hash.startsWith('#/active') || hash.startsWith('#/edit')) && navTarget === 'RoundDisplay';
         const isSettings = hash.startsWith('#/settings') && navTarget === 'Settings';
         
         link.classList.toggle('text-blue-600', isClubs || isSession || isSettings);
