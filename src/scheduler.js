@@ -236,6 +236,37 @@ export function scoreRound(round, history, settings) {
         score += getStandardPenalty(settings.penaltyRepeatedOpponent, getOpponentCount(a, b), getOpponentStreak(a, b));
       });
     });
+
+    // Short-sided penalties (per D-01, D-02)
+    const isSingles = teamA.length === 1 && teamB.length === 1;
+    const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
+
+    if (isSingles) {
+      // Both players are short-sided — each receives the singles penalty (D-02)
+      [teamA[0], teamB[0]].forEach(p => {
+        const count = history.singlesCount?.[p] || 0;
+        const streak = history.singlesStreak?.[p] || 0;
+        score += getStandardPenalty(settings.penaltySingles ?? 15, count, streak);
+      });
+    }
+
+    if (isThreeWay) {
+      const soloSide = teamA.length === 1 ? teamA : teamB;
+      const pairSide = teamA.length === 2 ? teamA : teamB;
+
+      // Solo player penalty (D-02, D-05)
+      const soloPlayer = soloSide[0];
+      const soloCount = history.threeWaySoloCount?.[soloPlayer] || 0;
+      const soloStreak = history.threeWaySoloStreak?.[soloPlayer] || 0;
+      score += getStandardPenalty(settings.penaltyThreeWaySolo ?? 20, soloCount, soloStreak);
+
+      // Pair players penalty (D-02, D-06)
+      pairSide.forEach(p => {
+        const pCount = history.threeWayPairCount?.[p] || 0;
+        const pStreak = history.threeWayPairStreak?.[p] || 0;
+        score += getStandardPenalty(settings.penaltyThreeWayPair ?? 15, pCount, pStreak);
+      });
+    }
   });
 
   return score;
@@ -344,6 +375,24 @@ export function generateRounds(attendees, playedRounds, countToGenerate, setting
         inc(currentHistory.opponentCount, a, b);
         inc(currentHistory.opponentCount, b, a);
       }));
+
+      // Short-sided fast-path count increment (per D-03; streaks are not fast-pathed, matching existing pattern)
+      const isSinglesInc = teamA.length === 1 && teamB.length === 1;
+      const isThreeWayInc = teamA.length + teamB.length === 3 && !isSinglesInc;
+
+      if (isSinglesInc) {
+        [teamA[0], teamB[0]].forEach(p => {
+          currentHistory.singlesCount[p] = (currentHistory.singlesCount[p] || 0) + 1;
+        });
+      }
+      if (isThreeWayInc) {
+        const soloSideInc = teamA.length === 1 ? teamA : teamB;
+        const pairSideInc = teamA.length === 2 ? teamA : teamB;
+        currentHistory.threeWaySoloCount[soloSideInc[0]] = (currentHistory.threeWaySoloCount[soloSideInc[0]] || 0) + 1;
+        pairSideInc.forEach(p => {
+          currentHistory.threeWayPairCount[p] = (currentHistory.threeWayPairCount[p] || 0) + 1;
+        });
+      }
     });
   }
 
