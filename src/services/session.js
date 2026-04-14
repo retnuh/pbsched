@@ -260,6 +260,41 @@ export const SessionService = {
     }
   },
 
+  /**
+   * Updates a round with editor-supplied assignments.
+   *
+   * Unplayed round (HIST-01, per D-02): replaces assignments in place, no subsequent regeneration.
+   * Played round (HIST-02, HIST-03, per D-01, D-03):
+   *   - marks round with source: 'edited' (played: true preserved)
+   *   - deletes all subsequent unplayed rounds
+   *   - persists FIRST, then calls generateNextRound (generateNextRound reads from storage)
+   */
+  updateRound(roundIndex, updatedRound) {
+    const session = this.getActiveSession();
+    if (!session || !session.rounds[roundIndex]) return;
+
+    const round = session.rounds[roundIndex];
+
+    if (round.played) {
+      // HIST-02: mark as edited; preserve played: true (D-03)
+      session.rounds[roundIndex] = { ...updatedRound, played: true, source: 'edited', index: roundIndex };
+
+      // HIST-03: inline-delete subsequent unplayed rounds
+      // (not delegating to deleteUnplayedRoundsAfter — that method has its own updateSession call)
+      session.rounds = session.rounds.filter(r => r.played || r.index <= roundIndex);
+
+      // Persist BEFORE generateNextRound — generateNextRound reads from localStorage (D-01)
+      this.updateSession(session);
+
+      // Regenerate next round using updated played-round history
+      this.generateNextRound();
+    } else {
+      // HIST-01: replace unplayed round in place (D-02)
+      session.rounds[roundIndex] = { ...updatedRound, index: roundIndex };
+      this.updateSession(session);
+    }
+  },
+
   updateSession(updatedSession) {
     const sessions = this.getSessions();
     const idx = sessions.findIndex(s => s.id === updatedSession.id);
