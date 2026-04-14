@@ -85,7 +85,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — All MatchEditor.js implementation: add/remove courts, pruning, bench badges, haptics, toast (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
+- [x] 14-01-PLAN.md — All MatchEditor.js implementation: add/remove courts, pruning, bench badges, haptics, toast (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
 - [ ] 14-02-PLAN.md — Phase 14 test suite + human verify checkpoint (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
 
 ## Backlog
@@ -94,7 +94,7 @@ Plans:
 
 **Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
 **Requirements:** TBD
-**Plans:** 0 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
@@ -109,4 +109,4 @@ Plans:
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete   | 2026-04-14 |
-| 14. Court Management & Polish | Milestone 7 | 0/2 | Not started | - |
+| 14. Court Management & Polish | Milestone 7 | 1/2 | In Progress|  |
