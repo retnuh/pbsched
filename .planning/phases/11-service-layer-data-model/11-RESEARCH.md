@@ -365,17 +365,19 @@ test('updateRound on played round invalidates and regenerates subsequent unplaye
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should updateRound guard against non-active sessions?**
    - What we know: All existing SessionService methods guard with `if (!session) return` or `if (session && ...)`. The caller (Phase 12) will only call `updateRound` when a session is active.
    - What's unclear: Whether to silently return or throw on no-session.
    - Recommendation: Follow the existing pattern — silent `return` (no throw). Consistent with all other methods.
+   - RESOLVED: Silent `return` (no throw) — matches all existing SessionService guard patterns.
 
 2. **What happens if roundIndex is out of bounds?**
    - What we know: `replaceRound` guards `session.rounds[roundIndex]` existence.
    - What's unclear: Phase 12 will always pass a valid index (from route param), so this is a defensive concern only.
    - Recommendation: Add `if (!session.rounds[roundIndex]) return;` guard for robustness, consistent with `replaceRound`.
+   - RESOLVED: Add `if (!session || !session.rounds[roundIndex]) return;` defensive guard — same pattern as `replaceRound` and `regenerateRound`.
 
 ---
 
