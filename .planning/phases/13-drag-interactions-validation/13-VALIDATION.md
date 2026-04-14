@@ -55,8 +55,8 @@ created: 2026-04-14
 
 ## Wave 0 Requirements
 
-- [ ] `src/views/MatchEditor.test.js.test.js` — add stubs for DRAG-01 through DRAG-06, VALID-01, VALID-02
-- [ ] `src/views/MatchEditor.test.js.test.js` — add `vi.mock('sortablejs')` mock at top of test file
+- [ ] `src/views/MatchEditor.test.js` — add stubs for DRAG-01 through DRAG-06, VALID-01, VALID-02
+- [ ] `src/views/MatchEditor.test.js` — add `vi.mock('sortablejs')` mock at top of test file
 - [ ] `npm install sortablejs` — install missing production dependency
 
 *Existing vitest infrastructure covers the test framework; only mock setup and dependency install required.*
