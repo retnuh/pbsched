@@ -85,12 +85,60 @@
 - [x] Implement git-hash based versioning.
 - [x] Add haptic feedback for mobile interactions.
 
-### Phase 8: Session History & Statistics (DEFERRED)
-- **ID:** P8-HISTORY
-- **Goal:** Review past sessions and player trends.
-- **Status:** On hold pending feedback.
+## Milestone 6: UX Polish & Scheduler Improvements
 
-### Phase 9: Score Tracking (DEFERRED)
-- **ID:** P9-SCORES
-- **Goal:** Optional win/loss tracking.
-- **Status:** On hold pending feedback.
+**Goal:** Deliver targeted UX fixes and scheduler fairness improvements captured since PWA launch.
+
+## Phases
+
+- [ ] **Phase 8: Club Name Editing** - Organizer can tap the club name to edit it inline in MemberEditor
+- [ ] **Phase 9: Player-Change Test Coverage** - Tests verify played match state is preserved across all mid-session roster changes
+- [ ] **Phase 10: Scheduling Penalties for Short-Sided Matches** - Configurable penalties for singles and 3-way solo play, with backward-compatible schema
+
+## Phase Details
+
+### Phase 8: Club Name Editing
+**Goal**: Organizer can tap the club name to edit it inline without navigating away
+**Depends on**: Phase 7 (app is deployed as PWA)
+**Requirements**: CLUB-07, CLUB-08, CLUB-09
+**Success Criteria** (what must be TRUE):
+  1. Tapping the club name in MemberEditor activates an inline text input at that position
+  2. Blurring the input or confirming saves the new name to localStorage and updates the displayed heading
+  3. The inline input renders at 16px or larger so iOS Safari does not auto-zoom the viewport
+  4. Canceling (e.g., pressing Escape or tapping away without changing text) leaves the name unchanged
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 9: Player-Change Test Coverage
+**Goal**: Vitest suite confirms that mid-session roster changes never mutate played round state
+**Depends on**: Phase 8
+**Requirements**: TEST-01, TEST-02, TEST-03
+**Success Criteria** (what must be TRUE):
+  1. A test adds a player mid-session and asserts every played round's courts and player assignments are byte-for-byte identical before and after
+  2. A test removes a player who appeared in a played court and asserts that played round is unchanged
+  3. A test asserts that only rounds with `played: false` are regenerated; played rounds retain their original structure
+**Plans**: 1 plan
+Plans:
+- [ ] 09-01-PLAN.md — Fix localStorage regression and write TEST-01, TEST-02, TEST-03
+
+### Phase 10: Scheduling Penalties for Short-Sided Matches
+**Goal**: The scheduler penalizes players who already had a singles or 3-way solo/pair match, and those penalties are configurable and schema-safe
+**Depends on**: Phase 9
+**Requirements**: SCHED-01, SCHED-02, SCHED-03, SCHED-04, SCHED-05
+**Success Criteria** (what must be TRUE):
+  1. Generating rounds after a singles or 3-way match causes affected players to appear less often on the short-sided position in subsequent candidates
+  2. The Settings screen exposes three sliders — singles penalty, 3-way solo penalty, 3-way pair penalty — with visible default values
+  3. Changing a penalty slider takes effect on the next generated round without requiring a session restart
+  4. Sessions saved before this deploy load without errors and behave as if default penalty values were applied
+**Plans**: 2 plans
+Plans:
+- [ ] 10-01-PLAN.md — Extend scheduler history/scoring + schema v2 migration (SCHED-01/02/03/05)
+- [ ] 10-02-PLAN.md — Settings UI: three short-sided penalty sliders (SCHED-04)
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 8. Club Name Editing | 1/1 | Complete | 2026-04-14 |
+| 9. Player-Change Test Coverage | 1/1 | Complete | 2026-04-14 |
+| 10. Scheduling Penalties for Short-Sided Matches | 2/2 | Complete | 2026-04-14 |
