@@ -72,12 +72,12 @@ export function mount(el, params) {
         </header>
 
         <!-- Add New Player Inline -->
-        <form id="add-member-form" class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex space-x-2">
-          <input 
-            id="new-member-name" 
-            type="text" 
-            placeholder="New Player Name" 
-            class="flex-grow bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <form id="add-member-form" class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex space-x-2">
+          <input
+            id="new-member-name"
+            type="text"
+            placeholder="New Player Name"
+            class="flex-grow bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
@@ -90,10 +90,10 @@ export function mount(el, params) {
             const isAttending = attendees.has(member.id);
             const sitCount = sitCounts[member.id] || 0;
             return `
-              <label class="flex items-center justify-between p-4 bg-white rounded-xl border ${isAttending ? 'border-blue-500 bg-blue-50' : 'border-gray-100'} cursor-pointer">
+              <label class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border ${isAttending ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-100 dark:border-gray-700'} cursor-pointer">
                 <div class="flex flex-col">
                   <span class="font-bold">${member.name}</span>
-                  ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
+                  ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
                 </div>
                 <input type="checkbox" data-id="${member.id}" ${isAttending ? 'checked' : ''} class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
               </label>
@@ -101,7 +101,7 @@ export function mount(el, params) {
           }).join('')}
         </div>
 
-        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
+        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 max-w-lg mx-auto z-40">
           <button id="save-attendees" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
             Update Practice List
           </button>
@@ -169,9 +169,9 @@ export function mount(el, params) {
 
         <div class="space-y-6">
           ${alternatives.map((alt, index) => `
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div class="p-3 bg-gray-50 flex justify-between items-center">
-                <h3 class="font-bold text-gray-500 uppercase tracking-widest text-xs">Option ${index + 1} (Score: ${Math.round(alt.score)})</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div class="p-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+                <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">Option ${index + 1} (Score: ${Math.round(alt.score)})</h3>
                 <button data-action="pick-alt" data-index="${index}" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold shadow-sm shadow-green-100">
                   Select
                 </button>
@@ -179,14 +179,14 @@ export function mount(el, params) {
               <div class="p-4 space-y-3">
                 ${alt.round.courts.map((court, i) => `
                   <div class="flex items-center space-x-3 opacity-80">
-                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-gray-300">
                       ${i + 1}
                     </div>
                     <div class="flex-grow grid grid-cols-2 gap-1 text-center">
-                      <div class="p-1.5 bg-blue-50 rounded border border-blue-100 text-xs font-bold">
+                      <div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-100 dark:border-blue-800 text-xs font-bold">
                         ${escapeHTML(getPlayerName(court.teamA[0]))} / ${court.teamA[1] ? escapeHTML(getPlayerName(court.teamA[1])) : '👻'}
                       </div>
-                      <div class="p-1.5 bg-orange-50 rounded border border-orange-100 text-xs font-bold">
+                      <div class="p-1.5 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-800 text-xs font-bold">
                         ${escapeHTML(getPlayerName(court.teamB[0]))} / ${court.teamB[1] ? escapeHTML(getPlayerName(court.teamB[1])) : '👻'}
                       </div>
                     </div>
@@ -195,9 +195,9 @@ export function mount(el, params) {
                 
                 ${alt.round.sittingOut.length > 0 ? `
                   <div class="mt-3 pt-3 border-t border-gray-50 flex flex-wrap gap-1.5">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase mr-1">Sitting:</span>
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mr-1">Sitting:</span>
                     ${alt.round.sittingOut.map(id => `
-                      <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">${escapeHTML(getPlayerName(id))}</span>
+                      <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-600">${escapeHTML(getPlayerName(id))}</span>
                     `).join('')}
                   </div>
                 ` : ''}
@@ -206,7 +206,7 @@ export function mount(el, params) {
           `).join('')}
         </div>
 
-        <button id="show-more-alts" class="w-full py-4 bg-gray-100 text-gray-600 rounded-xl font-bold border border-gray-200 hover:bg-gray-200 transition">
+        <button id="show-more-alts" class="w-full py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
           Show More Options
         </button>
       </div>
@@ -272,8 +272,8 @@ export function mount(el, params) {
     
     if (rounds.length === 0) {
       listEl.innerHTML = `
-        <div class="text-center py-12 bg-white rounded-xl border border-gray-100">
-          <p class="text-gray-500">Wait, where did the rounds go?</p>
+        <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+          <p class="text-gray-500 dark:text-gray-400">Wait, where did the rounds go?</p>
           <button id="gen-first" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">
             Generate Round
           </button>
@@ -290,42 +290,42 @@ export function mount(el, params) {
 
       const hasPlayed = rounds.some(r => r.played);
       listEl.innerHTML = rounds.map((round, i) => `
-        <div class="bg-white rounded-xl shadow-sm border ${round.played ? 'border-gray-100 opacity-60' : 'border-blue-200'} overflow-hidden">
-          <div class="p-3 ${round.played ? 'bg-gray-50' : 'bg-blue-50'} flex justify-between items-center">
-            <h3 class="font-bold ${round.played ? 'text-gray-500' : 'text-blue-800'}">Round ${round.index + 1}</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${round.played ? 'border-gray-100 dark:border-gray-700 opacity-60' : 'border-blue-200'} overflow-hidden">
+          <div class="p-3 ${round.played ? 'bg-gray-50 dark:bg-gray-700' : 'bg-blue-50 dark:bg-blue-900/30'} flex justify-between items-center">
+            <h3 class="font-bold ${round.played ? 'text-gray-500 dark:text-gray-400' : 'text-blue-800 dark:text-blue-300'}">Round ${round.index + 1}</h3>
             <div class="flex items-center space-x-2">
               ${round.played ? (round.index === lastPlayedIdx ? `
                 <button data-action="edit" data-index="${round.index}" class="text-xs font-bold text-blue-600 hover:underline px-2">Edit</button>
                 <button data-action="undo" data-index="${round.index}" class="text-xs font-bold text-red-500 hover:underline px-2">Undo</button>
-              ` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Completed</span>') : ''}
+              ` : '<span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Completed</span>') : ''}
             </div>
           </div>
           
           <div class="p-4 space-y-4">
             ${round.courts.map((court, i) => `
               <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400">
+                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400 dark:text-gray-300">
                   ${i + 1}
                 </div>
                 <div class="flex-grow grid grid-cols-2 gap-2 text-center">
-                  <div class="p-2 bg-blue-50 rounded border border-blue-100">
-                    <p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamA[0]))}</p>
-                    ${court.teamA[1] ? `<p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamA[1]))}</p>` : ''}
+                  <div class="p-2 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-100 dark:border-blue-800">
+                    <p class="text-sm font-bold dark:text-gray-100">${escapeHTML(getPlayerName(court.teamA[0]))}</p>
+                    ${court.teamA[1] ? `<p class="text-sm font-bold dark:text-gray-100">${escapeHTML(getPlayerName(court.teamA[1]))}</p>` : ''}
                   </div>
-                  <div class="p-2 bg-orange-50 rounded border border-orange-100">
-                    <p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamB[0]))}</p>
-                    ${court.teamB[1] ? `<p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamB[1]))}</p>` : ''}
+                  <div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-100 dark:border-orange-800">
+                    <p class="text-sm font-bold dark:text-gray-100">${escapeHTML(getPlayerName(court.teamB[0]))}</p>
+                    ${court.teamB[1] ? `<p class="text-sm font-bold dark:text-gray-100">${escapeHTML(getPlayerName(court.teamB[1]))}</p>` : ''}
                   </div>
                 </div>
               </div>
             `).join('')}
             
             ${round.sittingOut.length > 0 ? `
-              <div class="mt-4 pt-4 border-t border-gray-100">
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sitting Out</p>
+              <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <p class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">Sitting Out</p>
                 <div class="flex flex-wrap gap-2">
                   ${round.sittingOut.map(id => `
-                    <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium text-gray-600 border border-gray-200">${escapeHTML(getPlayerName(id))}</span>
+                    <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">${escapeHTML(getPlayerName(id))}</span>
                   `).join('')}
                 </div>
               </div>
