@@ -2,84 +2,89 @@
 
 ## What This Is
 
-A static single-page app hosted on GitHub Pages that helps a pickleball organizer schedule practice rounds. The organizer picks which club members showed up, sets a target number of rounds, and the app generates optimized matchups — grouping players into 2v2 courts with maximum variety so no one ends up playing with or against the same people repeatedly.
+A static single-page PWA hosted on GitHub Pages that helps a pickleball organizer schedule practice rounds. The organizer picks which club members showed up, sets a target number of rounds, and the app generates optimized matchups — grouping players into 2v2 courts (with singles/3-way fallbacks) with maximum variety so no one ends up playing with or against the same people repeatedly. Short-sided match penalties are configurable so organizers can tune how strongly the scheduler avoids repeating unfair formats.
 
 ## Core Value
 
 Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
 
-## Current Milestone: 6 — UX Polish & Scheduler Improvements
+## Current State (after v1.0)
 
-**Goal:** Deliver targeted UX fixes and scheduler fairness improvements captured since PWA launch.
+**Shipped:** 2026-04-14
+**Codebase:** ~2,574 lines Vanilla JS, deployed as static PWA on GitHub Pages
 
-**Target features:**
-- Allow editing the club name (inline tap-to-edit)
-- Tests for player changes preserving played match state
-- Scheduling penalties for singles and 3-way solo matches (configurable, with tests)
+Milestone 6 (v1.0) delivered:
+- Inline club name editing (tap pencil → edit → blur/Enter saves)
+- Vitest test suite for session immutability (mid-session roster changes don't mutate played rounds)
+- Configurable short-sided match penalties (singles, 3-way solo, 3-way pair) with Settings sliders
+- Schema v2 migration (backward-compatible, no breaking change)
+- All fairness slider ranges updated to 0-50 (0 = disable); plain-English organizer copy throughout
 
 ## Requirements
 
-### Validated
+### Validated (v1.0)
 
-(None yet — ship to validate)
+- ✓ Multi-club support with named rosters — v1.0 (phases 1-3, pre-GSD)
+- ✓ Session management with attendance picker — v1.0 (phase 4, pre-GSD)
+- ✓ Round generation: 2v2 courts, odd-count fallback — v1.0 (phase 2, pre-GSD)
+- ✓ Variety algorithm: penalty-based scoring, best candidate auto-selected — v1.0 (phase 2, pre-GSD)
+- ✓ Mid-session player changes auto-regenerate unplayed rounds — v1.0 (phase 5, pre-GSD)
+- ✓ Advanced settings: scoring weight sliders with defaults — v1.0 (phase 6, pre-GSD)
+- ✓ PWA + offline support — v1.0 (phase 7, pre-GSD)
+- ✓ Inline club name editing — v1.0 (phase 8)
+- ✓ Session immutability tests — v1.0 (phase 9)
+- ✓ Configurable short-sided match penalties — v1.0 (phase 10)
 
 ### Active
 
-- [ ] Multi-club support: user can create and switch between clubs, each with a named member roster
-- [ ] Session management: pick attending members at session start; add/remove players mid-session
-- [ ] Round generation: group players into 2v2 courts (4 players per court); handle odd counts with organizer-chosen fallback (sit out, 3-player court, etc.)
-- [ ] Variety algorithm: randomly generate candidate round schedules, score them with penalties for repeated partner/opponent matchups, auto-select the best — with option to view and pick from top alternatives
-- [ ] Advanced settings screen: expose and allow editing of scoring weights (penalty values for repeated pairings) with sensible defaults
-- [ ] Mid-session player changes: when a player is added or removed, auto-regenerate remaining (unplayed) rounds
-- [ ] Flexible round count: set a target number of rounds upfront, extend on the fly
-- [ ] All data stored in localStorage — no server, no backend
+- [ ] JSON export/import per club (CLUB-05/06) — requested, not yet prioritized
+- [ ] Late arrival / early departure in-session player changes via UI (SESS-03/04) — logic exists, no dedicated UI flow
+- [ ] Top-N alternative schedule picker (RGEN-03) — logic exists, partial UI
+- [ ] Default odd-player policy per club (SETT-02) — skip per-round prompt
 
 ### Out of Scope
 
-- Score tracking — not needed for v1; scheduling only
-- Court assignment — organizer just reads out the matchups, court numbers don't matter
-- Multi-user / shared sessions — one organizer runs the app; no real-time sync
-- Authentication — local storage only, no accounts
+- Score tracking — scheduling only
+- Court assignment — organizer reads matchups verbally
+- Multi-user / shared sessions — single organizer, local-first
+- Authentication — localStorage only
+- DUPR / rating integration
 
 ## Context
 
-- Deployed as a static site on GitHub Pages — no server-side logic, no build pipeline required
-- Runs on mobile (organizer's phone) — UI must be phone-friendly
-- Data persistence via localStorage only; clubs, members, and session history live on-device
-- Session = a practice evening with rounds; not an HTTP session
-- Typical session: 6–12 players, 6–10 rounds, one organizer announcing matchups
+- Deployed as static site on GitHub Pages — no server, no build pipeline required
+- Runs on organizer's phone — mobile-first, thumb-friendly
+- localStorage only; clubs, members, session history on-device
+- Session = a practice evening; not an HTTP session
+- Typical: 6-12 players, 6-10 rounds, one organizer
 
 ## Constraints
 
-- **Tech stack**: Vanilla JS/HTML/CSS or lightweight framework — no server, must deploy to GitHub Pages as static files
-- **Persistence**: localStorage only — no external DB, no cookies for auth
-- **Platform**: Mobile-first — designed for phone screen, thumb-friendly UI
-- **Deployment**: GitHub Pages — everything must work as static assets
+- **Tech stack**: Vanilla JS/HTML/CSS — no server, GitHub Pages static files
+- **Persistence**: localStorage only
+- **Platform**: Mobile-first — phone screen, thumb-friendly
+- **Deployment**: GitHub Pages — everything as static assets
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Random-generate + score candidates (not deterministic solver) | Simpler to implement, easy to tune, produces good-enough results for small group sizes | — Pending |
-| Organizer-chosen fallback for odd player counts | Different groups have different preferences; not worth hardcoding | — Pending |
-| Advanced settings screen for scoring weights | Developer wants control; organizers don't need it by default | — Pending |
+| Random-generate + score candidates (not deterministic solver) | Simpler, easy to tune, good-enough for small groups | ✓ Good — works well in practice |
+| Organizer-chosen fallback for odd player counts | Different groups have different preferences | ✓ Good — preferred over hardcoding |
+| Advanced settings screen for scoring weights | Developer wants control; organizers don't need defaults changed | ✓ Good — power users appreciate it |
+| Exponential sit-out penalty (`base * 100^count`) | Prevents repeated sit-outs before others have had a turn | ✓ Good — fairness-over-equality semantics |
+| Schema v2 migration with `?? default` fallbacks | Avoid breaking existing sessions | ✓ Good — zero-downtime deploy |
+| Slider range 0-50 (0 = disable) | Organizers may want to fully disable certain penalty types | ✓ Good — more flexible than 1-50 |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd:transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd:complete-milestone`):
+**After each milestone** (via `/gsd-complete-milestone`):
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — Milestone 6 started*
+*Last updated: 2026-04-14 after v1.0 milestone*
