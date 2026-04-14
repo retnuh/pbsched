@@ -58,6 +58,30 @@
 
 - **DEPL-01**: App can be installed as a PWA (Add to Home Screen on iOS/Android)
 
+## Milestone 8 Requirements
+
+### Dark Mode
+
+- [ ] **DARK-01**: Organizer's device dark mode preference is respected automatically on first load
+- [ ] **DARK-02**: App renders in correct theme before any content is visible (no white flash)
+- [ ] **DARK-03**: Organizer can manually override to light, dark, or system-auto via Settings
+- [ ] **DARK-04**: Theme preference persists across sessions
+- [ ] **DARK-05**: All courts, bench chips, and drag states are legible in dark mode
+- [ ] **DARK-06**: All user-facing text (button labels, hint text, toasts, error states, empty states) is legible in dark mode
+
+### Test Coverage
+
+- [ ] **TEST-01**: Running `npm run coverage` produces a report showing per-file line and function coverage
+- [ ] **TEST-02**: `club.js` and `html.js` utilities have unit tests covering their main paths
+- [ ] **TEST-03**: `ThemeService` has tests covering system-pref detection, manual override, and persistence
+- [ ] **TEST-04**: Storage v1→v2 migration has a regression test
+
+### Documentation & Copy
+
+- [ ] **DOCS-01**: In-app Help screen uses plain language and accurately describes all current features including dark mode and match editing
+- [ ] **DOCS-02**: GitHub README opens with what the app does in one plain sentence, with step-by-step instructions written for a phone-holding organizer at a court
+- [ ] **DOCS-03**: All user-facing text in the app (button labels, hint text, toast messages, error states, empty states) uses plain language appropriate for a non-developer organizer
+
 ## Out of Scope
 
 | Feature | Reason |
