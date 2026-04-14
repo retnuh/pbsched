@@ -1,7 +1,7 @@
 # Stack Research
 
 **Domain:** Static SPA — no backend, GitHub Pages deployment, mobile-first, localStorage persistence
-**Researched:** 2026-04-02 (initial) / 2026-04-13 (milestone 6 update)
+**Researched:** 2026-04-02 (initial) / 2026-04-13 (milestone 6 update) / 2026-04-14 (milestone 7 update)
 **Confidence:** HIGH (all versions verified against official sources)
 
 ## Recommended Stack
@@ -165,6 +165,110 @@ All three milestone 6 features are implementable within the existing stack. The 
 
 ---
 
+## Milestone 7 Stack Assessment: Match Editor Drag-and-Drop
+
+**New dependency required: SortableJS 1.15.7**
+
+The match editor needs touch drag-and-drop to move player chips between court zones and the rest bench. This is the only new dependency required.
+
+### Recommended: SortableJS 1.15.7
+
+**Install:**
+```bash
+npm install sortablejs@1.15.7
+```
+
+**Import in the match editor view module:**
+```js
+import Sortable from 'sortablejs'
+```
+
+**Why SortableJS over alternatives:**
+
+SortableJS is the right choice for this specific use case because:
+
+1. **Cross-container drag-and-drop is its primary feature.** The `group` option lets you define a named group across multiple `Sortable` instances (court 1, court 2, rest bench). Items drag freely between any zone in the group with a single config option — no custom hit-testing required.
+
+2. **Touch is first-class, not an afterthought.** SortableJS implements its own touch event handling internally via `touchstart`/`touchmove`/`touchend`. It does not rely on the broken HTML5 drag-and-drop API on iOS. Options like `delayOnTouchOnly` and `touchStartThreshold` handle the "accidental drag while scrolling" problem that kills most mobile DnD implementations.
+
+3. **Actively maintained.** v1.15.7 released February 2026. Over 1 million weekly npm downloads. The project receives consistent releases and bug fixes.
+
+4. **Framework-agnostic vanilla JS.** `Sortable.create(el, options)` is a plain function call on a DOM element. No virtual DOM, no React, no Vue wrapper needed. Integrates directly into the existing view module pattern.
+
+5. **No additional polyfill needed.** Unlike libraries built on top of the HTML5 DnD API (which requires a separate touch polyfill on mobile), SortableJS handles touch natively. You do not need `@dragdroptouch/drag-drop-touch` alongside it.
+
+**Basic integration pattern for the match editor:**
+
+```js
+import Sortable from 'sortablejs'
+
+const GROUP_NAME = 'match-editor'
+const SORTABLE_OPTIONS = {
+  group: GROUP_NAME,
+  animation: 150,
+  delay: 100,           // prevents accidental drags from taps
+  delayOnTouchOnly: true,
+  touchStartThreshold: 5,
+}
+
+function initMatchEditor(roundData) {
+  const zones = document.querySelectorAll('.court-zone, .bench-zone')
+  zones.forEach(zone => {
+    Sortable.create(zone, {
+      ...SORTABLE_OPTIONS,
+      onEnd(evt) {
+        // evt.item is the dragged player chip
+        // evt.from / evt.to are the source/target zone elements
+        handlePlayerMove(evt)
+      }
+    })
+  })
+}
+```
+
+**CSS required:** Add `touch-action: none` to draggable player chip elements. This prevents the browser from claiming touch events for scrolling before SortableJS can intercept them.
+
+```css
+.player-chip {
+  touch-action: none;
+}
+```
+
+**What SortableJS does NOT do for this use case:**
+- It does not enforce game-valid moves (e.g., max 2 players per team). That validation belongs in `handlePlayerMove()` in the view layer, which can inspect zone occupancy after the drop and revert if invalid.
+- It does not manage the data model. `onEnd` fires after the DOM has changed; the view layer must sync the DOM state back into the round data object before saving.
+
+### Why NOT the alternatives
+
+**Custom PointerEvents implementation (no library):**
+- PointerEvents unify mouse and touch, and Safari iOS 13+ supports them. Writing a custom DnD with `pointerdown`/`pointermove`/`pointerup` is feasible but requires implementing: visual drag preview/ghost element, hit-testing against drop zones on each `pointermove`, scroll-while-dragging auto-scroll, and cleanup on cancel. Estimated 150-300 lines of edge-case-heavy code. SortableJS solves all of this in one npm install. The custom approach is only justified if you need behavior SortableJS cannot provide — this use case does not reach that bar.
+
+**DragDropTouch polyfill + native HTML5 DnD API:**
+- The native HTML5 DnD API fires `dragstart`, `dragover`, `drop` events. iOS Safari 15+ supports these natively. However, iOS Safari's implementation of `dragover` does not fire continuously during touch movement (a known platform bug), making visual feedback during dragging nearly impossible. The DragDropTouch polyfill translates touch events into synthetic DnD events to paper over this, but it is a compatibility layer on a leaky abstraction. SortableJS bypasses the HTML5 DnD API entirely and directly consumes touch events — a cleaner foundation.
+
+**Dragula 3.7.3:**
+- Last published 5 years ago. Touch support on mobile Android and iOS has open, unresolved issues in the GitHub tracker (issues #236, #239). Not suitable for a mobile-first PWA.
+
+**interact.js 1.10.27:**
+- Last published approximately 2 years ago. Officially in maintenance-only mode (no new features). Designed primarily for free-form dragging and resizing of arbitrary elements, not for list/zone-based drag-and-drop between containers. Overkill API surface for this use case.
+
+**Shopify Draggable:**
+- Actively maintained but bundled as CommonJS modules with no clean single-file ES module build. Requires a build step to tree-shake. SortableJS provides a cleaner no-config ES module import.
+
+### iOS Safari Compatibility Note
+
+SortableJS has had minor iOS-specific issues over the years (e.g., `onFilter` regression in iOS 17.4 per GitHub issue #2374, resolved in subsequent releases). These are library-level bugs with tracked fixes, not platform-level limitations. At v1.15.7, iOS touch drag-and-drop with the `group` option is the library's most battle-tested use case. The `delay: 100, delayOnTouchOnly: true` options are the recommended config for mobile — they prevent conflicts between scroll intent and drag intent on touch screens.
+
+### What NOT to Add for Milestone 7
+
+- No additional drag-and-drop libraries alongside SortableJS (do not add DragDropTouch polyfill — it is not needed)
+- No animation library (SortableJS `animation: 150` provides built-in CSS transition animations)
+- No gesture library (e.g., Hammer.js) — SortableJS handles all touch gestures needed
+- No React/Vue — the existing view module pattern handles the match editor UI
+- No state management library — round data flows through the same localStorage service layer already in place
+
+---
+
 ## Sources
 
 - [Vite — Deploying a Static Site](https://vite.dev/guide/static-deploy) — GitHub Pages workflow verified, Vite 8.0.3 confirmed as current stable (HIGH confidence)
@@ -174,10 +278,17 @@ All three milestone 6 features are implementable within the existing stack. The 
 - [Tailwind Play CDN Docs](https://tailwindcss.com/docs/installation/play-cdn) — "not intended for production" confirmed (HIGH confidence)
 - [Vitest 4.0 release announcement](https://vitest.dev/blog/vitest-4) — v4.1.2 confirmed current (HIGH confidence)
 - [Preact npm / GitHub releases](https://github.com/preactjs/preact/releases) — 10.27.2 stable, 11.0.0-beta.0 not production-ready (HIGH confidence)
+- [SortableJS GitHub Releases](https://github.com/SortableJS/Sortable/releases) — v1.15.7 released February 11, 2026 (HIGH confidence)
+- [SortableJS npm](https://www.npmjs.com/package/sortablejs) — 1M+ weekly downloads, last updated February 2026 (HIGH confidence)
+- [DragDropTouch GitHub](https://github.com/drag-drop-touch-js/dragdroptouch) — v1.2, polyfill approach, why not used (MEDIUM confidence)
+- [Dragula GitHub issues #236, #239](https://github.com/bevacqua/dragula/issues/239) — confirmed mobile touch problems, last published 5 years ago (HIGH confidence)
+- [interact.js npm](https://www.npmjs.com/package/interactjs) — 1.10.27, published ~2 years ago, maintenance-only (HIGH confidence)
+- [Can I Use — Drag and Drop](https://caniuse.com/dragndrop) — iOS Safari 15+ native DnD support confirmed (HIGH confidence)
+- [SortableJS iOS issue #2374](https://github.com/SortableJS/Sortable/issues/2374) — iOS 17.4 onFilter regression, tracked and resolved (MEDIUM confidence)
 - WebSearch: mobile-first CSS frameworks 2025 — Pico CSS, Beer CSS, Tachyons alternatives reviewed (MEDIUM confidence)
 - WebSearch: localStorage best practices 2025 — JSON.parse/stringify wrapper pattern, try-catch availability check (MEDIUM confidence)
 - Codebase inspection: `src/scheduler.js`, `src/storage.js`, `src/services/club.js`, `src/services/session.js`, `src/views/Settings.js`, `src/views/RoundDisplay.js`, `package.json`, `vite.config.js` — direct verification (HIGH confidence)
 
 ---
 *Stack research for: Pickleball Practice Scheduler — static SPA, GitHub Pages, mobile-first, localStorage*
-*Initial research: 2026-04-02 | Milestone 6 update: 2026-04-13*
+*Initial research: 2026-04-02 | Milestone 6 update: 2026-04-13 | Milestone 7 update: 2026-04-14*
