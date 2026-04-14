@@ -546,6 +546,28 @@ describe('Phase 13: Drag interactions', () => {
       el.querySelector('#confirm-btn').click()
       expect(SessionService.updateRound).not.toHaveBeenCalled()
     })
+
+    test('confirm button is disabled when all players are on one side (imbalanced)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      expect(el.querySelector('#confirm-btn').disabled).toBe(true)
+    })
+
+    test('imbalanced court shows "players on both sides required" error', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      const errorLabel = el.querySelector('[data-court-error]')
+      expect(errorLabel.className).not.toContain('hidden')
+      expect(errorLabel.textContent.trim()).toBe('players on both sides required')
+    })
+
+    test('does not call updateRound when all players are on one side', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).not.toHaveBeenCalled()
+    })
   })
 
   describe('RENDER: Layout, zones, and round display', () => {

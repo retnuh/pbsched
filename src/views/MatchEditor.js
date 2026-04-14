@@ -41,7 +41,8 @@ function validateAndUpdateUI(el) {
   _draft.courts.forEach((court, i) => {
     const total = court.teamA.length + court.teamB.length;
     const oversized = court.teamA.length > 2 || court.teamB.length > 2;
-    const isInvalid = total === 1 || oversized;
+    const imbalanced = total > 1 && (court.teamA.length === 0 || court.teamB.length === 0);
+    const isInvalid = total === 1 || oversized || imbalanced;
     if (isInvalid) anyInvalid = true;
     const card = el.querySelector('[data-court="' + i + '"]');
     if (!card) return;
@@ -51,6 +52,7 @@ function validateAndUpdateUI(el) {
     if (errorLabel) {
       errorLabel.classList.toggle('hidden', !isInvalid);
       if (oversized) errorLabel.textContent = 'max 2 per side';
+      else if (imbalanced) errorLabel.textContent = 'players on both sides required';
       else if (total === 1) errorLabel.textContent = 'needs 2+ players';
     }
   });
@@ -84,9 +86,11 @@ function handleDiscardKeep() {
 }
 
 function handleConfirm() {
-  const anyInvalid = _draft.courts.some(c =>
-    (c.teamA.length + c.teamB.length) === 1 || c.teamA.length > 2 || c.teamB.length > 2
-  );
+  const anyInvalid = _draft.courts.some(c => {
+    const total = c.teamA.length + c.teamB.length;
+    return total === 1 || c.teamA.length > 2 || c.teamB.length > 2 ||
+      (total > 1 && (c.teamA.length === 0 || c.teamB.length === 0));
+  });
   if (anyInvalid) return;
   // Phase 14: prune empty courts before save (silent)
   const prunedDraft = {
