@@ -1,7 +1,9 @@
-import { expect, test, describe, beforeEach } from 'vitest'
 import { StorageAdapter } from '../storage.js'
 import { SessionService } from './session.js'
 
+// candidateCount: 1 makes generateRounds deterministic (only one candidate evaluated).
+// This is intentional for roster-change integration tests but means the scheduler's
+// candidate-selection and scoring paths are not exercised here.
 const MOCK_SETTINGS = {
   oddPlayerFallback: 'sit-out',
   candidateCount: 1,
@@ -10,6 +12,9 @@ const MOCK_SETTINGS = {
   penaltyRepeatedSitOut: 3,
 }
 
+// NOTE: makeRound sets the index field manually. regenerateRound (session.js) overwrites
+// newRound.index after generation, so the hardcoded value is safe today. If generateRounds
+// ever uses index internally (e.g. for penalty look-up), fixtures must be updated accordingly.
 function makeRound(index, playerIds, played = false) {
   return {
     index,
@@ -92,6 +97,15 @@ describe('SessionService — mid-session roster changes', () => {
 
       // p1's ID must still appear in played round history — removal does not rewrite history
       expect(playedAfter).toEqual(playedBefore)
+
+      // p1 must NOT appear in any regenerated unplayed round — proves attendeeIds was
+      // persisted before regenerateRound read it
+      const unplayedAfter02 = SessionService.getActiveSession().rounds.filter(r => !r.played)
+      const allPlayersInUnplayed02 = unplayedAfter02.flatMap(r => [
+        ...r.courts.flatMap(c => [...c.teamA, ...c.teamB]),
+        ...r.sittingOut,
+      ])
+      expect(allPlayersInUnplayed02).not.toContain('p1')
     })
   })
 
