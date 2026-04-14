@@ -66,8 +66,11 @@ Plans:
   5. Tapping Confirm saves the edited lineup; tapping Cancel discards all changes and returns to the previous view
   6. Confirm is disabled (and an error message shown) when any court has exactly one player; courts with 0, 2, 3, or 4 players are accepted
   7. A dragged chip's destination slot is visually highlighted during the drag
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Install SortableJS, scaffold test stubs, implement drag zones and draft state (DRAG-01, DRAG-02, DRAG-03, DRAG-04, VIS-01)
+- [ ] 13-02-PLAN.md — Validation, Confirm, Cancel wiring + human verify checkpoint (DRAG-05, DRAG-06, VALID-01, VALID-02, VIS-01)
 
 ### Phase 14: Court Management & Polish
 **Goal**: The organizer can add or remove courts inside the editor and receives tactile feedback on each successful drop
@@ -91,5 +94,5 @@ Plans:
 | 10. Scheduling Penalties for Short-Sided Matches | Milestone 6 | 2/2 | Complete | 2026-04-14 |
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
-| 13. Drag Interactions & Validation | Milestone 7 | 0/? | Not started | - |
+| 13. Drag Interactions & Validation | Milestone 7 | 0/2 | Not started | - |
 | 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
