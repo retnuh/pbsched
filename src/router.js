@@ -70,6 +70,7 @@ export function initRouter(el) {
       currentView = route;
       el.innerHTML = ''; // Clear
       route.mount(el, params);
+      window.scrollTo(0, 0);
       
       // Update active state in nav
       document.querySelectorAll('[data-nav]').forEach(link => {
