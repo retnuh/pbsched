@@ -39,19 +39,95 @@ describe('SessionService — mid-session roster changes', () => {
 
   describe('TEST-01: adding a player mid-session', () => {
     test('played rounds are unchanged after adding a player and regenerating the unplayed round', () => {
-      throw new Error('not implemented')
+      const session = makeSession({
+        attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+        rounds: [
+          makeRound(0, ['p1', 'p2', 'p3', 'p4'], true),
+          makeRound(1, ['p2', 'p4', 'p1', 'p3'], true),
+          makeRound(2, ['p1', 'p2', 'p3', 'p4'], false),
+        ],
+      })
+      StorageAdapter.set('sessions', [session])
+
+      const playedBefore = JSON.parse(JSON.stringify(
+        SessionService.getActiveSession().rounds.filter(r => r.played)
+      ))
+
+      // Simulate full mid-session flow: add p5, then regenerate the unplayed round
+      SessionService.updateAttendees(['p1', 'p2', 'p3', 'p4', 'p5'])
+      SessionService.regenerateRound(2)
+
+      const playedAfter = JSON.parse(JSON.stringify(
+        SessionService.getActiveSession().rounds.filter(r => r.played)
+      ))
+
+      expect(playedAfter).toEqual(playedBefore)
     })
   })
 
   describe('TEST-02: removing a player mid-session', () => {
     test('played rounds are unchanged after removing a player (including their ID in played courts)', () => {
-      throw new Error('not implemented')
+      // p1 appeared in both played rounds — removing p1 from attendees must not alter those rounds
+      const session = makeSession({
+        attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+        rounds: [
+          makeRound(0, ['p1', 'p2', 'p3', 'p4'], true),
+          makeRound(1, ['p2', 'p4', 'p1', 'p3'], true),
+          makeRound(2, ['p1', 'p2', 'p3', 'p4'], false),
+        ],
+      })
+      StorageAdapter.set('sessions', [session])
+
+      const playedBefore = JSON.parse(JSON.stringify(
+        SessionService.getActiveSession().rounds.filter(r => r.played)
+      ))
+
+      // Remove p1 mid-session, regenerate the pending unplayed round
+      SessionService.updateAttendees(['p2', 'p3', 'p4'])
+      SessionService.regenerateRound(2)
+
+      const playedAfter = JSON.parse(JSON.stringify(
+        SessionService.getActiveSession().rounds.filter(r => r.played)
+      ))
+
+      // p1's ID must still appear in played round history — removal does not rewrite history
+      expect(playedAfter).toEqual(playedBefore)
     })
   })
 
   describe('TEST-03: only unplayed rounds are affected', () => {
     test('played rounds are unchanged AND unplayed round now contains the updated roster', () => {
-      throw new Error('not implemented')
+      const session = makeSession({
+        attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+        rounds: [
+          makeRound(0, ['p1', 'p2', 'p3', 'p4'], true),
+          makeRound(1, ['p2', 'p4', 'p1', 'p3'], true),
+          makeRound(2, ['p1', 'p2', 'p3', 'p4'], false),
+        ],
+      })
+      StorageAdapter.set('sessions', [session])
+
+      const playedBefore = JSON.parse(JSON.stringify(
+        SessionService.getActiveSession().rounds.filter(r => r.played)
+      ))
+
+      // Add p5 and regenerate the unplayed round
+      SessionService.updateAttendees(['p1', 'p2', 'p3', 'p4', 'p5'])
+      SessionService.regenerateRound(2)
+
+      const sessionAfter = SessionService.getActiveSession()
+      const playedAfter = JSON.parse(JSON.stringify(sessionAfter.rounds.filter(r => r.played)))
+      const unplayedAfter = sessionAfter.rounds.filter(r => !r.played)
+
+      // Played rounds must be byte-for-byte identical
+      expect(playedAfter).toEqual(playedBefore)
+
+      // Unplayed round must now include p5 (proves it was actually regenerated with the new roster)
+      const allPlayersInUnplayed = unplayedAfter.flatMap(r => [
+        ...r.courts.flatMap(c => [...c.teamA, ...c.teamB]),
+        ...r.sittingOut,
+      ])
+      expect(allPlayersInUnplayed).toContain('p5')
     })
   })
 })
