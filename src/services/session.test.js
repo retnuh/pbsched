@@ -42,31 +42,36 @@ describe('SessionService — mid-session roster changes', () => {
     StorageAdapter.reset()
   })
 
-  describe('TEST-01: adding a player mid-session', () => {
-    test('played rounds are unchanged after adding a player and regenerating the unplayed round', () => {
+  describe('TEST-01: adding a player before any round has been played', () => {
+    test('regenerated round 0 contains the new player when no rounds are played yet', () => {
+      // Distinct from TEST-03: zero played rounds — the entire round list is unplayed.
+      // This exercises the boundary where playedRounds is empty and regenerateRound
+      // must still produce a valid round using the updated attendee list.
       const session = makeSession({
         attendeeIds: ['p1', 'p2', 'p3', 'p4'],
         rounds: [
-          makeRound(0, ['p1', 'p2', 'p3', 'p4'], true),
-          makeRound(1, ['p2', 'p4', 'p1', 'p3'], true),
-          makeRound(2, ['p1', 'p2', 'p3', 'p4'], false),
+          makeRound(0, ['p1', 'p2', 'p3', 'p4'], false),
         ],
       })
       StorageAdapter.set('sessions', [session])
 
-      const playedBefore = JSON.parse(JSON.stringify(
-        SessionService.getActiveSession().rounds.filter(r => r.played)
-      ))
-
-      // Simulate full mid-session flow: add p5, then regenerate the unplayed round
+      // Add p5 before any round has been played, then regenerate round 0
       SessionService.updateAttendees(['p1', 'p2', 'p3', 'p4', 'p5'])
-      SessionService.regenerateRound(2)
+      SessionService.regenerateRound(0)
 
-      const playedAfter = JSON.parse(JSON.stringify(
-        SessionService.getActiveSession().rounds.filter(r => r.played)
-      ))
+      const sessionAfter = SessionService.getActiveSession()
 
-      expect(playedAfter).toEqual(playedBefore)
+      // No played rounds exist, so none should appear in the result either
+      expect(sessionAfter.rounds.filter(r => r.played)).toHaveLength(0)
+
+      // The regenerated round must include p5 and carry the correct index
+      const regenerated = sessionAfter.rounds[0]
+      expect(regenerated.index).toBe(0)
+      const allPlayers = [
+        ...regenerated.courts.flatMap(c => [...c.teamA, ...c.teamB]),
+        ...regenerated.sittingOut,
+      ]
+      expect(allPlayers).toContain('p5')
     })
   })
 
