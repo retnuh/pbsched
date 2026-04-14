@@ -142,6 +142,10 @@ describe('SessionService — mid-session roster changes', () => {
         ...r.sittingOut,
       ])
       expect(allPlayersInUnplayed).toContain('p5')
+
+      // Regenerated round must retain its correct index (guards against index reset to 0)
+      const regenerated = SessionService.getActiveSession().rounds[2]
+      expect(regenerated.index).toBe(2)
     })
   })
 })
