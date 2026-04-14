@@ -108,8 +108,12 @@ Plans:
   2. Loading the app produces no white flash — the correct background color is applied before the first paint
   3. After the organizer changes the theme, reloading the app applies the same theme without any flash or flicker
   4. ThemeService reads and writes theme preference through StorageAdapter (not directly to localStorage)
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 15-01-PLAN.md — Wave 0 test scaffold: theme.test.js stubs + matchMedia mock in test-setup.js (DARK-01, DARK-04)
+- [ ] 15-02-PLAN.md — ThemeService implementation + style.css variant + index.html FOUC script + main.js wiring (DARK-01, DARK-02, DARK-04)
 
 ### Phase 16: Dark Mode Visuals & Toggle
 **Goal**: Every element in the app is legible and correctly styled in dark mode, and the organizer can override the theme from Settings
@@ -165,7 +169,7 @@ Plans:
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 14. Court Management & Polish | Milestone 7 | 2/2 | Complete | 2026-04-14 |
-| 15. Dark Mode Foundation | Milestone 8 | 0/TBD | Not started | - |
+| 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 0/TBD | Not started | - |
 | 17. Test Coverage | Milestone 8 | 0/TBD | Not started | - |
 | 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
