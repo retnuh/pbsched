@@ -123,8 +123,15 @@ Plans:
   1. All courts, player chips, and bench drag states are visually distinct and readable under dark mode on a real phone screen
   2. All button labels, hint text, toasts, error states, and empty states are readable in dark mode with sufficient contrast
   3. The Settings screen offers light, dark, and auto (system) options; selecting one takes effect immediately without a page reload
-**Plans**: TBD
+**Plans**: 5 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 16-01-PLAN.md — CSS zone chip dark overrides + sortable-ghost dark border + nav bar dark classes (DARK-05)
+- [ ] 16-02-PLAN.md — RoundDisplay.js dark coverage (3 render functions) + MatchEditor.js dark coverage (buildHTML + makeEmptySlot) (DARK-05, DARK-06)
+- [ ] 16-03-PLAN.md — Settings.js: Appearance card with ThemeService toggle + all existing card dark overrides (DARK-03, DARK-06)
+- [ ] 16-04-PLAN.md — SessionSetup.js, ClubManager.js, MemberEditor.js, Help.js dark coverage (DARK-06)
+- [ ] 16-05-PLAN.md — Human visual verification checkpoint across all views (DARK-03, DARK-05, DARK-06)
 
 ### Phase 17: Test Coverage
 **Goal**: Running `npm run coverage` produces a per-file line and function coverage report; service-layer and new ThemeService paths are exercised
@@ -170,6 +177,6 @@ Plans:
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 14. Court Management & Polish | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
-| 16. Dark Mode Visuals & Toggle | Milestone 8 | 0/TBD | Not started | - |
+| 16. Dark Mode Visuals & Toggle | Milestone 8 | 0/5 | Not started | - |
 | 17. Test Coverage | Milestone 8 | 0/TBD | Not started | - |
 | 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
