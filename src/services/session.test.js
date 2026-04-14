@@ -106,6 +106,10 @@ describe('SessionService — mid-session roster changes', () => {
         ...r.sittingOut,
       ])
       expect(allPlayersInUnplayed02).not.toContain('p1')
+
+      // Only the three remaining players must appear — guards against stale or missing players
+      const sortedPlayers = [...allPlayersInUnplayed02].sort()
+      expect(sortedPlayers).toEqual(['p2', 'p3', 'p4'])
     })
   })
 
