@@ -127,10 +127,10 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 16-01-PLAN.md — CSS zone chip dark overrides + sortable-ghost dark border + nav bar dark classes (DARK-05)
-- [ ] 16-02-PLAN.md — RoundDisplay.js dark coverage (3 render functions) + MatchEditor.js dark coverage (buildHTML + makeEmptySlot) (DARK-05, DARK-06)
-- [ ] 16-03-PLAN.md — Settings.js: Appearance card with ThemeService toggle + all existing card dark overrides (DARK-03, DARK-06)
-- [ ] 16-04-PLAN.md — SessionSetup.js, ClubManager.js, MemberEditor.js, Help.js dark coverage (DARK-06)
+- [x] 16-01-PLAN.md — CSS zone chip dark overrides + sortable-ghost dark border + nav bar dark classes (DARK-05)
+- [x] 16-02-PLAN.md — RoundDisplay.js dark coverage (3 render functions) + MatchEditor.js dark coverage (buildHTML + makeEmptySlot) (DARK-05, DARK-06)
+- [x] 16-03-PLAN.md — Settings.js: Appearance card with ThemeService toggle + all existing card dark overrides (DARK-03, DARK-06)
+- [x] 16-04-PLAN.md — SessionSetup.js, ClubManager.js, MemberEditor.js, Help.js dark coverage (DARK-06)
 - [ ] 16-05-PLAN.md — Human visual verification checkpoint across all views (DARK-03, DARK-05, DARK-06)
 
 ### Phase 17: Test Coverage
@@ -160,7 +160,7 @@ Plans:
 
 **Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
 **Requirements:** TBD
-**Plans:** 2/2 plans complete
+**Plans:** 4/5 plans executed
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
@@ -177,6 +177,6 @@ Plans:
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 14. Court Management & Polish | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
-| 16. Dark Mode Visuals & Toggle | Milestone 8 | 0/5 | Not started | - |
+| 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
 | 17. Test Coverage | Milestone 8 | 0/TBD | Not started | - |
 | 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
