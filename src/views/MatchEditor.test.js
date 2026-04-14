@@ -119,17 +119,13 @@ describe('MatchEditor', () => {
   })
 
   describe('Back navigation', () => {
-    test('Back button calls navigate(/active)', () => {
+    test('Cancel button calls navigate(/active)', () => {
       const session = makeSession([makeRound(0, false)])
       StorageAdapter.set('clubs', CLUBS_DATA)
       StorageAdapter.set('sessions', [session])
-
       mount(el, { roundIndex: '0' })
-
-      const backBtn = el.querySelector('#back-btn')
-      expect(backBtn).not.toBeNull()
-      backBtn.click()
-
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      el.querySelector('#cancel-btn').click()
       expect(navigate).toHaveBeenCalledWith('/active')
     })
   })

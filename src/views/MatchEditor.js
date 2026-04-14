@@ -33,7 +33,47 @@ function reconcileDraftFromDOM(el) {
 }
 
 function validateAndUpdateUI(el) {
-  // Implemented in Phase 13, Plan 02
+  let anyInvalid = false;
+  _draft.courts.forEach((court, i) => {
+    const total = court.teamA.length + court.teamB.length;
+    const isInvalid = total === 1;
+    if (isInvalid) anyInvalid = true;
+    const card = el.querySelector('[data-court="' + i + '"]');
+    if (!card) return;
+    card.classList.toggle('border-red-400', isInvalid);
+    card.classList.toggle('border-gray-200', !isInvalid);
+    const errorLabel = card.querySelector('[data-court-error]');
+    if (errorLabel) errorLabel.classList.toggle('hidden', !isInvalid);
+  });
+  const confirmBtn = el.querySelector('#confirm-btn');
+  if (confirmBtn) {
+    confirmBtn.disabled = anyInvalid;
+    confirmBtn.classList.toggle('opacity-50', anyInvalid);
+    confirmBtn.classList.toggle('cursor-not-allowed', anyInvalid);
+    confirmBtn.classList.toggle('bg-blue-600', !anyInvalid);
+    confirmBtn.classList.toggle('text-white', !anyInvalid);
+    confirmBtn.classList.toggle('shadow-lg', !anyInvalid);
+    confirmBtn.classList.toggle('shadow-blue-200', !anyInvalid);
+    confirmBtn.classList.toggle('bg-gray-300', anyInvalid);
+    confirmBtn.classList.toggle('text-gray-500', anyInvalid);
+  }
+}
+
+function hasChanges() {
+  return JSON.stringify(_draft) !== JSON.stringify(_originalRound);
+}
+
+function handleCancel() {
+  if (!hasChanges()) { navigate('/active'); return; }
+  const confirmed = confirm("Discard changes? Your edits won't be saved.");
+  if (confirmed) navigate('/active');
+}
+
+function handleConfirm() {
+  const anyInvalid = _draft.courts.some(c => (c.teamA.length + c.teamB.length) === 1);
+  if (anyInvalid) return;
+  SessionService.updateRound(_roundIndex, _draft);
+  navigate('/active');
 }
 
 function handleDragEnd() {
@@ -172,13 +212,9 @@ export function mount(el, params) {
     </div>
   `;
 
-  // Back button SVG — same chevron as MemberEditor and RoundDisplay sub-views
-  const backSVG = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>`;
-
   el.innerHTML = `
     <div class="p-4 space-y-6 pb-48">
       <header class="flex items-center space-x-4">
-        <button id="back-btn" class="p-2 -ml-2">${backSVG}</button>
         <h1 class="text-2xl font-bold">Edit Round ${round.index + 1}</h1>
       </header>
       ${courtsHTML}
@@ -193,14 +229,11 @@ export function mount(el, params) {
   _draft = JSON.parse(JSON.stringify(round));
   _originalRound = JSON.parse(JSON.stringify(round));
 
-  // Wire navigation buttons
-  el.querySelector('#back-btn').addEventListener('click', () => {
-    navigate('/active');
-  });
-
-  // Cancel and Confirm will be fully wired in Plan 02
   // (initSortables must come after el.innerHTML is set)
   initSortables(el);
+  validateAndUpdateUI(el);
+  el.querySelector('#cancel-btn').addEventListener('click', handleCancel);
+  el.querySelector('#confirm-btn').addEventListener('click', handleConfirm);
 }
 
 export function unmount() {
