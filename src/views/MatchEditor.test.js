@@ -14,6 +14,7 @@ vi.mock('../services/haptics.js', () => ({
 // Import mocked navigate for assertions
 import { navigate } from '../router.js'
 import { mount } from './MatchEditor.js'
+import { mount as mountRoundDisplay } from './RoundDisplay.js'
 
 function makeSession(rounds = []) {
   return {
@@ -77,10 +78,18 @@ describe('MatchEditor', () => {
       expect(el.innerHTML).toContain('Bob')
     })
 
-    test('Edit button entry point calls navigate with correct route', () => {
-      // Verify navigate('/edit/0') is called — tested by simulating the call
-      // (the actual Edit button is in RoundDisplay.js; this test verifies the route target)
-      navigate('/edit/0')
+    test('Edit button in RoundDisplay calls navigate with correct route', () => {
+      const session = makeSession([makeRound(0, false)])
+      StorageAdapter.set('clubs', CLUBS_DATA)
+      StorageAdapter.set('sessions', [session])
+
+      const rdEl = document.createElement('div')
+      mountRoundDisplay(rdEl, {})
+
+      const editBtn = rdEl.querySelector('[data-action="edit"]')
+      expect(editBtn).not.toBeNull()
+      editBtn.click()
+
       expect(navigate).toHaveBeenCalledWith('/edit/0')
     })
   })
@@ -130,6 +139,17 @@ describe('MatchEditor', () => {
       mount(el, { roundIndex: '5' })
 
       expect(el.innerHTML).toContain('Round not found')
+    })
+
+    test('renders error when club is not found', () => {
+      const session = makeSession([makeRound(0, false)])
+      // Seed session with a clubId that has no matching club
+      StorageAdapter.set('sessions', [session])
+      // Do NOT seed clubs data
+
+      mount(el, { roundIndex: '0' })
+
+      expect(el.innerHTML).toContain('Club Not Found')
     })
   })
 
