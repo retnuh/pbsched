@@ -61,17 +61,25 @@
 
 /* SortableJS drag states — Phase 13 */
 .sortable-ghost {
-  opacity: 0.4;
-  border: 2px dashed #93C5FD; /* blue-300 */
+  opacity: 0.35;
+  border: 3px dashed #111827 !important; /* gray-900 — visible on any background */
+  background-color: transparent !important;
+  color: transparent !important;
 }
 
 .sortable-chosen {
   opacity: 0.9;
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 
-.sortable-swap-highlight {
-  background-color: #EFF6FF; /* blue-50 */
-  border: 2px dashed #60A5FA; /* blue-400 */
+/* Pop animation — brief scale pulse on successful drop */
+@keyframes dropPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+.drop-pop {
+  animation: dropPop 0.28s ease-out;
 }

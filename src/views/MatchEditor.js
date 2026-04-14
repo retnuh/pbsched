@@ -2,10 +2,7 @@ import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { escapeHTML } from '../utils/html.js';
-import Sortable, { Swap } from 'sortablejs';
-
-// Mount Swap plugin once at module load (not inside mount())
-Sortable.mount(new Swap());
+import Sortable from 'sortablejs';
 
 // Module-scope state — initialized in mount(), nulled in unmount()
 let _sortableInstances = [];
@@ -13,6 +10,9 @@ let _draft = null;
 let _originalRound = null;
 let _roundIndex = null;
 let _el = null;
+
+// Empty slot placeholder — filtered so it can't be dragged, but accepts drops
+const EMPTY_SLOT_HTML = '<div class="empty-slot border-2 border-dashed border-gray-300 rounded-full min-h-[44px]"></div>';
 
 // --- Private helpers ---
 
@@ -30,6 +30,27 @@ function reconcileDraftFromDOM(el) {
     teamB: readZoneIds(el, `court-${i}-b`),
   }));
   _draft.sittingOut = readZoneIds(el, 'bench');
+}
+
+// Keep empty slot count at (2 - chipCount) per court column, 0 for bench
+function syncEmptySlots(el) {
+  el.querySelectorAll('[data-zone^="court-"]').forEach(zone => {
+    const chipCount = zone.querySelectorAll('[data-player-id]').length;
+    const slots = [...zone.querySelectorAll('.empty-slot')];
+    const needed = Math.max(0, 2 - chipCount);
+    slots.slice(needed).forEach(s => s.remove());
+    for (let i = slots.length; i < needed; i++) {
+      zone.insertAdjacentHTML('beforeend', EMPTY_SLOT_HTML);
+    }
+  });
+  // Bench: remove marker once chips arrive; no placeholder needed (min-h handles it)
+  const benchZone = el.querySelector('[data-zone="bench"]');
+  if (benchZone) {
+    const marker = benchZone.querySelector('.bench-empty-marker');
+    if (marker && benchZone.querySelectorAll('[data-player-id]').length > 0) {
+      marker.remove();
+    }
+  }
 }
 
 function validateAndUpdateUI(el) {
@@ -76,14 +97,14 @@ function handleConfirm() {
   navigate('/active');
 }
 
-function handleDragEnd() {
+function handleDragEnd(evt) {
   reconcileDraftFromDOM(_el);
+  syncEmptySlots(_el);
   validateAndUpdateUI(_el);
-  // Remove the empty-bench marker once a chip lands there
-  const benchZone = _el.querySelector('[data-zone="bench"]');
-  const marker = benchZone?.querySelector('.bench-empty-marker');
-  if (marker && benchZone.querySelectorAll('[data-player-id]').length > 0) {
-    marker.remove();
+  // Pop animation on the dropped chip
+  if (evt?.item) {
+    evt.item.classList.add('drop-pop');
+    evt.item.addEventListener('animationend', () => evt.item.classList.remove('drop-pop'), { once: true });
   }
 }
 
@@ -92,15 +113,14 @@ function initSortables(el) {
   zones.forEach(zone => {
     const instance = new Sortable(zone, {
       group: 'players',
-      swap: true,
-      swapClass: 'sortable-swap-highlight',
+      animation: 150,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       delay: 150,
       delayOnTouchOnly: true,
       touchStartThreshold: 5,
-      filter: '.bench-empty-marker',
-      onEnd: handleDragEnd,
+      filter: '.bench-empty-marker, .empty-slot',
+      onEnd: (evt) => handleDragEnd(evt),
     });
     _sortableInstances.push(instance);
   });
@@ -147,13 +167,19 @@ export function mount(el, params) {
 
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
-  // Chip helper — color is driven by CSS zone selectors ([data-zone$="-a/b"], [data-zone="bench"])
-  // so chips always reflect their current position, not their original team assignment
+  // Chip — color driven by CSS zone selectors so it always reflects current position
   const playerChip = (id) =>
     `<div data-player-id="${escapeHTML(id)}"
           class="px-3 py-3 border rounded-full text-sm font-medium text-center min-h-[44px] flex items-center justify-center cursor-grab">
        ${escapeHTML(getPlayerName(id))}
      </div>`;
+
+  // Court column: chips + empty-slot placeholders to fill up to 2 slots
+  const courtCol = (players) => {
+    const chips = players.map(playerChip);
+    while (chips.length < 2) chips.push(EMPTY_SLOT_HTML);
+    return chips.join('');
+  };
 
   // Court zones — data-court for validation, data-zone for SortableJS init
   const courtsHTML = round.courts.map((court, i) => `
@@ -165,18 +191,17 @@ export function mount(el, params) {
       <div class="p-4">
         <div class="grid grid-cols-2">
           <div data-zone="court-${i}-a" class="space-y-2 pr-3">
-            ${court.teamA.map(playerChip).join('')}
+            ${courtCol(court.teamA)}
           </div>
           <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200">
-            ${court.teamB.map(playerChip).join('')}
+            ${courtCol(court.teamB)}
           </div>
         </div>
       </div>
     </div>
   `).join('');
 
-  // Rest Bench zone — data-zone="bench"; empty-state marker has bench-empty-marker class
-  // so SortableJS filter excludes it from being draggable
+  // Rest Bench zone — empty marker is filtered (not draggable); min-h ensures drop target
   const benchHTML = `
     <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
       <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
@@ -224,7 +249,6 @@ export function mount(el, params) {
   _draft = JSON.parse(JSON.stringify(round));
   _originalRound = JSON.parse(JSON.stringify(round));
 
-  // (initSortables must come after el.innerHTML is set)
   initSortables(el);
   validateAndUpdateUI(el);
   el.querySelector('#cancel-btn').addEventListener('click', handleCancel);
