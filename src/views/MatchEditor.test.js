@@ -12,14 +12,19 @@ vi.mock('../services/haptics.js', () => ({
   Haptics: { light: vi.fn(), medium: vi.fn(), success: vi.fn() },
 }))
 
+// Shared state for Sortable instances — vi.hoisted runs before mock factories
+const mockSortable = vi.hoisted(() => ({ instances: [] }))
+
 // Mock SortableJS to avoid DOM drag API dependency in happy-dom
 vi.mock('sortablejs', () => ({
   default: class MockSortable {
-    constructor() {}
+    constructor(el, options) {
+      this._el = el
+      this.options = options || {}
+      mockSortable.instances.push(this)
+    }
     destroy() {}
-    static mount() {}
   },
-  Swap: class MockSwap {},
 }))
 
 // Import mocked navigate for assertions
@@ -196,6 +201,7 @@ describe('Phase 13: Drag interactions', () => {
   beforeEach(() => {
     StorageAdapter.reset()
     vi.clearAllMocks()
+    mockSortable.instances = []
     el = document.createElement('div')
   })
 
@@ -312,6 +318,125 @@ describe('Phase 13: Drag interactions', () => {
       setupEditor(makeRoundWithBench())
       el.querySelector('#cancel-btn').click()
       expect(navigate).toHaveBeenCalledWith('/active')
+    })
+  })
+
+  describe('MAXPLAYERS-01: Max 2 players per court side', () => {
+    test('onMove prevents a 3rd chip being dragged into a court zone with 2 players', () => {
+      setupEditor(makeRoundWithBench())
+      // court-0-a starts with p1 and p2 (2 chips)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ to: zoneA })
+      expect(result).toBe(false)
+    })
+
+    test('onMove allows a chip into a court zone with only 1 player', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
+      setupEditor(round)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(1)
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ to: zoneA })
+      expect(result).not.toBe(false)
+    })
+
+    test('onMove allows a chip into a court zone with 0 players', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: ['p1', 'p2'] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(0)
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ to: zoneA })
+      expect(result).not.toBe(false)
+    })
+
+    test('onMove always allows drops onto the bench regardless of chip count', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: [] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ to: benchZone })
+      expect(result).not.toBe(false)
+    })
+  })
+
+  describe('DISCARD-01: In-app discard modal replaces browser confirm()', () => {
+    function simulateDragChange() {
+      // Move p3 chip to court-0-a (already has p1+p2) in DOM only, then fire onEnd
+      // so reconcileDraftFromDOM sees a different state → hasChanges() returns true
+      const p3Chip = el.querySelector('[data-player-id="p3"]')
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      zoneA.appendChild(p3Chip)
+      mockSortable.instances[0].options.onEnd({ item: p3Chip })
+    }
+
+    test('Cancel with changes shows discard modal (no browser confirm call)', () => {
+      setupEditor(makeRoundWithBench())
+      simulateDragChange()
+      el.querySelector('#cancel-btn').click()
+      // Modal must be visible — if code called window.confirm() it would throw in happy-dom
+      expect(el.querySelector('#discard-modal').classList.contains('hidden')).toBe(false)
+    })
+
+    test('clicking Discard in modal navigates to /active', () => {
+      setupEditor(makeRoundWithBench())
+      simulateDragChange()
+      el.querySelector('#cancel-btn').click()
+      el.querySelector('#discard-confirm-btn').click()
+      expect(navigate).toHaveBeenCalledWith('/active')
+    })
+
+    test('clicking Keep Editing hides modal without navigating', () => {
+      setupEditor(makeRoundWithBench())
+      simulateDragChange()
+      el.querySelector('#cancel-btn').click()
+      el.querySelector('#discard-keep-btn').click()
+      expect(navigate).not.toHaveBeenCalled()
+      expect(el.querySelector('#discard-modal').classList.contains('hidden')).toBe(true)
+    })
+  })
+
+  describe('BENCH-01: Bench is always a valid drop target', () => {
+    test('bench zone has min-h class ensuring it is always droppable', () => {
+      setupEditor(makeRoundWithBench())
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      expect(benchZone.className).toContain('min-h')
+    })
+  })
+
+  describe('SLOT-01: Empty-slot placeholders reflect chip count', () => {
+    test('court zone with 2 players has no empty-slot placeholders', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(0)
+    })
+
+    test('court zone with 1 player has exactly 1 empty-slot placeholder', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
+      setupEditor(round)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
+    })
+
+    test('court zone with 0 players has 2 empty-slot placeholders', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: ['p1', 'p2'] }], sittingOut: ['p3', 'p4'] }
+      setupEditor(round)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(2)
+    })
+
+    test('after onEnd removes a chip from a zone, syncEmptySlots adds a placeholder back', () => {
+      setupEditor(makeRoundWithBench())
+      // Simulate moving p1 from court-0-a to bench in the DOM
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      benchZone.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+      // court-0-a now has only p2 → should have 1 empty-slot
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
     })
   })
 })

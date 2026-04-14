@@ -86,8 +86,13 @@ function hasChanges() {
 
 function handleCancel() {
   if (!hasChanges()) { navigate('/active'); return; }
-  const confirmed = confirm("Discard changes? Your edits won't be saved.");
-  if (confirmed) navigate('/active');
+  _el.querySelector('#discard-modal').classList.remove('hidden');
+}
+
+function handleDiscardConfirm() { navigate('/active'); }
+
+function handleDiscardKeep() {
+  _el.querySelector('#discard-modal').classList.add('hidden');
 }
 
 function handleConfirm() {
@@ -120,6 +125,12 @@ function initSortables(el) {
       delayOnTouchOnly: true,
       touchStartThreshold: 5,
       filter: '.bench-empty-marker, .empty-slot',
+      onMove: (evt) => {
+        const toZone = evt.to?.dataset?.zone || '';
+        if (toZone.startsWith('court-')) {
+          if (evt.to.querySelectorAll('[data-player-id]').length >= 2) return false;
+        }
+      },
       onEnd: (evt) => handleDragEnd(evt),
     });
     _sortableInstances.push(instance);
@@ -232,6 +243,26 @@ export function mount(el, params) {
     </div>
   `;
 
+  const discardModalHTML = `
+    <div id="discard-modal" class="hidden fixed inset-0 z-50 flex items-end justify-center">
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white rounded-t-2xl p-6 w-full max-w-lg space-y-4">
+        <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
+        <p class="text-sm text-gray-500">Your edits won't be saved.</p>
+        <div class="flex gap-3 pt-2">
+          <button id="discard-keep-btn"
+                  class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm">
+            Keep Editing
+          </button>
+          <button id="discard-confirm-btn"
+                  class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">
+            Discard
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
   el.innerHTML = `
     <div class="p-4 space-y-6 pb-48">
       <header class="flex items-center space-x-4">
@@ -241,6 +272,7 @@ export function mount(el, params) {
       ${benchHTML}
       ${bottomBarHTML}
     </div>
+    ${discardModalHTML}
   `;
 
   // Initialize module-scope state
@@ -253,6 +285,8 @@ export function mount(el, params) {
   validateAndUpdateUI(el);
   el.querySelector('#cancel-btn').addEventListener('click', handleCancel);
   el.querySelector('#confirm-btn').addEventListener('click', handleConfirm);
+  el.querySelector('#discard-keep-btn').addEventListener('click', handleDiscardKeep);
+  el.querySelector('#discard-confirm-btn').addEventListener('click', handleDiscardConfirm);
 }
 
 export function unmount() {
