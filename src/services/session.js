@@ -61,13 +61,16 @@ export const SessionService = {
     if (!session) return null;
 
     const playedRounds = session.rounds.filter(r => r.played);
-    const [nextRound] = generateRounds(
-      session.attendeeIds, 
-      playedRounds, 
-      1, 
+    const results = generateRounds(
+      session.attendeeIds,
+      playedRounds,
+      1,
       session.settings
     );
 
+    if (!results.length) return null;
+
+    const [nextRound] = results;
     session.rounds.push(nextRound);
     this.updateSession(session);
     return nextRound;
@@ -168,8 +171,11 @@ export const SessionService = {
     const newExtraCourts = [];
     let newSitOut = [];
 
-    // Shuffle leftovers slightly to ensure fair pick if dropping from 2v1 -> 1v1
-    leftoverPlayers.sort(() => Math.random() - 0.5);
+    // Shuffle leftovers (Fisher-Yates) to ensure fair pick if dropping from 2v1 -> 1v1
+    for (let i = leftoverPlayers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [leftoverPlayers[i], leftoverPlayers[j]] = [leftoverPlayers[j], leftoverPlayers[i]];
+    }
 
     if (strat === 'three-player-court' && oddCount === 3) {
       newExtraCourts.push({
@@ -296,6 +302,8 @@ export const SessionService = {
   },
 
   updateSession(updatedSession) {
+    // Re-stamp index to match array position before persisting (WR-02: keeps r.index in sync)
+    updatedSession.rounds.forEach((r, i) => { r.index = i; });
     const sessions = this.getSessions();
     const idx = sessions.findIndex(s => s.id === updatedSession.id);
     if (idx !== -1) {

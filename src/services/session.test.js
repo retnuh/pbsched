@@ -1,4 +1,4 @@
-import { expect, test, describe, beforeEach, vi } from 'vitest'
+import { expect, test, describe, beforeEach } from 'vitest'
 import { StorageAdapter } from '../storage.js'
 import { SessionService } from './session.js'
 
@@ -35,12 +35,6 @@ function makeSession({ attendeeIds, rounds = [], settings = MOCK_SETTINGS }) {
 
 describe('SessionService — updateRound', () => {
   beforeEach(() => {
-    const storage = {}
-    vi.stubGlobal('localStorage', {
-      getItem: (key) => storage[key] ?? null,
-      setItem: (key, value) => { storage[key] = value },
-      clear: () => { Object.keys(storage).forEach(k => delete storage[k]) },
-    })
     StorageAdapter.reset()
   })
 
