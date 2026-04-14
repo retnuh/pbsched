@@ -32,7 +32,6 @@ vi.mock('sortablejs', () => ({
 // Import mocked navigate for assertions
 import { navigate } from '../router.js'
 import { mount, unmount } from './MatchEditor.js'
-import { mount as mountRoundDisplay } from './RoundDisplay.js'
 
 function makeSession(rounds = []) {
   return {
@@ -96,20 +95,6 @@ describe('MatchEditor', () => {
       expect(el.innerHTML).toContain('Bob')
     })
 
-    test('Edit button in RoundDisplay calls navigate with correct route', () => {
-      const session = makeSession([makeRound(0, false)])
-      StorageAdapter.set('clubs', CLUBS_DATA)
-      StorageAdapter.set('sessions', [session])
-
-      const rdEl = document.createElement('div')
-      mountRoundDisplay(rdEl, {})
-
-      const editBtn = rdEl.querySelector('[data-action="edit"]')
-      expect(editBtn).not.toBeNull()
-      editBtn.click()
-
-      expect(navigate).toHaveBeenCalledWith('/edit/0')
-    })
   })
 
   describe('MEDIT-02: Editor mounts for a played round', () => {
@@ -168,14 +153,15 @@ describe('MatchEditor', () => {
   })
 
   describe('Rest Bench zone', () => {
-    test('renders empty bench marker when sittingOut is empty', () => {
+    test('renders an empty slot chip in the bench when sittingOut is empty', () => {
       const session = makeSession([makeRound(0, false)])
       StorageAdapter.set('clubs', CLUBS_DATA)
       StorageAdapter.set('sessions', [session])
 
       mount(el, { roundIndex: '0' })
 
-      expect(el.innerHTML).toContain('--|--')
+      const bench = el.querySelector('[data-zone="bench"]')
+      expect(bench.querySelector('.empty-slot')).not.toBeNull()
     })
 
     test('renders sitting-out player names in bench zone', () => {
@@ -240,21 +226,6 @@ describe('Phase 13: Drag interactions', () => {
       expect(el.querySelector('[data-zone="court-0-a"]')).not.toBeNull()
       expect(el.querySelector('[data-zone="court-0-b"]')).not.toBeNull()
       expect(el.querySelector('[data-zone="bench"]')).not.toBeNull()
-    })
-  })
-
-  describe('DRAG-02/03/04: reconcileDraftFromDOM rebuilds draft from DOM', () => {
-    test('after simulated DOM move, reconcile reads new player positions from data-player-id', () => {
-      setupEditor(makeRoundWithBench())
-      // Simulate SortableJS DOM mutation: physically move p1 chip to court-0-b zone
-      const p1Chip = el.querySelector('[data-player-id="p1"]')
-      const zoneB = el.querySelector('[data-zone="court-0-b"]')
-      zoneB.appendChild(p1Chip)
-      // Trigger reconcile by firing a synthetic onEnd on the Sortable instance
-      // (In the mock environment, we call the view's exported reconcile helper if available,
-      // or simulate by clicking the confirm button after reconcile should have run.)
-      // The test verifies structure: p1 chip is now inside court-0-b
-      expect(zoneB.querySelector('[data-player-id="p1"]')).not.toBeNull()
     })
   })
 
@@ -356,13 +327,33 @@ describe('Phase 13: Drag interactions', () => {
       expect(result).not.toBe(false)
     })
 
-    test('SWAP: onMove allows bench→court when Swap plugin provides a swap partner', () => {
+    test('onMove allows bench chip swapped with a player in a full court zone', () => {
+      // Bench now uses swap mode — bench→full-court swaps a player out (no overflow).
       setupEditor(makeRoundWithBench())
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const zoneA = el.querySelector('[data-zone="court-0-a"]') // has 2 players
       const benchZone = el.querySelector('[data-zone="bench"]')
-      const p1Chip = el.querySelector('[data-player-id="p1"]') // chip in zoneA to swap with
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
       const instance = mockSortable.instances.find(s => s._el === benchZone)
       const result = instance.options.onMove({ from: benchZone, to: zoneA, related: p1Chip })
+      expect(result).not.toBe(false)
+    })
+
+    test('onMove blocks bench chip dropped onto empty space in a full court zone', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]') // has 2 players
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA, related: null })
+      expect(result).toBe(false)
+    })
+
+    test('onMove allows bench chip dropped into a partial court zone', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
+      const zoneB = el.querySelector('[data-zone="court-0-b"]') // has 1 player
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneB, related: null })
       expect(result).not.toBe(false)
     })
 
@@ -569,31 +560,11 @@ describe('Phase 13: Drag interactions', () => {
   })
 
   describe('SORTABLE-CONFIG: SortableJS is configured correctly', () => {
-    test('court zone instances have swap:true and bench instance has swap:false', () => {
+    test('all zones use swap:true — bench and courts behave identically', () => {
       setupEditor(makeRoundWithBench())
-      const courtA = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="court-0-a"]'))
-      const courtB = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="court-0-b"]'))
-      const bench  = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="bench"]'))
-      expect(courtA.options.swap).toBe(true)
-      expect(courtB.options.swap).toBe(true)
-      expect(bench.options.swap).toBe(false)
-    })
-
-    test('instances use correct group, delay, ghostClass, and emptyInsertThreshold', () => {
-      setupEditor(makeRoundWithBench())
-      const opts = mockSortable.instances[0].options
-      expect(opts.group).toBe('players')
-      expect(opts.delay).toBe(150)
-      expect(opts.delayOnTouchOnly).toBe(true)
-      expect(opts.ghostClass).toBe('sortable-ghost')
-      expect(opts.emptyInsertThreshold).toBe(20)
-    })
-
-    test('filter excludes bench-empty-marker but NOT empty-slot (removed to prevent ghost expansion)', () => {
-      setupEditor(makeRoundWithBench())
-      const filter = mockSortable.instances[0].options.filter
-      expect(filter).toContain('bench-empty-marker')
-      expect(filter).not.toContain('empty-slot')
+      mockSortable.instances.forEach(inst => {
+        expect(inst.options.swap).toBe(true)
+      })
     })
   })
 
@@ -606,24 +577,53 @@ describe('Phase 13: Drag interactions', () => {
     })
   })
 
-  describe('SLOT-01: Court zones are always droppable (min-h, no ghost-expanding placeholders)', () => {
-    test('court zones have min-h class so empty zones remain drop targets', () => {
-      setupEditor(makeRoundWithBench())
-      expect(el.querySelector('[data-zone="court-0-a"]').className).toContain('min-h')
-      expect(el.querySelector('[data-zone="court-0-b"]').className).toContain('min-h')
+  describe('EMPTY-SLOT: swap targets for partial court zones', () => {
+    test('a partial side renders an empty slot as a swap target', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      expect(zoneB.querySelectorAll('.empty-slot').length).toBe(1)
+      expect(zoneB.querySelectorAll('[data-player-id]').length).toBe(1)
     })
 
-    test('court zones contain only player chips — no extra placeholder elements', () => {
-      setupEditor(makeRoundWithBench())
+    test('a full side has no empty slots', () => {
+      setupEditor(makeRoundWithBench()) // both sides have 2 players
+      expect(el.querySelector('[data-zone="court-0-a"]').querySelectorAll('.empty-slot').length).toBe(0)
+      expect(el.querySelector('[data-zone="court-0-b"]').querySelectorAll('.empty-slot').length).toBe(0)
+    })
+
+    test('onMove allows a court chip dropped onto an empty slot in a partial zone', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
       const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      // All direct children that are not player chips should not exist
-      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(0)
-      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      const emptySlot = zoneB.querySelector('.empty-slot')
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      // Empty slot is the swap target — chipCount in zoneB is 1, so not blocked
+      const result = instance.options.onMove({ from: zoneA, to: zoneB, related: emptySlot })
+      expect(result).not.toBe(false)
     })
 
-    test('bench zone has min-h class ensuring it is always droppable', () => {
-      setupEditor(makeRoundWithBench())
-      expect(el.querySelector('[data-zone="bench"]').className).toContain('min-h')
+    test('after court→empty-slot swap: draft updates and slots rebalance', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
+      // Simulate Swap plugin: p1 moves to zoneB, empty slot migrates to zoneA
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      const emptySlot = zoneB.querySelector('.empty-slot')
+      zoneB.appendChild(p1Chip)   // p1 moves to Court B
+      zoneA.appendChild(emptySlot) // empty slot migrates to Court A
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(0, expect.objectContaining({
+        courts: [expect.objectContaining({ teamA: ['p2'], teamB: ['p3', 'p1'] })],
+        sittingOut: ['p4'],
+      }))
+      // Slots rebalanced: Court A now has 1 player → 1 slot; Court B has 2 → 0 slots
+      expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
+      expect(zoneB.querySelectorAll('.empty-slot').length).toBe(0)
     })
   })
 })

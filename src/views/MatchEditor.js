@@ -87,8 +87,40 @@ function handleConfirm() {
   navigate('/active');
 }
 
+function makeEmptySlot({ bench = false } = {}) {
+  const div = document.createElement('div');
+  if (bench) {
+    div.className = 'empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg';
+    div.textContent = '🛋️';
+  } else {
+    div.className = 'empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full';
+  }
+  return div;
+}
+
+// Keep exactly (2 - playerCount) empty slots in each court side after each drag.
+// Empty slots that drifted to the bench are discarded.
+function syncEmptySlots(el) {
+  _draft.courts.forEach((court, i) => {
+    [['a', court.teamA], ['b', court.teamB]].forEach(([side, team]) => {
+      const zone = el.querySelector(`[data-zone="court-${i}-${side}"]`);
+      if (!zone) return;
+      zone.querySelectorAll('.empty-slot').forEach(s => s.remove());
+      const needed = Math.max(0, 2 - team.length);
+      for (let k = 0; k < needed; k++) zone.appendChild(makeEmptySlot());
+    });
+  });
+  // Bench always keeps exactly one empty slot so there is always a swap target.
+  const bench = el.querySelector('[data-zone="bench"]');
+  if (bench) {
+    bench.querySelectorAll('.empty-slot').forEach(s => s.remove());
+    bench.appendChild(makeEmptySlot({ bench: true }));
+  }
+}
+
 function handleDragEnd(evt) {
   reconcileDraftFromDOM(_el);
+  syncEmptySlots(_el);
   validateAndUpdateUI(_el);
   // Pop animation on the dropped chip
   if (evt?.item) {
@@ -100,7 +132,6 @@ function handleDragEnd(evt) {
 function initSortables(el) {
   const zones = el.querySelectorAll('[data-zone]');
   zones.forEach(zone => {
-    const isBench = zone.dataset.zone === 'bench';
     const instance = new Sortable(zone, {
       group: 'players',
       animation: 150,
@@ -111,18 +142,15 @@ function initSortables(el) {
       delayOnTouchOnly: true,
       touchStartThreshold: 5,
       emptyInsertThreshold: 20,
-      filter: '.bench-empty-marker',
-      // Swap plugin enabled on court zones — allows chip↔chip swap without overflow.
-      // Disabled on bench so bench always uses insertion mode (works when empty).
-      swap: !isBench,
+      swap: true,
       onMove: (evt) => {
         const toZone = evt.to?.dataset?.zone || '';
         if (toZone.startsWith('court-')) {
           const chipCount = evt.to.querySelectorAll('[data-player-id]').length;
           if (chipCount >= 2) {
-            // Allow only if Swap plugin found a swap partner (evt.related = chip being swapped)
-            const isSwap = evt.related?.hasAttribute('data-player-id');
-            if (!isSwap) return false;
+            // Only allow if swapping with an actual player chip (not an empty slot).
+            const isPlayerSwap = evt.related?.hasAttribute('data-player-id');
+            if (!isPlayerSwap) return false;
           }
         }
       },
@@ -180,7 +208,10 @@ export function mount(el, params) {
        ${escapeHTML(getPlayerName(id))}
      </div>`;
 
-  const courtCol = (players) => players.map(playerChip).join('');
+  const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full"></div>';
+  const courtCol = (players) =>
+    players.map(playerChip).join('') +
+    Array(Math.max(0, 2 - players.length)).fill(emptySlotHTML).join('');
 
   // Court zones — data-court for validation, data-zone for SortableJS init
   const courtsHTML = round.courts.map((court, i) => `
@@ -202,14 +233,12 @@ export function mount(el, params) {
     </div>
   `).join('');
 
-  // Rest Bench zone — empty marker is filtered (not draggable); min-h ensures drop target
   const benchHTML = `
     <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
       <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
       <div data-zone="bench" class="flex flex-wrap gap-2 min-h-[52px]">
-        ${round.sittingOut.length > 0
-          ? round.sittingOut.map(playerChip).join('')
-          : '<span class="bench-empty-marker text-sm text-gray-400 italic">--|--</span>'}
+        ${round.sittingOut.map(playerChip).join('')}
+        <div class="empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg">🛋️</div>
       </div>
     </div>
   `;
@@ -234,9 +263,9 @@ export function mount(el, params) {
   `;
 
   const discardModalHTML = `
-    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center">
+    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center pb-48">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white rounded-t-2xl p-6 w-full max-w-lg space-y-4">
+      <div class="relative bg-white rounded-2xl mx-4 p-6 w-full max-w-lg space-y-4">
         <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
         <p class="text-sm text-gray-500">Your edits won't be saved.</p>
         <div class="flex gap-3 pt-2">

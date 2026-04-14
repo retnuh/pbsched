@@ -68,9 +68,18 @@
 }
 
 .sortable-chosen {
-  opacity: 0.9;
-  transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  opacity: 0.55;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* Swap target — more prominent than source: blue ring + lift */
+.sortable-swap {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+  border-color: #3B82F6 !important;
+  outline: 2px solid #93C5FD;
+  outline-offset: 1px;
 }
 
 /* Pop animation — brief scale pulse on successful drop */
