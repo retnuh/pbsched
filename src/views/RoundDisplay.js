@@ -35,7 +35,6 @@ export function mount(el, params) {
 
   let isManagingAttendees = false;
   let showingAlternativesFor = null; // index
-  let pickingSitterFor = null; // index
   let numAlternativesToShow = 3;
 
   function render() {
@@ -46,11 +45,6 @@ export function mount(el, params) {
 
     if (showingAlternativesFor !== null) {
       renderAlternatives();
-      return;
-    }
-
-    if (pickingSitterFor !== null) {
-      renderSitterPicker();
       return;
     }
 
@@ -161,127 +155,8 @@ export function mount(el, params) {
     });
   }
 
-  function renderSitterPicker() {
-    const round = session.rounds[pickingSitterFor];
-    if (!round) {
-      pickingSitterFor = null;
-      render();
-      return;
-    }
-    const attendees = session.attendeeIds;
-    
-    // Calculate sit counts for the current session up to this round
-    const sitCounts = {};
-    session.rounds.forEach(r => {
-      if (r.index < pickingSitterFor && r.played) {
-        r.sittingOut.forEach(id => {
-          sitCounts[id] = (sitCounts[id] || 0) + 1;
-        });
-      }
-    });
-
-    // Calculate how many people MUST sit out based on current strategy
-    const oddCount = attendees.length % 4;
-    const strat = session.settings.oddPlayerFallback;
-    let requiredSitOutCount = oddCount; 
-    if (strat === 'two-player-court' && oddCount === 3) requiredSitOutCount = 1;
-    if (strat === 'two-player-court' && oddCount === 2) requiredSitOutCount = 0;
-    if (strat === 'three-player-court' && oddCount === 3) requiredSitOutCount = 0;
-
-    let sitters = new Set(round.sittingOut);
-
-    function updateSitterUI() {
-      const sitterListEl = el.querySelector('#sitter-list');
-      const limitReached = sitters.size >= requiredSitOutCount;
-      const isSingle = requiredSitOutCount === 1;
-
-      sitterListEl.innerHTML = attendees.map(id => {
-        const isChecked = sitters.has(id);
-        const isDisabled = !isSingle && !isChecked && limitReached;
-        const inputType = isSingle ? 'radio' : 'checkbox';
-        const sitCount = sitCounts[id] || 0;
-        
-        return `
-          <label class="flex items-center justify-between p-4 bg-white rounded-xl border ${isChecked ? 'border-blue-500 bg-blue-50' : 'border-gray-100'} ${isDisabled ? 'opacity-40 grayscale' : 'cursor-pointer'}">
-            <div class="flex flex-col">
-              <span class="font-bold ${isDisabled ? 'text-gray-400' : ''}">${escapeHTML(getPlayerName(id))}</span>
-              ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
-            </div>
-            <input type="${inputType}" name="sitter" value="${id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
-          </label>
-        `;
-      }).join('');
-
-      const saveBtn = el.querySelector('#confirm-sitters');
-      const diff = requiredSitOutCount - sitters.size;
-      
-      if (diff > 0) {
-        saveBtn.innerText = `Select ${diff} more...`;
-        saveBtn.disabled = true;
-        saveBtn.classList.add('opacity-50');
-      } else {
-        saveBtn.innerText = `Regenerate Round`;
-        saveBtn.disabled = false;
-        saveBtn.classList.remove('opacity-50');
-      }
-    }
-
-    el.innerHTML = `
-      <div class="p-4 space-y-6 pb-48">
-        <header class="flex items-center space-x-4">
-          <button id="back-to-rounds" class="p-2 -ml-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-          </button>
-          <h1 class="text-2xl font-bold">Pick Sitters</h1>
-        </header>
-
-        <p class="text-gray-500 text-sm italic">Select exactly ${requiredSitOutCount} player${requiredSitOutCount === 1 ? '' : 's'} to sit out.</p>
-
-        <div id="sitter-list" class="space-y-2"></div>
-
-        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto z-40">
-          <button id="confirm-sitters" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
-            Regenerate Round
-          </button>
-        </div>
-      </div>
-    `;
-
-    updateSitterUI();
-
-    el.querySelector('#back-to-rounds').addEventListener('click', () => {
-      pickingSitterFor = null;
-      render();
-    });
-
-    el.querySelector('#sitter-list').addEventListener('change', (e) => {
-      const isSingle = requiredSitOutCount === 1;
-      if (isSingle) {
-        sitters = new Set([e.target.value]);
-        Haptics.light();
-      } else {
-        if (e.target.checked) {
-          sitters.add(e.target.value);
-          Haptics.light();
-        }
-        else {
-          sitters.delete(e.target.value);
-          Haptics.light();
-        }
-      }
-      updateSitterUI();
-    });
-
-    el.querySelector('#confirm-sitters').addEventListener('click', () => {
-      SessionService.regenerateRound(pickingSitterFor, Array.from(sitters));
-      Haptics.success();
-      pickingSitterFor = null;
-      render();
-    });
-  }
-
   function renderAlternatives() {
-    const alternatives = SessionService.getAlternativeRounds(numAlternativesToShow, showingAlternativesFor);
+    const alternatives = SessionService.getAlternativeRounds(numAlternativesToShow);
 
     el.innerHTML = `
       <div class="p-4 space-y-6 pb-48">
@@ -370,27 +245,6 @@ export function mount(el, params) {
       year: 'numeric' 
     });
 
-    const oddCount = session.attendeeIds.length % 4;
-    
-    // Determine effective strategy of the LATEST round to sync UI
-    const latestRound = session.rounds[session.rounds.length - 1];
-    let effectiveStrat = session.settings?.oddPlayerFallback || 'three-player-court';
-    
-    if (latestRound && !latestRound.played && oddCount > 0) {
-      const num4Packs = Math.floor(session.attendeeIds.length / 4);
-      const standardCourts = latestRound.courts.filter(c => c.teamA.length === 2 && c.teamB.length === 2).length;
-      
-      if (standardCourts === num4Packs) {
-        const extraCourt = latestRound.courts.find(c => c.teamA.length < 2 || c.teamB.length < 2);
-        if (extraCourt) {
-          if (extraCourt.teamA.length === 2 || extraCourt.teamB.length === 2) effectiveStrat = 'three-player-court';
-          else effectiveStrat = 'two-player-court';
-        } else {
-          effectiveStrat = 'sit-out';
-        }
-      }
-    }
-
     el.innerHTML = `
       <div class="p-4 space-y-6">
         <header class="flex justify-between items-center">
@@ -409,35 +263,7 @@ export function mount(el, params) {
           </div>
         </header>
 
-        <div id="rounds-list" class="space-y-4 pb-48"></div>
-
-        <!-- Sticky Bottom Controls -->
-        <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
-          ${oddCount > 1 ? `
-            <!-- Strategy Quick Toggle -->
-            <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm mb-4">
-              ${oddCount === 3 ? `
-                <button data-strat="three-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'three-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                  Play 2v1
-                </button>
-                <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                  Play 1v1 (+1 Sit)
-                </button>
-              ` : ''}
-              ${oddCount === 2 ? `
-                <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                  Play 1v1
-                </button>
-              ` : ''}
-              <button data-strat="sit-out" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'sit-out' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                All Sit
-              </button>
-            </div>
-          ` : ''}
-          <div class="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest pb-2">
-            Tap "Mark Played" to advance
-          </div>
-        </div>
+        <div id="rounds-list" class="space-y-4 pb-8"></div>
       </div>
     `;
 
@@ -462,7 +288,8 @@ export function mount(el, params) {
     } else {
       const lastPlayedIdx = [...session.rounds].reverse().find(r => r.played)?.index;
 
-      listEl.innerHTML = rounds.map(round => `
+      const hasPlayed = rounds.some(r => r.played);
+      listEl.innerHTML = rounds.map((round, i) => `
         <div class="bg-white rounded-xl shadow-sm border ${round.played ? 'border-gray-100 opacity-60' : 'border-blue-200'} overflow-hidden">
           <div class="p-3 ${round.played ? 'bg-gray-50' : 'bg-blue-50'} flex justify-between items-center">
             <h3 class="font-bold ${round.played ? 'text-gray-500' : 'text-blue-800'}">Round ${round.index + 1}</h3>
@@ -493,24 +320,16 @@ export function mount(el, params) {
               </div>
             `).join('')}
             
-            <div data-action="pick-sitter" data-index="${round.index}" class="mt-4 pt-4 border-t border-gray-100 ${!round.played && round.sittingOut.length > 0 ? 'cursor-pointer group active:bg-gray-50' : ''} -mx-4 px-4">
-              <div class="flex justify-between items-center mb-2">
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center">
-                  Sitting Out
-                  ${!round.played && round.sittingOut.length > 0 ? `<span class="ml-2 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold border border-blue-100">Tap to Change</span>` : ''}
-                </p>
-                ${!round.played && round.sittingOut.length > 0 ? `
-                  <div class="text-blue-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                  </div>
-                ` : ''}
+            ${round.sittingOut.length > 0 ? `
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sitting Out</p>
+                <div class="flex flex-wrap gap-2">
+                  ${round.sittingOut.map(id => `
+                    <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium text-gray-600 border border-gray-200">${escapeHTML(getPlayerName(id))}</span>
+                  `).join('')}
+                </div>
               </div>
-              <div class="flex flex-wrap gap-2">
-                ${round.sittingOut.length > 0 ? round.sittingOut.map(id => `
-                  <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium text-gray-600 border border-gray-200">${escapeHTML(getPlayerName(id))}</span>
-                `).join('') : '<span class="text-sm text-gray-300 italic">None</span>'}
-              </div>
-            </div>
+            ` : ''}
             ${!round.played ? `
               <div class="flex items-center gap-2 pt-3 border-t border-blue-100 mt-4">
                 <button data-action="alternatives" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-3 rounded-lg min-h-[44px]">
@@ -526,21 +345,14 @@ export function mount(el, params) {
             ` : ''}
           </div>
         </div>
-      `).join('');
+      ` + (!round.played && i === 0 ? `
+        <div class="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2">
+          ${hasPlayed ? 'Tap "Mark Played" to advance &bull; Previous Rounds' : 'Tap "Mark Played" to advance'}
+        </div>
+      ` : '')).join('');
     }
 
     // Attach Listeners
-    el.querySelectorAll('[data-strat]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const strategy = btn.getAttribute('data-strat');
-        if (effectiveStrat === strategy) return; // Sync logic here too
-
-        SessionService.updateSettings({ oddPlayerFallback: strategy });
-        Haptics.medium();
-        render();
-      });
-    });
-
     el.querySelector('#manage-attendees').addEventListener('click', () => {
       isManagingAttendees = true;
       Haptics.light();
@@ -598,17 +410,6 @@ export function mount(el, params) {
         return;
       }
 
-      const sitterBtn = e.target.closest('[data-action="pick-sitter"]');
-      if (sitterBtn) {
-        const idx = parseInt(sitterBtn.getAttribute('data-index'));
-        const round = session.rounds[idx];
-        if (!round.played && round.sittingOut.length > 0) {
-          pickingSitterFor = idx;
-          Haptics.light();
-          render();
-        }
-        return;
-      }
     });
   }
 

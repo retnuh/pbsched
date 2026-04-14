@@ -200,24 +200,17 @@ export const SessionService = {
   /**
    * Returns top N alternative candidates for the next round slot.
    */
-  getAlternativeRounds(n = 3, roundIndex = null) {
+  getAlternativeRounds(n = 3) {
     const session = this.getActiveSession();
     if (!session) return [];
 
     const playedRounds = session.rounds.filter(r => r.played);
-    
-    // If we're looking for alternatives for an unplayed round that might have forced sit-outs
-    let forcedSitOutIds = null;
-    if (roundIndex !== null && session.rounds[roundIndex] && !session.rounds[roundIndex].played) {
-      forcedSitOutIds = session.rounds[roundIndex].sittingOut;
-    }
 
     return getTopAlternatives(
       session.attendeeIds,
       playedRounds,
       session.settings,
-      n,
-      forcedSitOutIds
+      n
     );
   },
 
