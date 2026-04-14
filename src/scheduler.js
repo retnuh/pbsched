@@ -124,8 +124,12 @@ export function scoreRound(round, history, settings) {
     return base * Math.pow(2, streak);
   };
 
-  // Massive penalty for sit-outs: base * 100^count
-  // This ensures 2nd BYE (count=1) is 100x more expensive than 1st.
+  // Fairness penalty for sit-outs: strongly discourages assigning a sit-out
+  // to someone who has already sat out more than others. Not about strict equality
+  // — about preventing anyone from sitting out repeatedly while others haven't yet.
+  // Formula: base * 100^count so a 2nd sit-out is 100x more expensive than a 1st,
+  // a 3rd is 10,000x more expensive than a 1st, etc.
+  // Additional streak component (base * 2^streak) penalizes consecutive sit-outs.
   const getSitOutPenalty = (base, count, streak) => {
     if (count === 0) return 0;
     const countWeight = base * Math.pow(100, count);
