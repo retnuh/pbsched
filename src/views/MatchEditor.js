@@ -237,11 +237,11 @@ function buildHTML(draft, round, club, getPlayerName, session) {
                 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700">
       <div class="flex items-center gap-3 p-4">
         <button id="cancel-btn"
-                class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-bold border border-gray-200">
+                class="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold border border-gray-200 dark:border-gray-600">
           Cancel
         </button>
         <button id="confirm-btn"
-                class="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200">
+                class="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 dark:shadow-blue-900">
           Confirm
         </button>
       </div>

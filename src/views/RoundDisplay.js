@@ -331,11 +331,11 @@ export function mount(el, params) {
               </div>
             ` : ''}
             ${!round.played ? `
-              <div class="flex items-center gap-2 pt-3 border-t border-blue-100 mt-4">
-                <button data-action="alternatives" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-3 rounded-lg min-h-[44px]">
+              <div class="flex items-center gap-2 pt-3 border-t border-blue-100 dark:border-blue-900 mt-4">
+                <button data-action="alternatives" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 px-3 py-3 rounded-lg min-h-[44px]">
                   Alternatives
                 </button>
-                <button data-action="edit" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-3 rounded-lg min-h-[44px]">
+                <button data-action="edit" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 px-3 py-3 rounded-lg min-h-[44px]">
                   Edit
                 </button>
                 <button data-action="play" data-index="${round.index}" class="flex-1 text-xs font-bold bg-blue-600 text-white px-3 py-3 rounded-lg shadow-sm min-h-[44px]">
