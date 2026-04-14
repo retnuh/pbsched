@@ -66,8 +66,10 @@ Existing typography — unchanged in Phase 15. Declared for executor reference:
 |------|------|--------|-------------|--------|
 | Body | 16px (text-base) | 400 (regular) | 1.5 | Tailwind default |
 | Label / small | 14px (text-sm) | 700 (bold) | 1.5 | Settings.js labels |
-| Heading | 20px (text-xl) to 24px (text-2xl) | 700 (bold) | 1.2 | Settings.js `<h1>` |
+| Heading | 24px (text-2xl) | 700 (bold) | 1.2 | 12 of 13 heading sites in src/views/ |
 | Micro | 10px (text-[10px]) | 700 (bold) | 1.0 | Nav bar labels |
+
+Four sizes in total: 10, 14, 16, 24. `text-xl` (20px) appears once in a single error-state heading in `SessionSetup.js` and is not a distinct typographic role — treat as `text-2xl` if touched in Phase 15.
 
 Weights in use: 400 (regular) and 700 (bold). No additional weights introduced in Phase 15.
 
