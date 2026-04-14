@@ -393,8 +393,35 @@ export function mount(el, params) {
           </div>
         </header>
 
-        <div id="rounds-list" class="space-y-4 pb-8"></div>
+        <div id="rounds-list" class="space-y-4 pb-48"></div>
 
+        <!-- Sticky Bottom Controls -->
+        <div class="fixed-safe-bottom left-0 right-0 p-4 bg-gray-50/90 backdrop-blur-sm border-t border-gray-100 max-w-lg mx-auto space-y-3 z-40">
+          ${oddCount > 1 ? `
+            <!-- Strategy Quick Toggle -->
+            <div class="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-200 shadow-sm mb-4">
+              ${oddCount === 3 ? `
+                <button data-strat="three-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'three-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
+                  Play 2v1
+                </button>
+                <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
+                  Play 1v1 (+1 Sit)
+                </button>
+              ` : ''}
+              ${oddCount === 2 ? `
+                <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
+                  Play 1v1
+                </button>
+              ` : ''}
+              <button data-strat="sit-out" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'sit-out' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
+                All Sit
+              </button>
+            </div>
+          ` : ''}
+          <div class="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest pb-2">
+            Tap "Mark Played" to advance
+          </div>
+        </div>
       </div>
     `;
 
@@ -458,29 +485,6 @@ export function mount(el, params) {
               </div>
             `).join('')}
             
-            ${!round.played && oddCount > 1 ? `
-            <div class="mt-4 pt-4 border-t border-gray-100 -mx-4 px-4 pb-2">
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Match Format</p>
-              <div class="flex items-center justify-between bg-gray-50 p-1 rounded-xl border border-gray-200">
-                ${oddCount === 3 ? `
-                  <button data-strat="three-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'three-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                    Play 2v1
-                  </button>
-                  <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                    Play 1v1 (+1 Sit)
-                  </button>
-                ` : ''}
-                ${oddCount === 2 ? `
-                  <button data-strat="two-player-court" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'two-player-court' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                    Play 1v1
-                  </button>
-                ` : ''}
-                <button data-strat="sit-out" class="flex-1 py-2 px-1 text-[10px] font-bold uppercase tracking-tight rounded-lg transition ${effectiveStrat === 'sit-out' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}">
-                  All Sit
-                </button>
-              </div>
-            </div>
-            ` : ''}
             <div data-action="pick-sitter" data-index="${round.index}" class="mt-4 pt-4 border-t border-gray-100 ${!round.played && round.sittingOut.length > 0 ? 'cursor-pointer group active:bg-gray-50' : ''} -mx-4 px-4">
               <div class="flex justify-between items-center mb-2">
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center">

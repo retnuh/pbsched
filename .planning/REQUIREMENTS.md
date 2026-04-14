@@ -47,25 +47,6 @@
 
 - [x] **DEVP-01**: Project includes a `justfile` with common developer targets (dev, test, build)
 
-## Milestone 6 Requirements
-
-### Club Management
-- [x] **CLUB-07**: Organizer can tap the club name to edit it inline (MemberEditor view)
-- [x] **CLUB-08**: Inline edit saves on blur or confirm; change persists to localStorage
-- [x] **CLUB-09**: Inline edit input uses ≥16px font size to prevent iOS Safari auto-zoom
-
-### Scheduler Improvements
-- [ ] **SCHED-01**: Scheduling engine applies a configurable penalty when a player has played a singles (1v1) match this session
-- [ ] **SCHED-02**: Scheduling engine applies a configurable penalty when a player was the solo side of a 3-way (2v1) match this session
-- [ ] **SCHED-03**: Scheduling engine applies a configurable penalty when a player was on the pair side of a 3-way (2v1) match this session
-- [ ] **SCHED-04**: Penalty values for SCHED-01–03 are configurable via sliders in the Settings screen with sensible defaults
-- [ ] **SCHED-05**: Sessions created before deploy fall back to default penalty values (no breaking schema change)
-
-### Test Coverage
-- [ ] **TEST-01**: Tests verify played rounds retain their courts and players when a new player is added mid-session
-- [ ] **TEST-02**: Tests verify played rounds retain their courts and players when a player is removed mid-session (including players who appeared in played courts)
-- [ ] **TEST-03**: Tests verify that only unplayed rounds are affected by roster changes
-
 ## v2 Requirements
 
 ### Session History
@@ -117,24 +98,11 @@
 | SETT-03 | P6-POLISH | Done |
 | DEVP-01 | P1-FOUNDATION | Done |
 
-| CLUB-07 | Phase 8 | Complete |
-| CLUB-08 | Phase 8 | Complete |
-| CLUB-09 | Phase 8 | Complete |
-| TEST-01 | Phase 9 | Pending |
-| TEST-02 | Phase 9 | Pending |
-| TEST-03 | Phase 9 | Pending |
-| SCHED-01 | Phase 10 | Pending |
-| SCHED-02 | Phase 10 | Pending |
-| SCHED-03 | Phase 10 | Pending |
-| SCHED-04 | Phase 10 | Pending |
-| SCHED-05 | Phase 10 | Pending |
-
 **Coverage:**
 - v1 requirements: 24 total
-- Milestone 6 requirements: 11 total
-- Mapped to phases: 35
+- Mapped to phases: 24
 - Unmapped: 0 ✅
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-13 — Milestone 6 requirements added*
+*Last updated: 2026-04-02 after justfile addition*

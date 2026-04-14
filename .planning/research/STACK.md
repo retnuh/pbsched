@@ -1,7 +1,7 @@
 # Stack Research
 
 **Domain:** Static SPA — no backend, GitHub Pages deployment, mobile-first, localStorage persistence
-**Researched:** 2026-04-02 (initial) / 2026-04-13 (milestone 6 update)
+**Researched:** 2026-04-02
 **Confidence:** HIGH (all versions verified against official sources)
 
 ## Recommended Stack
@@ -112,59 +112,6 @@ That's the entire setup — no `tailwind.config.js`, no `postcss.config.js`.
 | `tailwindcss@4.x` + `@tailwindcss/vite@4.x` | `vite@5+` and `vite@8.x` | Keep both at the same major version (both `4.x`). Do not mix with the old `postcss`-based Tailwind v3 config. |
 | `vitest@4.x` | `vite@8.x` | Vitest 4 targets Vite 5+. Works with Vite 8. Both can share a single `vite.config.js`. |
 
----
-
-## Milestone 6 Stack Assessment
-
-**New dependencies required: None.**
-
-All three milestone 6 features are implementable within the existing stack. The analysis below explains exactly what touches which layer, and what to watch out for.
-
-### Feature 1: Inline tap-to-edit club name
-
-**What:** Replace the static club name heading in the club view with a tap-to-edit `<input>` that writes back via `ClubService.updateClub()`.
-
-**Stack fit:** `ClubService.updateClub(id, updates)` already exists in `src/services/club.js`. The view layer (likely `src/views/MemberEditor.js` or the club detail view) already uses inline `<input>` elements for member names. This pattern is established — use `<input>` (not `contenteditable`) for mobile consistency and to match existing patterns.
-
-**No new code needed in:** scheduler, storage, session, settings.
-
-**Mobile note:** On iOS Safari, `contenteditable` elements have known caret-position bugs on first tap. A styled `<input>` avoids this entirely. Existing member-add inputs in `RoundDisplay.js` and `ClubManager.js` demonstrate the correct approach.
-
-### Feature 2: Scheduling penalties for singles (1v1) and 3-way solo (2v1) matches
-
-**What:** Add two new penalty weights (`penaltySinglesMatch`, `penaltyThreeWaySoloMatch`) to the settings schema and apply them in `scoreRound()`.
-
-**Stack fit:** `scoreRound()` in `src/scheduler.js` already reads all penalty weights from the `settings` argument. The round data structure already captures non-standard courts (`teamA.length === 1` for singles, one team length-1 and the other length-2 for 3-way). The Settings view already renders range sliders for three penalty weights — adding two more follows the same pattern exactly.
-
-**Required changes (source files only):**
-
-- `src/storage.js`: Increment `SCHEMA_VERSION` to 2. Add a migration 2 function that spreads existing settings and adds new penalty defaults (e.g. `penaltySinglesMatch: 8`, `penaltyThreeWaySoloMatch: 5`). The migration chain in the file already handles this pattern.
-- `src/scheduler.js`: In `scoreRound()`, after the existing partner/opponent loops, add detection for courts where `teamA.length === 1 || teamB.length === 1` and apply the appropriate penalty from settings.
-- `src/views/Settings.js`: Add two range sliders following the pattern of the existing three, wired to the new settings keys.
-
-**Schema migration is required** — users with stored settings must receive the new keys with defaults. The `migrate()` function in `storage.js` is already the right mechanism.
-
-### Feature 3: Tests for player changes preserving played match state
-
-**What:** Vitest tests asserting that when `SessionService.updateAttendees()` is called mid-session, rounds already marked `played: true` retain their data and `played` flag unchanged.
-
-**Stack fit:** Vitest + happy-dom is configured in `vite.config.js` (`test: { environment: 'happy-dom', globals: true }`). The test file pattern is established: `vi.stubGlobal('localStorage', ...)` in `beforeEach`, then direct service method calls, then `expect()` assertions. See `src/storage.test.js` for the exact pattern.
-
-**New file:** `src/session.test.js` (following the same naming convention as `storage.test.js` and `scheduler.test.js`).
-
-**No source changes required** — if the feature works correctly, only new test assertions are needed. If tests reveal a bug, a fix to `SessionService` methods would be scoped.
-
-### What NOT to Add for Milestone 6
-
-- No new npm packages
-- No new Vite plugins
-- No changes to `vite.config.js` (test environment already configured)
-- No additional test utilities (Testing Library, sinon, etc.) — `vi.stubGlobal` and `vi.fn()` from Vitest cover all mocking needs
-- No state management library — the service module pattern handles everything
-- No form validation library — `.trim()` and empty-string checks are sufficient, matching existing club/member name handling
-
----
-
 ## Sources
 
 - [Vite — Deploying a Static Site](https://vite.dev/guide/static-deploy) — GitHub Pages workflow verified, Vite 8.0.3 confirmed as current stable (HIGH confidence)
@@ -176,8 +123,7 @@ All three milestone 6 features are implementable within the existing stack. The 
 - [Preact npm / GitHub releases](https://github.com/preactjs/preact/releases) — 10.27.2 stable, 11.0.0-beta.0 not production-ready (HIGH confidence)
 - WebSearch: mobile-first CSS frameworks 2025 — Pico CSS, Beer CSS, Tachyons alternatives reviewed (MEDIUM confidence)
 - WebSearch: localStorage best practices 2025 — JSON.parse/stringify wrapper pattern, try-catch availability check (MEDIUM confidence)
-- Codebase inspection: `src/scheduler.js`, `src/storage.js`, `src/services/club.js`, `src/services/session.js`, `src/views/Settings.js`, `src/views/RoundDisplay.js`, `package.json`, `vite.config.js` — direct verification (HIGH confidence)
 
 ---
 *Stack research for: Pickleball Practice Scheduler — static SPA, GitHub Pages, mobile-first, localStorage*
-*Initial research: 2026-04-02 | Milestone 6 update: 2026-04-13*
+*Researched: 2026-04-02*

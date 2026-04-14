@@ -13,7 +13,7 @@ export function mount(el, params) {
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-6">
           <div>
             <h2 class="font-bold text-gray-700">Scheduler Optimization</h2>
-            <p class="text-xs text-gray-500 italic">Adjust how the algorithm prioritizes variety vs fairness.</p>
+            <p class="text-xs text-gray-500 italic">Control how strongly the scheduler avoids repeating matchups. Drag to 0 to turn off a preference entirely.</p>
           </div>
 
           <div class="space-y-4">
@@ -22,8 +22,8 @@ export function mount(el, params) {
                 <label>Repeated Partners</label>
                 <span id="val-partner" class="text-blue-600">${settings.penaltyRepeatedPartner || 5}</span>
               </div>
-              <input type="range" id="weight-partner" min="1" max="50" value="${settings.penaltyRepeatedPartner || 5}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = avoids putting same partners together.</p>
+              <input type="range" id="weight-partner" min="0" max="50" value="${settings.penaltyRepeatedPartner || 5}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">How strongly to avoid scheduling the same two players as partners again.</p>
             </div>
 
             <div class="space-y-2">
@@ -31,8 +31,8 @@ export function mount(el, params) {
                 <label>Repeated Opponents</label>
                 <span id="val-opponent" class="text-blue-600">${settings.penaltyRepeatedOpponent || 10}</span>
               </div>
-              <input type="range" id="weight-opponent" min="1" max="50" value="${settings.penaltyRepeatedOpponent || 10}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = avoids playing against same people.</p>
+              <input type="range" id="weight-opponent" min="0" max="50" value="${settings.penaltyRepeatedOpponent || 10}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">How strongly to avoid scheduling the same two players against each other again.</p>
             </div>
 
             <div class="space-y-2">
@@ -40,8 +40,8 @@ export function mount(el, params) {
                 <label>Fair Sitting Out</label>
                 <span id="val-sitout" class="text-blue-600">${settings.penaltyRepeatedSitOut || 3}</span>
               </div>
-              <input type="range" id="weight-sitout" min="1" max="50" value="${settings.penaltyRepeatedSitOut || 3}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = forces everyone to sit out equally.</p>
+              <input type="range" id="weight-sitout" min="0" max="50" value="${settings.penaltyRepeatedSitOut || 3}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+              <p class="text-[10px] text-gray-400">How strongly to ensure every player sits out an equal number of rounds.</p>
             </div>
 
             <p class="text-xs font-bold text-gray-600 uppercase tracking-wide mt-2">Short-Sided Matches</p>
@@ -51,10 +51,10 @@ export function mount(el, params) {
                 <label>Singles Match</label>
                 <span id="val-singles" class="text-blue-600">${settings.penaltySingles || 15}</span>
               </div>
-              <input type="range" id="weight-singles" min="1" max="50"
+              <input type="range" id="weight-singles" min="0" max="50"
                 value="${settings.penaltySingles || 15}"
                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = avoids scheduling repeated 1v1 singles matches.</p>
+              <p class="text-[10px] text-gray-400">How strongly to avoid scheduling the same players in a 1v1 singles match again.</p>
             </div>
 
             <div class="space-y-2">
@@ -62,10 +62,10 @@ export function mount(el, params) {
                 <label>3-Way Solo</label>
                 <span id="val-threeway-solo" class="text-blue-600">${settings.penaltyThreeWaySolo || 20}</span>
               </div>
-              <input type="range" id="weight-threeway-solo" min="1" max="50"
+              <input type="range" id="weight-threeway-solo" min="0" max="50"
                 value="${settings.penaltyThreeWaySolo || 20}"
                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = avoids putting the same player alone on the short side of a 3-player court.</p>
+              <p class="text-[10px] text-gray-400">How strongly to avoid putting the same player alone on a 3-player court again.</p>
             </div>
 
             <div class="space-y-2">
@@ -73,10 +73,10 @@ export function mount(el, params) {
                 <label>3-Way Pair</label>
                 <span id="val-threeway-pair" class="text-blue-600">${settings.penaltyThreeWayPair || 15}</span>
               </div>
-              <input type="range" id="weight-threeway-pair" min="1" max="50"
+              <input type="range" id="weight-threeway-pair" min="0" max="50"
                 value="${settings.penaltyThreeWayPair || 15}"
                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <p class="text-[10px] text-gray-400">Higher = avoids repeating the same players on the pair side of a 3-player court.</p>
+              <p class="text-[10px] text-gray-400">How strongly to avoid repeating the same pair on the full-side of a 3-player court again.</p>
             </div>
 
             <button id="reset-weights" class="text-xs font-bold text-blue-600 hover:underline">Reset to Defaults</button>

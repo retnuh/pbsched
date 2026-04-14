@@ -8,15 +8,6 @@ A static single-page app hosted on GitHub Pages that helps a pickleball organize
 
 Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
 
-## Current Milestone: 6 — UX Polish & Scheduler Improvements
-
-**Goal:** Deliver targeted UX fixes and scheduler fairness improvements captured since PWA launch.
-
-**Target features:**
-- Allow editing the club name (inline tap-to-edit)
-- Tests for player changes preserving played match state
-- Scheduling penalties for singles and 3-way solo matches (configurable, with tests)
-
 ## Requirements
 
 ### Validated
@@ -82,4 +73,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — Milestone 6 started*
+*Last updated: 2026-04-02 after initialization*

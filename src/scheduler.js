@@ -16,12 +16,6 @@ export function buildPairHistory(playedRounds) {
     partnerStreak: {}, // { playerA: { playerB: streak } }
     opponentStreak: {}, // { playerA: { playerB: streak } }
     sitOutStreak: {}, // { player: streak }
-    singlesCount: {}, // { player: count }
-    singlesStreak: {}, // { player: streak }
-    threeWaySoloCount: {}, // { player: count }
-    threeWaySoloStreak: {}, // { player: streak }
-    threeWayPairCount: {}, // { player: count }
-    threeWayPairStreak: {}, // { player: streak }
   };
 
   const increment = (obj, p1, p2) => {
@@ -47,23 +41,6 @@ export function buildPairHistory(playedRounds) {
       teamA.forEach((a) => teamB.forEach((b) => {
         increment(history.opponentCount, a, b);
       }));
-
-      const isSingles = teamA.length === 1 && teamB.length === 1;
-      const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
-
-      if (isSingles) {
-        [teamA[0], teamB[0]].forEach(p => {
-          history.singlesCount[p] = (history.singlesCount[p] || 0) + 1;
-        });
-      }
-      if (isThreeWay) {
-        const soloSide = teamA.length === 1 ? teamA : teamB;
-        const pairSide = teamA.length === 2 ? teamA : teamB;
-        history.threeWaySoloCount[soloSide[0]] = (history.threeWaySoloCount[soloSide[0]] || 0) + 1;
-        pairSide.forEach(p => {
-          history.threeWayPairCount[p] = (history.threeWayPairCount[p] || 0) + 1;
-        });
-      }
     });
   });
 
@@ -86,9 +63,6 @@ export function buildPairHistory(playedRounds) {
     history.sitOutStreak[p] = 0;
     history.partnerStreak[p] = {};
     history.opponentStreak[p] = {};
-    history.singlesStreak[p] = 0;
-    history.threeWaySoloStreak[p] = 0;
-    history.threeWayPairStreak[p] = 0;
   });
 
   // Helper to check relationship in a round
@@ -115,39 +89,6 @@ export function buildPairHistory(playedRounds) {
       // Sit out streak
       if (history.sitOutStreak[p] === (playedRounds.length - 1 - i)) {
         if (round.sittingOut.includes(p)) history.sitOutStreak[p]++;
-      }
-
-      const expectedStreak = playedRounds.length - 1 - i;
-
-      // singles streak
-      const inSingles = round.courts.some(c =>
-        c.teamA.length === 1 && c.teamB.length === 1 &&
-        (c.teamA.includes(p) || c.teamB.includes(p))
-      );
-      if (history.singlesStreak[p] === expectedStreak && inSingles) {
-        history.singlesStreak[p]++;
-      }
-
-      // 3-way solo streak
-      const inThreeWaySolo = round.courts.some(c => {
-        const isThreeWay = c.teamA.length + c.teamB.length === 3 && !(c.teamA.length === 1 && c.teamB.length === 1);
-        if (!isThreeWay) return false;
-        const soloSide = c.teamA.length === 1 ? c.teamA : c.teamB;
-        return soloSide.includes(p);
-      });
-      if (history.threeWaySoloStreak[p] === expectedStreak && inThreeWaySolo) {
-        history.threeWaySoloStreak[p]++;
-      }
-
-      // 3-way pair streak
-      const inThreeWayPair = round.courts.some(c => {
-        const isThreeWay = c.teamA.length + c.teamB.length === 3 && !(c.teamA.length === 1 && c.teamB.length === 1);
-        if (!isThreeWay) return false;
-        const pairSide = c.teamA.length === 2 ? c.teamA : c.teamB;
-        return pairSide.includes(p);
-      });
-      if (history.threeWayPairStreak[p] === expectedStreak && inThreeWayPair) {
-        history.threeWayPairStreak[p]++;
       }
 
       for (let j = idx + 1; j < playerList.length; j++) {
@@ -236,37 +177,6 @@ export function scoreRound(round, history, settings) {
         score += getStandardPenalty(settings.penaltyRepeatedOpponent, getOpponentCount(a, b), getOpponentStreak(a, b));
       });
     });
-
-    // Short-sided penalties (per D-01, D-02)
-    const isSingles = teamA.length === 1 && teamB.length === 1;
-    const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
-
-    if (isSingles) {
-      // Both players are short-sided — each receives the singles penalty (D-02)
-      [teamA[0], teamB[0]].forEach(p => {
-        const count = history.singlesCount?.[p] || 0;
-        const streak = history.singlesStreak?.[p] || 0;
-        score += getStandardPenalty(settings.penaltySingles ?? 15, count, streak);
-      });
-    }
-
-    if (isThreeWay) {
-      const soloSide = teamA.length === 1 ? teamA : teamB;
-      const pairSide = teamA.length === 2 ? teamA : teamB;
-
-      // Solo player penalty (D-02, D-05)
-      const soloPlayer = soloSide[0];
-      const soloCount = history.threeWaySoloCount?.[soloPlayer] || 0;
-      const soloStreak = history.threeWaySoloStreak?.[soloPlayer] || 0;
-      score += getStandardPenalty(settings.penaltyThreeWaySolo ?? 20, soloCount, soloStreak);
-
-      // Pair players penalty (D-02, D-06)
-      pairSide.forEach(p => {
-        const pCount = history.threeWayPairCount?.[p] || 0;
-        const pStreak = history.threeWayPairStreak?.[p] || 0;
-        score += getStandardPenalty(settings.penaltyThreeWayPair ?? 15, pCount, pStreak);
-      });
-    }
   });
 
   return score;
@@ -375,24 +285,6 @@ export function generateRounds(attendees, playedRounds, countToGenerate, setting
         inc(currentHistory.opponentCount, a, b);
         inc(currentHistory.opponentCount, b, a);
       }));
-
-      // Short-sided fast-path count increment (per D-03; streaks are not fast-pathed, matching existing pattern)
-      const isSinglesInc = teamA.length === 1 && teamB.length === 1;
-      const isThreeWayInc = teamA.length + teamB.length === 3 && !isSinglesInc;
-
-      if (isSinglesInc) {
-        [teamA[0], teamB[0]].forEach(p => {
-          currentHistory.singlesCount[p] = (currentHistory.singlesCount[p] || 0) + 1;
-        });
-      }
-      if (isThreeWayInc) {
-        const soloSideInc = teamA.length === 1 ? teamA : teamB;
-        const pairSideInc = teamA.length === 2 ? teamA : teamB;
-        currentHistory.threeWaySoloCount[soloSideInc[0]] = (currentHistory.threeWaySoloCount[soloSideInc[0]] || 0) + 1;
-        pairSideInc.forEach(p => {
-          currentHistory.threeWayPairCount[p] = (currentHistory.threeWayPairCount[p] || 0) + 1;
-        });
-      }
     });
   }
 

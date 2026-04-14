@@ -2,46 +2,6 @@ import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { Haptics } from '../services/haptics.js';
 
-function showToast(message, anchorEl) {
-  const toast = document.createElement('div');
-  toast.textContent = message;
-
-  let positionStyles;
-  if (anchorEl) {
-    const rect = anchorEl.getBoundingClientRect();
-    positionStyles = [
-      'position:fixed',
-      `top:${rect.bottom + 8}px`,
-      `left:${rect.left + rect.width / 2}px`,
-      'transform:translateX(-50%)',
-    ];
-  } else {
-    positionStyles = [
-      'position:fixed',
-      'bottom:24px',
-      'left:50%',
-      'transform:translateX(-50%)',
-    ];
-  }
-
-  toast.style.cssText = [
-    ...positionStyles,
-    'background:#1f2937',
-    'color:#fff',
-    'padding:8px 16px',
-    'border-radius:8px',
-    'font-size:14px',
-    'z-index:9999',
-    'pointer-events:none',
-    'opacity:1',
-    'transition:opacity 0.4s ease',
-    'white-space:nowrap',
-  ].join(';');
-  document.body.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; }, 1600);
-  setTimeout(() => { toast.remove(); }, 2000);
-}
-
 export function mount(el, params) {
   const { clubId } = params;
   const club = ClubService.getClub(clubId);
@@ -70,34 +30,20 @@ export function mount(el, params) {
 
     memberListEl.innerHTML = freshClub.members.map(member => `
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center group">
-        <span data-member-name="${member.id}" class="font-medium text-lg flex-grow min-w-0 truncate mr-2"></span>
-        <div class="flex items-center space-x-1 flex-shrink-0">
-          <button data-id="${member.id}" data-action="rename-member" aria-label="Rename member"
-            class="text-gray-400 text-lg leading-none"
-            style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
-          <button data-id="${member.id}" data-action="remove-member" aria-label="Remove member"
-            class="text-red-400 text-lg leading-none"
-            style="background:none;border:none;cursor:pointer;padding:2px 4px;">🗑️</button>
+        <span class="font-medium text-lg">${member.name}</span>
+        <div class="flex space-x-1">
+          <button data-id="${member.id}" data-action="rename-member" class="px-3 py-1 text-sm text-blue-600 font-medium">Rename</button>
+          <button data-id="${member.id}" data-action="remove-member" class="px-3 py-1 text-sm text-red-500 font-medium">Remove</button>
         </div>
       </div>
     `).join('');
-    // Set member names via textContent to avoid XSS from localStorage values
-    freshClub.members.forEach(member => {
-      const span = memberListEl.querySelector(`[data-member-name="${member.id}"]`);
-      if (span) span.textContent = member.name;
-    });
   }
 
   el.innerHTML = `
     <div class="p-4 space-y-6">
       <header class="flex items-center space-x-4">
         <a href="#/" class="text-blue-600 font-medium text-lg">&larr;</a>
-        <div id="club-name-display" class="flex items-center gap-2 flex-grow min-w-0">
-          <h1 id="club-name-heading" class="text-2xl font-bold truncate flex-grow">${club.name}</h1>
-          <button id="edit-club-name" aria-label="Edit club name"
-            class="text-gray-400 text-lg leading-none flex-shrink-0"
-            style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
-        </div>
+        <h1 class="text-2xl font-bold flex-grow truncate">${club.name}</h1>
       </header>
 
       <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center">
@@ -123,86 +69,6 @@ export function mount(el, params) {
   `;
 
   renderMembers();
-
-  // ── Inline club name editing ──────────────────────────────────────────────
-  const nameDisplay  = el.querySelector('#club-name-display');
-  const nameHeading  = el.querySelector('#club-name-heading');
-  const editBtn      = el.querySelector('#edit-club-name');
-
-  function activateEdit() {
-    const currentName = ClubService.getClub(clubId).name;
-
-    // Build input that visually matches the h1
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = currentName;
-    input.setAttribute('aria-label', 'Club name');
-    // Match h1 styling; font-size 1.5rem = 24px — satisfies iOS ≥16px requirement (CLUB-09)
-    input.className = 'flex-grow min-w-0 font-bold bg-transparent outline-none';
-    input.style.cssText = [
-      'font-size:1.5rem',       // text-2xl = 24px
-      'font-weight:700',
-      'border:none',
-      'border-bottom:2px solid #6b7280',
-      'padding-bottom:2px',
-      'width:100%',
-    ].join(';');
-
-    // Swap heading + button for input
-    nameDisplay.innerHTML = '';
-    nameDisplay.appendChild(input);
-    input.focus();
-    input.select();
-
-    let saved = false;
-
-    function save() {
-      if (saved) return;
-      saved = true;
-      const newName = input.value.trim();
-      if (!newName) {
-        showToast("Club name can't be empty", input);
-        restore(currentName);
-        return;
-      }
-      ClubService.updateClub(clubId, { name: newName });
-      Haptics.light();
-      restore(newName);
-    }
-
-    function cancel() {
-      if (saved) return;
-      saved = true;
-      restore(currentName);
-    }
-
-    function restore(displayName) {
-      nameDisplay.innerHTML = `
-        <h1 id="club-name-heading" class="text-2xl font-bold truncate flex-grow"></h1>
-        <button id="edit-club-name" aria-label="Edit club name"
-          class="text-gray-400 text-lg leading-none flex-shrink-0"
-          style="background:none;border:none;cursor:pointer;padding:2px 4px;">✏️</button>
-      `;
-      // T-08-02: set text via textContent to prevent XSS from crafted localStorage values
-      nameDisplay.querySelector('#club-name-heading').textContent = displayName;
-      // Re-bind the edit button after innerHTML replacement
-      nameDisplay.querySelector('#edit-club-name').addEventListener('click', activateEdit);
-    }
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter')  { e.preventDefault(); save(); }
-      if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-    });
-
-    // blur fires after keydown, so the saved flag prevents double-fire
-    input.addEventListener('blur', save);
-  }
-
-  // Initial bind
-  editBtn.addEventListener('click', activateEdit);
-  // Also allow tapping the heading text itself to activate edit
-  nameHeading.addEventListener('click', activateEdit);
-  // ─────────────────────────────────────────────────────────────────────────
 
   // Add Member
   const addBtn = el.querySelector('#add-member');
@@ -247,64 +113,15 @@ export function mount(el, params) {
         renderMembers();
       }
     } else if (action === 'rename-member') {
-      const member = ClubService.getClub(clubId).members.find(m => m.id === memberId);
+      const currentClub = ClubService.getClub(clubId);
+      const member = currentClub.members.find(m => m.id === memberId);
       if (!member) return;
-      const nameSpan = el.querySelector(`[data-member-name="${memberId}"]`);
-      if (!nameSpan) return;
-
-      const currentName = member.name;
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = currentName;
-      input.setAttribute('aria-label', 'Member name');
-      input.className = 'font-medium flex-grow min-w-0 bg-transparent outline-none';
-      input.style.cssText = [
-        'font-size:1.125rem',  // text-lg = 18px, satisfies iOS ≥16px
-        'border:none',
-        'border-bottom:2px solid #6b7280',
-        'padding-bottom:2px',
-        'width:100%',
-      ].join(';');
-
-      nameSpan.replaceWith(input);
-      input.focus();
-      input.select();
-
-      let saved = false;
-
-      function restoreSpan(name) {
-        const span = document.createElement('span');
-        span.setAttribute('data-member-name', memberId);
-        span.className = 'font-medium text-lg flex-grow min-w-0 truncate mr-2';
-        span.textContent = name;
-        input.replaceWith(span);
-      }
-
-      function saveMember() {
-        if (saved) return;
-        saved = true;
-        const newName = input.value.trim();
-        if (!newName) {
-          showToast("Member name can't be empty", input);
-          restoreSpan(currentName);
-          return;
-        }
-        ClubService.renameMember(clubId, memberId, newName);
+      const newName = prompt('Rename member:', member.name);
+      if (newName && newName.trim()) {
+        ClubService.renameMember(clubId, memberId, newName.trim());
         Haptics.light();
         renderMembers();
       }
-
-      function cancelMember() {
-        if (saved) return;
-        saved = true;
-        restoreSpan(currentName);
-      }
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter')  { e.preventDefault(); saveMember(); }
-        if (e.key === 'Escape') { e.preventDefault(); cancelMember(); }
-      });
-      input.addEventListener('blur', saveMember);
     }
   });
 }
