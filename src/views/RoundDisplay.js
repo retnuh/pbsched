@@ -184,10 +184,10 @@ export function mount(el, params) {
                     </div>
                     <div class="flex-grow grid grid-cols-2 gap-1 text-center">
                       <div class="p-1.5 bg-blue-50 rounded border border-blue-100 text-xs font-bold">
-                        ${escapeHTML(getPlayerName(court.teamA[0]))} / ${court.teamA[1] ? escapeHTML(getPlayerName(court.teamA[1])) : '—'}
+                        ${escapeHTML(getPlayerName(court.teamA[0]))} / ${court.teamA[1] ? escapeHTML(getPlayerName(court.teamA[1])) : '👻'}
                       </div>
                       <div class="p-1.5 bg-orange-50 rounded border border-orange-100 text-xs font-bold">
-                        ${escapeHTML(getPlayerName(court.teamB[0]))} / ${court.teamB[1] ? escapeHTML(getPlayerName(court.teamB[1])) : '—'}
+                        ${escapeHTML(getPlayerName(court.teamB[0]))} / ${court.teamB[1] ? escapeHTML(getPlayerName(court.teamB[1])) : '👻'}
                       </div>
                     </div>
                   </div>
