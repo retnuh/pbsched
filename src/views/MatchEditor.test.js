@@ -180,6 +180,48 @@ describe('MatchEditor', () => {
       expect(el.innerHTML).toContain('Dave')
       expect(el.innerHTML).toContain('Rest Bench')
     })
+
+    test('bench always has exactly one empty slot even when players are present', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }],
+        sittingOut: ['p4'],
+      }
+      const session = makeSession([round])
+      StorageAdapter.set('clubs', CLUBS_DATA)
+      StorageAdapter.set('sessions', [session])
+
+      mount(el, { roundIndex: '0' })
+
+      const bench = el.querySelector('[data-zone="bench"]')
+      expect(bench.querySelectorAll('.empty-slot').length).toBe(1)
+    })
+
+    test('bench empty slot shows couch emoji', () => {
+      const session = makeSession([makeRound(0, false)])
+      StorageAdapter.set('clubs', CLUBS_DATA)
+      StorageAdapter.set('sessions', [session])
+
+      mount(el, { roundIndex: '0' })
+
+      const bench = el.querySelector('[data-zone="bench"]')
+      const slot = bench.querySelector('.empty-slot')
+      expect(slot.textContent.trim()).toBe('🛋️')
+    })
+
+    test('court empty slots do not show the couch emoji', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3'] }], sittingOut: [] }
+      const session = makeSession([round])
+      StorageAdapter.set('clubs', CLUBS_DATA)
+      StorageAdapter.set('sessions', [session])
+
+      mount(el, { roundIndex: '0' })
+
+      const courtSlot = el.querySelector('[data-zone="court-0-b"] .empty-slot')
+      expect(courtSlot).not.toBeNull()
+      expect(courtSlot.textContent.trim()).toBe('')
+    })
   })
 })
 
@@ -624,6 +666,18 @@ describe('Phase 13: Drag interactions', () => {
       // Slots rebalanced: Court A now has 1 player → 1 slot; Court B has 2 → 0 slots
       expect(zoneA.querySelectorAll('.empty-slot').length).toBe(1)
       expect(zoneB.querySelectorAll('.empty-slot').length).toBe(0)
+    })
+
+    test('bench still has exactly one empty slot after a drag ends', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+      el.querySelector('#confirm-btn').click()
+      expect(bench.querySelectorAll('.empty-slot').length).toBe(1)
     })
   })
 })
