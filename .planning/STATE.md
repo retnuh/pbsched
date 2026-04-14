@@ -20,7 +20,7 @@ progress:
 Phase: 10 (Scheduling Penalties for Short-Sided Matches) — EXECUTING
 Plan: 1 of 2
 Status: Executing Phase 10
-Last activity: 2026-04-14 - Completed quick task 260414-e5s: verify fair sit-out logic prioritizes fairness over equality and update copy to reflect intent
+Last activity: 2026-04-14 - Completed quick task 260414-eau: restore phase 10 short-sided sliders lost in e5s regression
 
 ## Milestone: Milestone 6 — UX Polish & Scheduler Improvements
 
@@ -40,3 +40,4 @@ Last activity: 2026-04-14 - Completed quick task 260414-e5s: verify fair sit-out
 |---|-------------|------|--------|-----------|
 | 260414-dx9 | change all fairness sliders to 0-50 range and update text for end users | 2026-04-14 | 044450b | [260414-dx9-change-all-fairness-sliders-to-0-50-rang](./quick/260414-dx9-change-all-fairness-sliders-to-0-50-rang/) |
 | 260414-e5s | verify fair sit-out logic prioritizes fairness over equality and update copy to reflect intent | 2026-04-14 | f83bbf9 | [260414-e5s-verify-fair-sit-out-logic-prioritizes-fa](./quick/260414-e5s-verify-fair-sit-out-logic-prioritizes-fa/) |
+| 260414-eau | restore phase 10 short-sided sliders lost in e5s regression | 2026-04-14 | bf282fe | [260414-eau-restore-phase-10-short-sided-sliders-los](./quick/260414-eau-restore-phase-10-short-sided-sliders-los/) |
