@@ -15,3 +15,11 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
   configurable: true,
 })
+
+// Clear _store before every test to prevent state bleeding across test files.
+// StorageAdapter.reset() re-initialises the in-memory state in storage.js, but
+// does not wipe keys written by other test files with different prefixes.
+import { beforeEach } from 'vitest'
+beforeEach(() => {
+  Object.keys(_store).forEach(k => delete _store[k])
+})
