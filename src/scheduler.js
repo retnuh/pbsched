@@ -218,30 +218,16 @@ function generateCandidate(attendees, history, settings, index) {
     });
   }
 
-  // 3. Handle the remainder based on strategy
-  if (oddCount > 0) {
-    const strat = settings.oddPlayerFallback;
-
-    if (strat === 'three-player-court' && oddCount === 3) {
-      // Play 2v1
-      const trio = playersToAssign.splice(0, 3);
-      round.courts.push({
-        teamA: [trio[0], trio[1]],
-        teamB: [trio[2]],
-      });
-    } else if (strat === 'two-player-court' && oddCount >= 2) {
-      // Play 1v1
-      const duo = playersToAssign.splice(0, 2);
-      round.courts.push({
-        teamA: [duo[0]],
-        teamB: [duo[1]],
-      });
-      // Remaining (if any, e.g. 3rd player) sits out
-      round.sittingOut = [...round.sittingOut, ...playersToAssign];
-    } else {
-      // 'sit-out' strategy or no other choice (e.g. only 1 player left)
-      round.sittingOut = [...round.sittingOut, ...playersToAssign];
-    }
+  // 3. Handle the remainder — always use the most inclusive layout:
+  //    3 left → 2v1 court, 2 left → 1v1 court, 1 left → sits out
+  if (oddCount === 3) {
+    const trio = playersToAssign.splice(0, 3);
+    round.courts.push({ teamA: [trio[0], trio[1]], teamB: [trio[2]] });
+  } else if (oddCount === 2) {
+    const duo = playersToAssign.splice(0, 2);
+    round.courts.push({ teamA: [duo[0]], teamB: [duo[1]] });
+  } else if (oddCount === 1) {
+    round.sittingOut = [...round.sittingOut, ...playersToAssign];
   }
 
   return round;

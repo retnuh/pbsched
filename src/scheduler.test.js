@@ -6,7 +6,6 @@ const MOCK_SETTINGS = {
   penaltyRepeatedOpponent: 10,
   penaltyRepeatedSitOut: 3,
   candidateCount: 100,
-  oddPlayerFallback: 'sit-out',
 };
 
 describe('Scheduler Logic', () => {
@@ -65,34 +64,30 @@ describe('Scheduler Logic', () => {
     expect(rounds[0].sittingOut).toHaveLength(0);
   });
 
-  test('generateRounds handles 7 players (odd count, sit-out)', () => {
+  test('generateRounds handles 7 players — 2v1 court, nobody sits out', () => {
     const sevenPlayers = players.slice(0, 7);
     const rounds = generateRounds(sevenPlayers, [], 1, MOCK_SETTINGS);
-    expect(rounds[0].courts).toHaveLength(1); // 1 court of 4
-    expect(rounds[0].sittingOut).toHaveLength(3); // 3 sit out
-  });
-
-  test('generateRounds handles 7 players (odd count, 3-player court)', () => {
-    const sevenPlayers = players.slice(0, 7);
-    const settings = { ...MOCK_SETTINGS, oddPlayerFallback: 'three-player-court' };
-    const rounds = generateRounds(sevenPlayers, [], 1, settings);
-    
-    // 7 players = 1 court of 4 + 1 court of 3 (2v1)
+    // 7 = 1 court of 4 + 1 court of 3 (2v1)
     expect(rounds[0].courts).toHaveLength(2);
     expect(rounds[0].courts.some(c => c.teamB.length === 1)).toBe(true);
     expect(rounds[0].sittingOut).toHaveLength(0);
   });
 
-  test('generateRounds handles 10 players (two-player-court / 1v1)', () => {
+  test('generateRounds handles 10 players — 1v1 court, nobody sits out', () => {
     const tenPlayers = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10'];
-    const settings = { ...MOCK_SETTINGS, oddPlayerFallback: 'two-player-court' };
-    const rounds = generateRounds(tenPlayers, [], 1, settings);
-    
-    // 10 players = 2 courts of 4 (2v2) + 1 court of 2 (1v1)
+    const rounds = generateRounds(tenPlayers, [], 1, MOCK_SETTINGS);
+    // 10 = 2 courts of 4 + 1 court of 2 (1v1)
     expect(rounds[0].courts).toHaveLength(3);
-    const ones = rounds[0].courts.filter(c => c.teamA.length === 1 && c.teamB.length === 1);
-    expect(ones).toHaveLength(1);
+    expect(rounds[0].courts.filter(c => c.teamA.length === 1 && c.teamB.length === 1)).toHaveLength(1);
     expect(rounds[0].sittingOut).toHaveLength(0);
+  });
+
+  test('generateRounds handles 9 players — 1 sits out', () => {
+    const ninePlayers = players.slice(0, 8).concat(['p9']);
+    const rounds = generateRounds(ninePlayers, [], 1, MOCK_SETTINGS);
+    // 9 = 2 courts of 4 + 1 sits out
+    expect(rounds[0].courts).toHaveLength(2);
+    expect(rounds[0].sittingOut).toHaveLength(1);
   });
 
   test('scoreRound applies exponential penalties for back-to-back repeats', () => {
