@@ -141,7 +141,7 @@ Source: CONTEXT.md Decisions 3 and 4.
 
 **Inactive button state:** `bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium` — matches existing muted/secondary style.
 
-**Button dimensions:** Equal-width flex children, `py-2.5` height (minimum 44px touch target), `text-sm font-bold`.
+**Button dimensions:** Equal-width flex children, `py-3` height (12px top + 12px bottom + line-height ≈ 44px total, meeting minimum touch target), `text-sm font-bold`.
 
 **Behavior:**
 - On mount: read `ThemeService.getMode()` → highlight matching button
