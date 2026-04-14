@@ -100,10 +100,10 @@ function handleConfirm() {
 function makeEmptySlot({ bench = false } = {}) {
   const div = document.createElement('div');
   if (bench) {
-    div.className = 'empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg';
+    div.className = 'empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 text-lg';
     div.textContent = '🛋️';
   } else {
-    div.className = 'empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full';
+    div.className = 'empty-slot min-h-[44px] border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-full';
   }
   return div;
 }
@@ -176,19 +176,19 @@ function buildHTML(draft, round, club, getPlayerName, session) {
        <span class="text-xs font-medium text-gray-500">${sitCounts[id] || 0}×</span>
      </div>`;
 
-  const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full"></div>';
+  const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-full"></div>';
   const courtCol = (players) =>
     players.map(courtChip).join('') +
     Array(Math.max(0, 2 - players.length)).fill(emptySlotHTML).join('');
 
   const courtsHTML = draft.courts.map((court, i) => `
-    <div data-court="${i}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-3 bg-gray-50 flex items-center justify-between">
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Court ${i + 1}</span>
+    <div data-court="${i}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="p-3 bg-gray-50 dark:bg-gray-700 flex items-center justify-between">
+        <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Court ${i + 1}</span>
         <div class="flex items-center gap-2">
-          <span data-court-error class="hidden text-xs font-bold text-red-600">needs 2+ players</span>
+          <span data-court-error class="hidden text-xs font-bold text-red-600 dark:text-red-400">needs 2+ players</span>
           <button data-remove-court="${i}"
-                  class="text-xs font-medium text-gray-400 hover:text-red-500 ${(court.teamA.length === 0 && court.teamB.length === 0 && draft.courts.length > 1) ? '' : 'hidden'}">
+                  class="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 ${(court.teamA.length === 0 && court.teamB.length === 0 && draft.courts.length > 1) ? '' : 'hidden'}">
             Remove
           </button>
         </div>
@@ -198,7 +198,7 @@ function buildHTML(draft, round, club, getPlayerName, session) {
           <div data-zone="court-${i}-a" class="space-y-2 pr-3 min-h-[96px]">
             ${courtCol(court.teamA)}
           </div>
-          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200 min-h-[96px]">
+          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200 dark:border-gray-700 min-h-[96px]">
             ${courtCol(court.teamB)}
           </div>
         </div>
@@ -209,7 +209,7 @@ function buildHTML(draft, round, club, getPlayerName, session) {
   const addCourtButtonHTML = `
     <button id="add-court-btn"
             class="flex items-center gap-2 justify-center w-full min-h-[44px] px-4 py-3
-                   bg-white border border-gray-200 rounded-xl text-blue-600 font-medium text-sm">
+                   bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-xl text-blue-600 dark:text-blue-300 font-medium text-sm">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"/>
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8M8 12h8"/>
@@ -219,18 +219,18 @@ function buildHTML(draft, round, club, getPlayerName, session) {
   `;
 
   const benchHTML = `
-    <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
-      <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
+    <div class="rounded-xl bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 space-y-3">
+      <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Rest Bench</h2>
       <div data-zone="bench" class="flex flex-wrap gap-2 min-h-[52px]">
         ${draft.sittingOut.map(benchChip).join('')}
-        <div class="empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg">🛋️</div>
+        <div class="empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-600 text-lg">🛋️</div>
       </div>
     </div>
   `;
 
   const bottomBarHTML = `
     <div class="fixed fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
-                bg-white/90 backdrop-blur-sm border-t border-gray-100">
+                bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700">
       <div class="flex items-center gap-3 p-4">
         <button id="cancel-btn"
                 class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-bold border border-gray-200">
