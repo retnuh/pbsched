@@ -1,205 +1,186 @@
-# Feature Landscape: Match Editor Drag-and-Drop
+# Feature Research
 
-**Domain:** Pickleball practice scheduler — mobile-first PWA, vanilla JS, localStorage only
-**Milestone:** 7 — Match Editor (drag-and-drop player chips)
-**Researched:** 2026-04-14
-**Overall confidence:** HIGH for interaction patterns; MEDIUM for precise touch API tradeoffs
+**Domain:** Pickleball practice session scheduler (single-organizer, local-first SPA)
+**Researched:** 2026-04-02
+**Confidence:** HIGH — core scheduling features well-documented across multiple existing products; pickleball-specific social play organizer needs verified through multiple sources
 
 ---
 
-## Table Stakes
+## Feature Landscape
 
-Features the organizer will expect to be present and working before the editor feels usable. Missing any of these makes the feature feel half-baked.
+### Table Stakes (Users Expect These)
+
+Features any scheduling tool for this domain must have. Missing these makes the product non-functional.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Draggable player chips | The entire premise of the feature | Medium | Pointer Events API; `touch-action: none` on chips required |
-| Named court slots as drop targets | Players must have somewhere to land | Low | Static grid; slot accepts one player chip |
-| Rest Bench as a named drop target | Replaces current separate sit-out flow | Low | Bench can hold multiple chips; no slot-count constraint |
-| Ghost placeholder at origin | Reassures user where the chip came from | Low | CSS opacity reduction on the original while dragging |
-| Drag preview chip under finger | Confirms the chip is being moved | Low | Cloned chip that follows pointer; `position: fixed` |
-| Visual "ready" state on valid drop zones | Guides where a chip can land | Low | Border highlight or background color change on hover/proximity |
-| Drop snaps chip into slot | Chip lands cleanly at destination; no float | Low | On `pointerup`, remove clone, insert chip into target |
-| Swap behavior when slot is occupied | Dropping on a full slot displaces the existing chip to origin slot | Medium | Two-phase: eject occupant to origin, insert dragged chip |
-| Confirm / Save button | Committing edits must be an explicit action | Low | Sticky bottom bar, disabled until at least one change is made |
-| Discard / Cancel button | Organizer must be able to bail without side effects | Low | Returns to the original round state; resets all in-memory edits |
-| Works on mobile touch (iOS + Android) | Entire audience uses mobile | Medium | Pointer Events API handles both; test on real device |
-| Haptic feedback on grab and on drop | Already established in the app for all interactions | Low | `Haptics.light()` on grab; `Haptics.success()` on successful drop |
-| Accessible from proposed (unplayed) round | Primary use case — tweak before playing | Low | "Edit" button on current unplayed round card |
-| Edits update the session's round object | Core purpose; scheduler uses history | Medium | Mutate a draft copy in memory; persist only on Confirm |
+| Attendance roster — pick who showed up | Every organizer's first step before any round can be generated | LOW | Simple multi-select from a saved member list |
+| Round generation — 2v2 court groupings | Core product value; without this there is no product | MEDIUM | 4 players per court; must handle N players across M courts |
+| Odd player count handling | Almost every real session has a non-divisible-by-4 player count; organizers encounter this constantly | MEDIUM | Sit-out rotation OR 3-player court; organizer chooses the strategy |
+| Variety optimization — minimize repeat partners/opponents | Primary complaint against manual scheduling is unfair repetition; competitors (Pickleheads, MatchUp) all solve this | HIGH | Scoring-based candidate evaluation; see PROJECT.md algorithm decision |
+| Persistent member roster across sessions | Organizer should not re-enter player names every week | LOW | localStorage; per-club list |
+| Round display — readable on phone screen | Organizer reads matchups aloud from their phone at courtside; tiny text or complex layout fails | LOW | Clear court-by-court grouping, large tap targets |
+| Advance round count — set N rounds upfront | Organizers pre-commit to a session structure; they need to announce "we're doing 8 rounds tonight" | LOW | Simple numeric input; drives how many rounds to generate |
+| Mark a round as played / advance to next round | Without tracking which round is current, the organizer cannot remember where they are in a session | LOW | Simple "next round" state; does not require score entry |
 
-## Differentiators
+### Differentiators (Competitive Advantage)
 
-Features that would improve the experience beyond the basic expectation. Worth building if complexity is low; defer if not.
+These are where this product wins against existing tools. Most competitors either require accounts/servers, focus on tournament-not-practice use cases, or lack the variety optimization depth.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Accessible from most-recently-played round | Allows correcting a mistake after marking played | Medium | Edits to played rounds must write back to `session.rounds[idx]` so scheduler history updates. Guarded: only the last played round is editable. |
-| "Modified" indicator on the editor | Shows the organizer they have unsaved changes | Low | A visible "unsaved" badge or button state change |
-| Tap-to-select / tap-to-place fallback | Safer alternative for thumb-cramped small screens; also an accessibility escape hatch | Medium | Tap a chip to select it (ring highlight), then tap an empty slot or another chip to swap. No drag required. Lowers the interaction bar significantly. |
-| Constraint indicator on invalid slots | Visual "no" indicator if a slot is already full and swaps aren't allowed | Low | Red border flash on target; chip snaps back to origin |
-| Sit-out count badge on bench chips | Reminds organizer who has sat out most — aids fair manual editing | Low | Leverage existing sit-count logic from `renderSitterPicker` in RoundDisplay.js |
-| Auto-validate court counts before confirm | Prevent confirming an invalid state (e.g., a court with 1 player on one side) | Medium | Check that each court still has a legal configuration; surface inline error message |
+| Multi-club roster support | Organizers who run play at multiple venues keep separate member lists; no existing local-first tool handles this | LOW-MEDIUM | Club switcher; each club has independent roster and can be active one at a time |
+| Mid-session player add/remove with automatic round regeneration | Real sessions always have late arrivals and early departures; PlayMore's most-praised feature; missing from most schedulers | MEDIUM | When roster changes, regenerate all unplayed future rounds using updated player list |
+| View and choose from top-N generated schedules | Gives organizer agency when generated schedule has a known social conflict (two players who should not be paired) | MEDIUM | Generate K candidates, rank by score, present top 3–5 for organizer to preview and pick |
+| Tunable scoring weights via advanced settings | Allows developer and power-user organizers to experiment with how strongly to penalize repeat partners vs repeat opponents | LOW | Hidden behind an advanced settings screen; sensible defaults mean most users never touch it |
+| Extend session on the fly | Organizers frequently decide to add more rounds once a session is going well | LOW | "Add round" button appends one more generated round to the session |
+| No account required, fully local | Every existing competitor that handles variety optimization requires account creation and a backend; this works from a phone browser instantly | NONE (it's an absence) | GitHub Pages + localStorage = zero friction to start |
+| Offline / no-connectivity required | Gyms and recreation centers often have poor cell signal; the app cannot depend on network during a session | NONE (consequence of architecture) | Static SPA + localStorage inherently offline-capable |
 
-## Anti-Features
+### Anti-Features (Commonly Requested, Often Problematic)
 
-Features to explicitly NOT build in this milestone.
+Features that seem like good ideas but conflict with this product's core constraints or dilute focus.
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Full undo/redo history stack | Disproportionate complexity for a modal editor | Single-step discard: tap Cancel to restore the original state |
-| Drag-to-reorder courts | Courts are not ordered in any meaningful way in pickleball practice | Keep courts in their generated order; no court reordering |
-| Multi-select drag (grab multiple chips at once) | Very complex on touch; no use case with 4-player courts | One chip at a time; the group is small enough |
-| Keyboard shortcuts or desktop-first DnD | This app runs on an organizer's phone; desktop is not the target | Pointer Events (covers mouse too) but don't optimize for it |
-| Live score update on edit | Score tracking is explicitly out of scope in PROJECT.md | No score integration |
-| Edit history visible in the UI | Prior rounds are shown as read-only; history editing is a power feature | Only the most-recently-played round is editable, and that's already a differentiator |
-| Scroll-while-dragging (auto-scroll) | Not needed; the editor is a focused modal or sub-view with a small court grid that fits one screen | Keep the editor layout compact enough to avoid needing it |
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Score tracking | Organizers see competitors (Pickleheads, PlayMore) doing it; natural request | Dramatically increases session state complexity; requires score entry UX mid-play; out of scope per PROJECT.md | Provide "round played" confirmation only — no numeric scores |
+| Real-time multi-device sync | "Other organizers at the club want to see the schedule too" | Requires a backend or WebRTC; destroys the static/local-first architecture constraint | Share by reading the app aloud or showing the phone screen |
+| Player accounts / profiles | "Players want to track their own history" | Account system = backend = not a GitHub Pages static app | Organizer-only app; player history is not the product's job |
+| Skill-level balancing in matchups | Seen in PlayMore, Pickleheads; organizers naturally ask for it | Adds a second optimization axis that conflicts with variety; small practice groups (6–12) have known skill levels that organizers account for socially | Document that the algorithm optimizes for variety, not balance; trust organizer judgment on player selection |
+| Court reservation / time slot scheduling | Adjacent feature many scheduling apps bundle | Completely different domain; adds court availability, time constraints, booking UX; no value for a practice-session matchup generator | Out of scope; this product generates who plays who, not when they play |
+| Push notifications / reminders | Standard feature in PlayMore, PlayTime | Requires a backend or push notification service; impossible in a static SPA without a service worker + push API subscription flow | Out of scope for v1; static SPA with no server cannot send notifications |
+| DUPR or rating system integration | Pickleheads offers DUPR submission; players ask for it | Requires API credentials, backend proxy (CORS), account linking; incompatible with static-only constraint | Out of scope; this is a practice tool, not a rated event |
+| Export to PDF / printable schedule | Common request in tournament schedulers | Low organizer value for a phone-screen app; adds a formatting/layout subsystem | The on-screen round display is the output; no print layer needed for v1 |
 
 ---
 
 ## Feature Dependencies
 
 ```
-Drag grab → Ghost preview + origin placeholder (must appear simultaneously)
-Ghost preview → Pointer tracking (pointerMove updates ghost position)
-Drop on occupied slot → Swap behavior (eject occupant first, then place)
-Drop on bench → No slot constraint (bench accepts N chips)
-Confirm → Write draft state to session.rounds[idx] → SessionService.updateSession()
-Confirm (played round) → session.rounds[idx].played stays true; courts/sittingOut mutated
-Cancel → Discard draft; show original round data
-Sit-out count badge → session.rounds[0..lastPlayedIdx].sittingOut (computed at editor open)
-Auto-validate → Run before enabling Confirm button
+[Member Roster (per club)]
+    └──required by──> [Attendance Selection]
+                          └──required by──> [Round Generation]
+                                                └──required by──> [Variety Optimization]
+                                                └──required by──> [Round Display]
+                                                └──required by──> [Odd Player Handling]
+
+[Multi-Club Support]
+    └──enhances──> [Member Roster (per club)]
+
+[Round Generation]
+    └──required by──> [Mid-Session Player Changes]
+    └──required by──> [Extend Session]
+    └──required by──> [Top-N Schedule Alternatives]
+
+[Advance Round Count]
+    └──enhances──> [Round Generation]
+
+[Tunable Scoring Weights]
+    └──enhances──> [Variety Optimization]
+
+[Mark Round as Played]
+    └──required by──> [Mid-Session Player Changes]  (need to know which rounds are unplayed)
+    └──required by──> [Extend Session]
 ```
 
----
+### Dependency Notes
 
-## Interaction Model: Recommended Approach
-
-### Primary: Pointer Events API drag-and-drop
-
-Use `pointerdown`, `pointermove`, `pointerup` on the chip elements, not the HTML Drag and Drop API and not the legacy `touchstart`/`touchmove` pair.
-
-**Why Pointer Events:**
-- Unified API covering finger, stylus, and mouse with one code path (HIGH confidence — MDN, W3C spec)
-- No need for dual mouse/touch handlers
-- `touch-action: none` on draggable chips prevents the browser from claiming the pointer for scrolling — critical for drag-to-not-scroll correctness
-- Supported in all modern browsers including iOS Safari 13+ (HIGH confidence — MDN compatibility data)
-
-**Why not HTML Drag and Drop API:**
-- The `dragstart`/`drop` API does not fire on touch devices natively. Every production implementation that needs mobile either uses a polyfill (`drag-drop-touch`) or abandons the API in favor of Pointer Events. The polyfill adds 5 KB of untestable glue code; Pointer Events avoids it entirely.
-
-**Why not `touchstart`/`touchmove`:**
-- Redundant when Pointer Events are available. Adds a second code path that must be maintained in sync.
-
-### Secondary: Tap-to-Select / Tap-to-Place (recommended addition)
-
-For users who find a sustained drag difficult on a small screen — or when the screen is crowded — a tap-based fallback works as follows:
-
-1. Tap a chip → chip receives `selected` class (visible ring); editor enters selection mode
-2. Tap any drop target (slot or bench) → chip moves to target; if occupied, chips swap
-3. Tap the selected chip again → deselects (cancel the move)
-
-This is the same interaction model used by Yahoo Fantasy's "Swap Mode" and ESPN's tap-based lineup editor on mobile (MEDIUM confidence — from Yahoo Help and ESPN support docs). It requires no pointer tracking and has zero scroll conflict risk.
-
-**Recommendation:** Build drag first. Add tap-to-select as a fallback in the same phase if complexity allows — it reuses all the same slot/swap logic.
+- **Attendance Selection requires Member Roster:** You can only pick attendees from a pre-existing list; roster must be populated first.
+- **Round Generation requires Attendance Selection:** The algorithm needs the confirmed player list before it can generate groupings.
+- **Variety Optimization requires Round Generation:** It is the scoring layer on top of candidate generation, not a separate feature.
+- **Mid-Session Player Changes requires Mark Round as Played:** The system must know which rounds are already done to only regenerate future rounds.
+- **Multi-Club Support enhances Member Roster:** Each club gets its own isolated member list; the structure is a pre-condition for multi-club to be meaningful.
+- **Top-N Schedule Alternatives requires Round Generation:** It is the same generation process run K times with results ranked and surfaced for human selection.
 
 ---
 
-## State Machine for the Editor
+## MVP Definition
 
-The editor operates with a simple draft model:
+### Launch With (v1)
 
-```
-Open editor
-  → Copy current round to draftRound (deep clone)
-  → All mutations operate on draftRound
+Minimum viable — covers the complete practice session workflow for a single club.
 
-Drag/tap interaction
-  → Mutate draftRound.courts + draftRound.sittingOut
-  → Re-render chip positions from draftRound
+- [ ] Member roster management — add, remove, rename players per club
+- [ ] Single-club support — one club, one roster (multi-club comes after)
+- [ ] Attendance selection at session start — tap to mark who is present
+- [ ] Round generation with variety optimization — candidate + scoring algorithm
+- [ ] Odd player handling — organizer chooses: sit-out rotation or 3-player court
+- [ ] Round display — phone-optimized, court-by-court matchup view
+- [ ] Mark round as played / advance to next round
+- [ ] Set round count upfront; extend session on the fly
 
-Confirm
-  → Validate draftRound
-  → Write draftRound into session.rounds[roundIndex]
-  → If round.played === true: SessionService.updateSession() (persist history mutation)
-  → If round.played === false: treat as a replaceRound equivalent
-  → Navigate back / close editor
+### Add After Validation (v1.x)
 
-Cancel
-  → Discard draftRound
-  → Navigate back / close editor (no session write)
-```
+Add once the core session workflow is confirmed useful.
 
-This model means the editor never touches live session state until Confirm is tapped. Cancel is always safe.
+- [ ] Multi-club support — add when a second club is needed; the roster data model must accommodate it from the start even if the UI exposes only one club at launch
+- [ ] View and choose from top-N generated schedules — add once organizers report wanting to override a generated schedule
+- [ ] Mid-session player add/remove with round regeneration — add once the "someone showed up late" pain point is confirmed in real use
 
----
+### Future Consideration (v2+)
 
-## Edge Cases and Validity Rules
+Defer until there is evidence of demand.
 
-These are the cases the editor must handle correctly. Missing any will produce corrupted scheduler history.
-
-| Scenario | Expected Behavior |
-|----------|------------------|
-| Drop chip onto its own origin slot | No-op; no visual change |
-| Drop chip onto an occupied slot | Swap: origin slot gets displaced chip; target slot gets dragged chip |
-| Drag chip from bench to court slot | Move chip; court slot is filled; bench shrinks by one |
-| Drag chip from court slot to bench | Move chip; bench grows by one; court slot becomes empty |
-| Court slot becomes empty after drag | Slot visually shows as empty (placeholder); Confirm button checks validity |
-| All bench chips dragged to courts | Bench shows "No one sitting out" empty state |
-| All active players dragged to bench | Should be preventable or produce a validation error on Confirm: can't confirm with no courts |
-| Confirm with a court that has 0 players on one side | Validation error before write: "Court 2 is missing players." Confirm remains disabled or shows error toast |
-| Confirm with a court that has 3 players on one side | Same validation — invalid court shape |
-| Edit a played round | `round.played` stays `true`; only `courts` and `sittingOut` are mutated; scheduler history is updated |
-| Pointer cancelled mid-drag (e.g. phone call, notification) | `pointercancel` event fires; snap chip back to origin cleanly |
-| Long press before drag (iOS delay) | Not needed: Pointer Events fires `pointerdown` immediately, no hold required |
-| Scroll conflict on mobile | `touch-action: none` on chip elements prevents browser claiming the drag as a scroll |
+- [ ] Tunable scoring weights (advanced settings screen) — low user-facing value until organizers ask for it; algorithm defaults should cover most cases
+- [ ] Session history / past session review — useful for pattern analysis but no immediate organizer need during a live session
+- [ ] PWA / installable app shell — improves mobile UX but adds build complexity; defer until usage justifies it
 
 ---
 
-## Dependencies on Existing Code
+## Feature Prioritization Matrix
 
-| Existing Feature | How the Editor Uses It |
-|-----------------|----------------------|
-| `session.rounds[idx].courts` | Read to populate initial chip positions; written back on Confirm |
-| `session.rounds[idx].sittingOut` | Read to populate Bench initial state; written back on Confirm |
-| `session.rounds[idx].played` | Determines whether Confirm writes to played history vs. unplayed proposal |
-| `SessionService.updateSession()` | Called on Confirm to persist the mutated session |
-| `SessionService.replaceRound()` | Existing method; Confirm on an unplayed round can call this instead of direct mutation |
-| `getPlayerName(id)` | Chip labels; already implemented in `RoundDisplay.js` |
-| `Haptics.light()` / `Haptics.success()` | Grab and drop feedback; service already exists |
-| `session.rounds` sit-out counts | For bench chip badges; computed the same way as `renderSitterPicker` |
-| Scheduler history (`playedRounds`) | After Confirm on a played round, the next `generateNextRound()` will use the edited history automatically — no extra work needed |
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Member roster management | HIGH | LOW | P1 |
+| Attendance selection | HIGH | LOW | P1 |
+| Round generation (2v2 groupings) | HIGH | MEDIUM | P1 |
+| Variety optimization algorithm | HIGH | HIGH | P1 |
+| Odd player handling | HIGH | MEDIUM | P1 |
+| Round display (mobile-optimized) | HIGH | LOW | P1 |
+| Mark round as played | HIGH | LOW | P1 |
+| Set / extend round count | MEDIUM | LOW | P1 |
+| Multi-club support | MEDIUM | LOW-MEDIUM | P2 |
+| Top-N schedule alternatives | MEDIUM | MEDIUM | P2 |
+| Mid-session player changes | HIGH | MEDIUM | P2 |
+| Tunable scoring weights | LOW | LOW | P3 |
+| Session history | LOW | MEDIUM | P3 |
 
-No changes to `scheduler.js` or `SessionService` business logic are expected. The editor is a new view that reads existing data structures and writes back to them through existing persistence methods.
+**Priority key:**
+- P1: Must have for launch
+- P2: Should have; add in v1.x after core is validated
+- P3: Nice to have; future consideration
 
 ---
 
-## MVP Recommendation
+## Competitor Feature Analysis
 
-Build in this order within the milestone:
-
-1. Editor UI scaffold: open from "Edit" button on current unplayed round, shows chips in court slots + bench, has Confirm/Cancel buttons (no drag yet)
-2. Drag-and-drop with Pointer Events: grab, ghost, drop onto empty slot, drop onto occupied slot (swap), drop onto bench
-3. Confirm writes draft to session; Cancel discards; validate before Confirm
-4. Accessibility from most-recently-played round (edit played history)
-5. Tap-to-select fallback (if complexity allows within the milestone)
-
-**Defer:**
-- Sit-out count badges on bench chips: useful but not critical; the organizer knows who has sat out
-- Auto-validation UI beyond a simple Confirm-disabled state: inline error messages can wait
+| Feature | Pickleheads | PlayMore | MatchUp | Our Approach |
+|---------|-------------|----------|---------|--------------|
+| Round generation | Yes (tournament) | Yes (social) | Yes (tournament) | Yes — practice-session focused |
+| Variety optimization | Yes | AI-based | Systematic rotation | Candidate scoring; tunable weights |
+| Odd player handling | Bye rotation | Not documented | Bye for 5/9 players | Organizer-chosen: sit-out or 3-player court |
+| Mid-session changes | Matchup adjustment | Add/remove with one click | Limited post-generation | Regenerate unplayed rounds |
+| Score tracking | Yes | Optional | Yes | No — deliberately excluded |
+| Multi-club roster | No (single community) | No | No | Yes — core differentiator |
+| Account required | Yes | Yes | Yes | No — zero friction |
+| Works offline | No | No | No | Yes — localStorage + static SPA |
+| Mobile-first | Partial | Yes (app) | Partial | Yes — phone-screen first, thumb-friendly |
+| Top-N alternative schedules | No | No | No | Yes — differentiator |
 
 ---
 
 ## Sources
 
-- [Smart Interface Design Patterns — Drag-and-Drop UX](https://smart-interface-design-patterns.com/articles/drag-and-drop-ux/) — visual feedback states, ghost/placeholder patterns, undo approach
-- [MDN — Using Pointer Events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events/Using_Pointer_Events) — unified API, `touch-action` requirement
-- [MDN — Pointer Events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events) — browser support confirmation
-- [Bricx Labs — 15 Drag and Drop UI Tips 2025](https://bricxlabs.com/blogs/drag-and-drop-ui) — 44px touch targets, timing thresholds, undo stacks, haptic timing
-- [Pencil & Paper — Drag & Drop UX Best Practices](https://www.pencilandpaper.io/articles/ux-pattern-drag-and-drop) — ghost state, lifted state, drop zone states
-- [LogRocket — Designing drag and drop UIs](https://blog.logrocket.com/ux-design/drag-and-drop-ui-examples/) — invalid drop handling, constraint enforcement
-- [Contentsquare Engineering — Click and Swap](https://engineering.contentsquare.com/2021/click-and-swap-alternative-to-drag-and-drop/) — tap-to-select/place as alternative pattern
-- [Yahoo Fantasy Help — Edit Lineup](https://help.yahoo.com/kb/SLN26796.html) — tap-based mobile lineup swap pattern
-- [ESPN Fantasy — Setting Your Lineup](https://support.espn.com/hc/en-us/articles/360000958652-Setting-Your-Lineup) — tap-position swap on mobile
-- [Cloudscape Design System — Drag and Drop](https://cloudscape.design/patterns/general/drag-and-drop/) — constraint enforcement, conditional restrictions
-- [drag-drop-touch-js polyfill](https://github.com/drag-drop-touch-js/dragdroptouch) — confirms HTML DnD API doesn't work natively on touch; Pointer Events avoids this entirely
+- [Pickleheads Round Robin Guide](https://www.pickleheads.com/guides/pickleball-round-robin) — organizer challenges and app feature set
+- [Pickleheads Open Play Guide](https://www.pickleheads.com/guides/organize-pickleball-open-play) — open play pain points
+- [PlayMore App](https://getplaymore.com/) — social session management feature set; mid-session add/remove
+- [All-Play-All Round Robin App](https://www.allplayall.app/) — variety algorithm approach, odd player handling
+- [MatchUp Tennis & Pickleball](https://www.matchuptennis.app/round-robin) — doubles rotation, odd player constraints
+- [PlayTime Scheduler](https://playtimescheduler.com/) — pickleball-specific session scheduling, community management
+- [Picklebeast Organizer Guide 2025](https://www.picklebeastpickleball.com/blog/round-robin-pickleball-leagues-guide) — organizer pain points: manual scheduling errors, variety complaints
+- [PlayRez Round Robin Generator](https://playrez.com/tools/pickleball-round-robin-generator) — variety and balance in generated schedules
+- [The Dink: Paddle Queuing and Rotation Methods](https://www.thedinkpickleball.com/the-best-paddle-queuing-and-rotation-methods-for-open-play-pickleball/) — open play rotation methods and organizer frustrations
+
+---
+*Feature research for: Pickleball Practice Session Scheduler SPA*
+*Researched: 2026-04-02*

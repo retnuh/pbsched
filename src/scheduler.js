@@ -124,12 +124,8 @@ export function scoreRound(round, history, settings) {
     return base * Math.pow(2, streak);
   };
 
-  // Fairness penalty for sit-outs: strongly discourages assigning a sit-out
-  // to someone who has already sat out more than others. Not about strict equality
-  // — about preventing anyone from sitting out repeatedly while others haven't yet.
-  // Formula: base * 100^count so a 2nd sit-out is 100x more expensive than a 1st,
-  // a 3rd is 10,000x more expensive than a 1st, etc.
-  // Additional streak component (base * 2^streak) penalizes consecutive sit-outs.
+  // Massive penalty for sit-outs: base * 100^count
+  // This ensures 2nd BYE (count=1) is 100x more expensive than 1st.
   const getSitOutPenalty = (base, count, streak) => {
     if (count === 0) return 0;
     const countWeight = base * Math.pow(100, count);
@@ -190,12 +186,7 @@ export function scoreRound(round, history, settings) {
  * Generates a single random candidate round for the given attendees.
  */
 function generateCandidate(attendees, history, settings, index) {
-  // Fisher-Yates shuffle — avoids biased ordering from sort-based shuffle
-  const shuffled = [...attendees];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  const shuffled = [...attendees].sort(() => Math.random() - 0.5);
   const round = {
     index,
     courts: [],

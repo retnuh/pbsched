@@ -1,86 +1,108 @@
-# Requirements: Milestone 7 — Match Editor
+# Requirements: Pickleball Practice Scheduler
 
-**Milestone goal:** Let the organizer manually reassign players between courts and the rest bench before confirming or after a round is played.
+**Defined:** 2026-04-02
+**Core Value:** Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
 
----
+## v1 Requirements
 
-## Active Requirements
+### Clubs
 
-### Editor Access
+- [x] **CLUB-01**: Organizer can create a new club with a name
+- [x] **CLUB-02**: Organizer can rename an existing club
+- [x] **CLUB-03**: Organizer can delete a club (with confirmation)
+- [x] **CLUB-04**: Organizer can switch between clubs
+- [ ] **CLUB-05**: Organizer can export a club's data as a JSON file
+- [ ] **CLUB-06**: Organizer can import a club from a JSON file
 
-- [ ] **MEDIT-01**: Organizer can open the match editor from the current proposed (unplayed) round, pre-populated with that round's lineup
-- [ ] **MEDIT-02**: Organizer can open the match editor from the most recently played round, pre-populated with that round's lineup
+### Members
 
-### Drag Interactions
+- [x] **MEMB-01**: Organizer can add a member to a club by name
+- [x] **MEMB-02**: Organizer can rename a member
+- [x] **MEMB-03**: Organizer can remove a member from a club
 
-- [ ] **DRAG-01**: Organizer can drag a player chip to an empty court slot
-- [ ] **DRAG-02**: Organizer can drag a player chip to an occupied slot, swapping the two
-- [ ] **DRAG-03**: Organizer can drag a player chip to the Rest Bench
-- [ ] **DRAG-04**: Organizer can drag a player from the Rest Bench to a court slot
-- [ ] **DRAG-05**: Organizer can confirm edits to save the match
-- [ ] **DRAG-06**: Organizer can cancel edits and return without saving
+### Sessions
 
-### Court Management
+- [x] **SESS-01**: Organizer can start a new session for the active club
+- [x] **SESS-02**: Organizer can select which club members are attending a session
+- [ ] **SESS-03**: Organizer can add a player to an in-progress session (late arrival)
+- [ ] **SESS-04**: Organizer can remove a player from an in-progress session (early departure)
+- [ ] **SESS-05**: Adding or removing a player auto-regenerates all remaining (unplayed) rounds
 
-- [ ] **COURT-01**: Organizer can add an empty court to the editor
-- [ ] **COURT-02**: Organizer can remove an empty court from the editor
-- [ ] **COURT-03**: On save, empty courts are silently removed
+### Round Generation
 
-### Validation
+- [x] **RGEN-01**: Organizer can generate the next round on demand (open-ended, no fixed count)
+- [x] **RGEN-02**: App auto-selects the highest-scoring candidate matchup by default
+- [ ] **RGEN-03**: Organizer can view top alternative matchup candidates and choose one instead
+- [x] **RGEN-04**: When player count is not divisible by 4, organizer is prompted to choose a fallback (sit someone out or use a 3-player court)
+- [x] **RGEN-05**: Organizer can mark a round as played, advancing session history
+- [x] **RGEN-06**: Scoring penalizes repeated partner and opponent pairings across all played rounds in the session
 
-- [ ] **VALID-01**: Saving is blocked if any court has exactly 1 player; 0 (empty/removed), 2 (singles), 3 (3-way), and 4 (2v2) are all valid
-- [ ] **VALID-02**: Non-attendees cannot be placed on a court slot
-- [ ] **VIS-01**: The drop target slot shows a clear visual indicator when a chip is being dragged over it (SortableJS ghostClass/dragClass — verify visually clear on mobile)
+### Settings
 
-### Data & Scheduler Integration
+- [ ] **SETT-01**: Organizer can view and edit the scoring penalty weights (repeated partner, repeated opponent, bye frequency)
+- [ ] **SETT-02**: Organizer can set a default odd-player policy per club (sit out / 3-player court) to skip the per-round prompt
+- [x] **SETT-03**: Organizer can reset all app data with a confirmation step
 
-- [ ] **HIST-01**: Confirmed edits on a proposed round update the round's assignments used by the scheduler
-- [ ] **HIST-02**: Confirmed edits on a played round update session history with source flagged as 'edited'
-- [ ] **HIST-03**: Editing a played round invalidates and regenerates all subsequent unplayed rounds
+### Developer Productivity
 
-### Polish
+- [x] **DEVP-01**: Project includes a `justfile` with common developer targets (dev, test, build)
 
-- [ ] **BENCH-01**: Bench chips display each player's sit-out count
-- [ ] **BENCH-02**: Haptic feedback fires on successful drop
+## v2 Requirements
 
----
+### Session History
 
-## Future Requirements
+- **HIST-01**: Organizer can view a list of past sessions for a club
+- **HIST-02**: Organizer can review the round matchups from a past session
 
-- Tap-to-select / tap-to-place fallback interaction (deferred — drag-only in Milestone 7)
-- Edited round badge on RoundDisplay (deferred)
-- Undo for match editor changes (deferred)
-- Edit any played round, not just most recent (deferred — too complex, cascading history rewrites)
+### Deployment
+
+- **DEPL-01**: App can be installed as a PWA (Add to Home Screen on iOS/Android)
 
 ## Out of Scope
 
-- Editing rounds other than the current proposed or most recently played — cascading history rewrite complexity
-- Tap-to-select interaction — drag-and-drop covers mobile adequately for now
-- Score tracking — scheduling only
-- Court cap / venue configuration — organizer manages their own venue
-
----
+| Feature | Reason |
+|---------|--------|
+| Score tracking | Not needed — scheduling only for v1 |
+| Court assignment | Organizer announces matchups verbally; court numbers don't matter |
+| User accounts / authentication | Local-first, single-device; no backend |
+| Real-time sync across devices | No server; one organizer runs the app |
+| DUPR / rating integration | Out of scope for practice scheduling |
+| Fixed round count target | Open-ended "next round" model is simpler and sufficient |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HIST-01 | Phase 11 | Pending |
-| HIST-02 | Phase 11 | Pending |
-| HIST-03 | Phase 11 | Pending |
-| MEDIT-01 | Phase 12 | Pending |
-| MEDIT-02 | Phase 12 | Pending |
-| DRAG-01 | Phase 13 | Pending |
-| DRAG-02 | Phase 13 | Pending |
-| DRAG-03 | Phase 13 | Pending |
-| DRAG-04 | Phase 13 | Pending |
-| DRAG-05 | Phase 13 | Pending |
-| DRAG-06 | Phase 13 | Pending |
-| VALID-01 | Phase 13 | Pending |
-| VALID-02 | Phase 13 | Pending |
-| VIS-01 | Phase 13 | Pending |
-| COURT-01 | Phase 14 | Pending |
-| COURT-02 | Phase 14 | Pending |
-| COURT-03 | Phase 14 | Pending |
-| BENCH-01 | Phase 14 | Pending |
-| BENCH-02 | Phase 14 | Pending |
+| CLUB-01 | P3-ROSTER | Done |
+| CLUB-02 | P3-ROSTER | Done |
+| CLUB-03 | P3-ROSTER | Done |
+| CLUB-04 | P3-ROSTER | Done |
+| CLUB-05 | P5-SESSION-ADV | Pending |
+| CLUB-06 | P5-SESSION-ADV | Pending |
+| MEMB-01 | P3-ROSTER | Done |
+| MEMB-02 | P3-ROSTER | Done |
+| MEMB-03 | P3-ROSTER | Done |
+| SESS-01 | P4-SESSION-CORE | Done |
+| SESS-02 | P4-SESSION-CORE | Done |
+| SESS-03 | P5-SESSION-ADV | Pending |
+| SESS-04 | P5-SESSION-ADV | Pending |
+| SESS-05 | P5-SESSION-ADV | Partial (Logic Done) |
+| RGEN-01 | P2-ALGORITHM | Done |
+| RGEN-02 | P2-ALGORITHM | Done |
+| RGEN-03 | P5-SESSION-ADV | Partial (Logic Done) |
+| RGEN-04 | P2-ALGORITHM | Done |
+| RGEN-05 | P4-SESSION-CORE | Done |
+| RGEN-06 | P2-ALGORITHM | Done |
+| SETT-01 | P6-POLISH | Pending |
+| SETT-02 | P6-POLISH | Pending |
+| SETT-03 | P6-POLISH | Done |
+| DEVP-01 | P1-FOUNDATION | Done |
+
+**Coverage:**
+- v1 requirements: 24 total
+- Mapped to phases: 24
+- Unmapped: 0 ✅
+
+---
+*Requirements defined: 2026-04-02*
+*Last updated: 2026-04-02 after justfile addition*

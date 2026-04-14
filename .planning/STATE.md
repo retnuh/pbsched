@@ -1,64 +1,25 @@
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Phase 11 Complete — Advancing to Phase 12
-last_updated: "2026-04-14T12:15:00.000Z"
-progress:
-  total_phases: 4
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 25
----
-
 # Project State: Pickleball Practice Scheduler
 
-## Current Position
+## Milestone: Milestone 5 - Offline & Persistence
+**Phase:** Phase 7 - PWA & Offline Support
+**Status:** Milestone 5 complete. The app is a full-featured, offline-capable PWA with haptic feedback, automated versioning, and a seamless update flow.
 
-Phase: 11 (Service Layer & Data Model) — COMPLETE ✓
-**Next:** Phase 12 — Editor Scaffold & Entry Points
-**Milestone 7 — Match Editor** | Phase 12 (next) | Status: Phase 11 verified, advancing
+## Active Phase
+- **ID:** P7-PWA
+- **Goal:** Full offline functionality and Service Worker caching.
+- **Started:** 2026-04-02
+- **Progress:** 100% (Offline caching, update notifications, versioning, and haptics complete)
 
-```
-Milestone 7 progress: [##--------] 25% (1/4 phases)
-```
+## Key Files
+- public/sw.js: Service Worker logic
+- src/main.js: SW registration and update UI
+- public/manifest.json: PWA metadata
 
-## Project Reference
+## Blockers / Risks
+- (None)
 
-See: .planning/PROJECT.md (updated 2026-04-14)
-
-**Core value:** Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
-**Current focus:** Phase 12 — Editor Scaffold & Entry Points
-
-## Performance Metrics
-
-| Milestone | Phases | Plans | Outcome |
-|-----------|--------|-------|---------|
-| Milestone 6 | 3 | 4 | Shipped 2026-04-14 |
-| Milestone 7 | 4 | TBD | In progress |
-
-## Accumulated Context
-
-- App is a full-featured, offline-capable PWA with haptic feedback, automated versioning, and a seamless update flow
-- Scheduler uses random-generate + score candidates with exponential penalty-based scoring
-- Short-sided match penalties (singles, 3-way solo/pair) configurable via Settings sliders (0=disable, max 50)
-- localStorage only — no backend; mobile-first (organizer's phone)
-- Fairness-over-equality semantics: sit-out penalty uses base * 100^count to prevent repeated sit-outs before others have had a turn
-- Active requirements deferred: JSON export/import (CLUB-05/06), in-session player change UI (SESS-03/04), alternative schedule picker (RGEN-03), default odd-player policy (SETT-02)
-
-### Milestone 7 Key Decisions
-
-- **Drag library:** SortableJS 1.15.7 — handles touch natively; HTML5 DnD API is broken on iOS and must not be used
-- **Draft model:** All edits on a deep clone; Confirm writes back, Cancel discards — no intermediate persistence
-- **New service method:** `SessionService.updateRound(roundIndex, updatedRound)` — single entry point for all editor saves
-- **New view:** `MatchEditor.js` mounted at route `#/edit/:roundIndex`
-- **History integration:** `source: 'edited'` field on edited rounds (backward-compatible); editing a played round invalidates + regenerates all subsequent unplayed rounds
-
-## Session Continuity
-
-- Phase 11 complete — `SessionService.updateRound` ships with tests; HIST-01/02/03 verified
-- Phase 12 is next — static MatchEditor scaffold, route `#/edit/:roundIndex`, entry point wiring (Edit button on round cards)
-- Build order: ~~service layer (Phase 11)~~ → static scaffold + routes (Phase 12) → SortableJS drag + validation (Phase 13) → court add/remove + polish (Phase 14)
-- Test SortableJS touch behavior on real iOS device during Phase 13 — emulator does not reproduce iOS drag bugs
-- Stale worktrees from Phase 11 executor were cleaned up (agent-afb05e13, agent-afd7819b) — actual test count is 15 (3 files), not 89
+## Checkpoints
+- [x] Phase 1: Data Foundation complete
+- [x] Phase 2: Scheduling Algorithm complete
+- [x] Phase 3: Club and Roster Management complete
+- [x] Phase 4: Session Workflow Core complete
