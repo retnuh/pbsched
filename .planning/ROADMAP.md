@@ -85,6 +85,17 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+## Backlog
+
+### Phase 999.1: Court Side Penalty to Encourage Swapping Sides (BACKLOG)
+
+**Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
