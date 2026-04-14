@@ -4,7 +4,7 @@
  */
 
 const STORAGE_PREFIX = 'pb:';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /**
  * Migration chain for the application state.
@@ -28,6 +28,22 @@ const migrations = {
         oddPlayerFallback: 'three-player-court',
       },
       schemaVersion: 1,
+    };
+  },
+
+  /**
+   * v2: Add short-sided match penalty settings with defaults.
+   */
+  2: (data) => {
+    return {
+      ...data,
+      settings: {
+        penaltySingles: 15,
+        penaltyThreeWaySolo: 20,
+        penaltyThreeWayPair: 15,
+        ...data.settings,   // existing keys WIN — preserves user-configured values
+      },
+      schemaVersion: 2,
     };
   },
 };
