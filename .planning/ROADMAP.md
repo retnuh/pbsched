@@ -82,8 +82,11 @@ Plans:
   3. On save, any courts still empty are silently pruned from the saved round
   4. Each chip on the Rest Bench displays the player's current sit-out count
   5. Dropping a chip onto any valid target fires device haptic feedback
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — All MatchEditor.js implementation: add/remove courts, pruning, bench badges, haptics, toast (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
+- [ ] 14-02-PLAN.md — Phase 14 test suite + human verify checkpoint (COURT-01, COURT-02, COURT-03, BENCH-01, BENCH-02)
 
 ## Backlog
 
@@ -106,4 +109,4 @@ Plans:
 | 11. Service Layer & Data Model | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 12. Editor Scaffold & Entry Points | Milestone 7 | 1/1 | Complete | 2026-04-14 |
 | 13. Drag Interactions & Validation | Milestone 7 | 2/2 | Complete   | 2026-04-14 |
-| 14. Court Management & Polish | Milestone 7 | 0/? | Not started | - |
+| 14. Court Management & Polish | Milestone 7 | 0/2 | Not started | - |
