@@ -72,5 +72,15 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
+## Current Milestone: Milestone 8 — Polish & Quality
+
+**Goal:** Make the app feel finished — dark mode for evening courts, solid test coverage, and documentation real users can actually read.
+
+**Target features:**
+- Dark mode (system-preference-based, with optional manual toggle; preference persisted)
+- Test coverage audit & gap-filling (service layer + UI, especially MatchEditor and SessionService)
+- In-app Help screen rewrite (plain language, no jargon, reflects current feature set)
+- GitHub README rewrite (plain language, for non-developer organizers)
+
 ---
-*Last updated: 2026-04-02 after initialization*
+*Last updated: 2026-04-14 — Milestone 8 started*

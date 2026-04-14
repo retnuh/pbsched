@@ -1,44 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: executing
-last_updated: "2026-04-14T15:31:22.829Z"
+milestone: v3.0
+milestone_name: Milestone 8 - Polish & Quality
+status: planning
+last_updated: "2026-04-14T20:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 4
-  completed_plans: 2
-  percent: 50
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State: Pickleball Practice Scheduler
 
-## Milestone: Milestone 5 - Offline & Persistence
+## Milestone: Milestone 8 — Polish & Quality
 
-**Phase:** Phase 7 - PWA & Offline Support
-**Status:** Executing Phase 13
+**Phase:** Not started (defining requirements)
+**Status:** Defining requirements
+**Last activity:** 2026-04-14 — Milestone 8 started
 
 ## Active Phase
 
-- **ID:** P7-PWA
-- **Goal:** Full offline functionality and Service Worker caching.
-- **Started:** 2026-04-02
-- **Progress:** 100% (Offline caching, update notifications, versioning, and haptics complete)
-
-## Key Files
-
-- public/sw.js: Service Worker logic
-- src/main.js: SW registration and update UI
-- public/manifest.json: PWA metadata
+- (None yet)
 
 ## Blockers / Risks
 
 - (None)
 
-## Checkpoints
+## Pending Todos
 
-- [x] Phase 1: Data Foundation complete
-- [x] Phase 2: Scheduling Algorithm complete
-- [x] Phase 3: Club and Roster Management complete
-- [x] Phase 4: Session Workflow Core complete
+- 3 todos consumed into Milestone 8 scope (dark mode, test coverage, docs rewrite)
