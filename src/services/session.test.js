@@ -24,13 +24,15 @@ function makeRound(index, playerIds, played = false) {
   }
 }
 
-function makeSession(overrides = {}) {
+// attendeeIds is intentionally omitted from defaults — callers must pass it explicitly
+// so that each test documents the exact roster it relies on.
+function makeSession({ attendeeIds, ...overrides }) {
   return {
     id: 'session-1',
     clubId: 'club-1',
     createdAt: '2026-01-01T00:00:00.000Z',
     status: 'active',
-    attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+    attendeeIds,
     rounds: [],
     settings: { ...MOCK_SETTINGS },
     ...overrides,
