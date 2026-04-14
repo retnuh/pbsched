@@ -130,7 +130,10 @@ Plans:
   2. The Settings screen exposes three sliders — singles penalty, 3-way solo penalty, 3-way pair penalty — with visible default values
   3. Changing a penalty slider takes effect on the next generated round without requiring a session restart
   4. Sessions saved before this deploy load without errors and behave as if default penalty values were applied
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 10-01-PLAN.md — Extend scheduler history/scoring + schema v2 migration (SCHED-01/02/03/05)
+- [ ] 10-02-PLAN.md — Settings UI: three short-sided penalty sliders (SCHED-04)
 
 ## Progress Table
 
@@ -138,4 +141,4 @@ Plans:
 |-------|----------------|--------|-----------|
 | 8. Club Name Editing | 0/? | Not started | - |
 | 9. Player-Change Test Coverage | 0/1 | Planned | - |
-| 10. Scheduling Penalties for Short-Sided Matches | 0/? | Not started | - |
+| 10. Scheduling Penalties for Short-Sided Matches | 0/2 | Planned | - |
