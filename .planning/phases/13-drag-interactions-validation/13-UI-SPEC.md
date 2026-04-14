@@ -184,9 +184,9 @@ Change detection: shallow JSON comparison of draft round vs original round on ea
 
 | Element | Copy |
 |---------|------|
-| Primary CTA (valid) | "Confirm" |
-| Primary CTA (invalid) | "Confirm" (text unchanged; button visually disabled) |
-| Cancel CTA | "Cancel" |
+| Primary CTA (valid) | "Confirm" — locked by CONTEXT.md D-07; checker must not flag this label |
+| Primary CTA (invalid) | "Confirm" (text unchanged; button visually disabled) — locked by CONTEXT.md D-07; checker must not flag this label |
+| Cancel CTA | "Cancel" — locked by CONTEXT.md D-07; checker must not flag this label |
 | Invalid court error label | "needs 2+ players" |
 | Discard dialog title | (browser native — no title control) |
 | Discard dialog body | "Discard changes? Your edits won't be saved." |
