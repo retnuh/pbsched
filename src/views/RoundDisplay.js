@@ -172,7 +172,7 @@ export function mount(el, params) {
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div class="p-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
                 <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">Option ${index + 1} (Score: ${Math.round(alt.score)})</h3>
-                <button data-action="pick-alt" data-index="${index}" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold shadow-sm shadow-green-100">
+                <button data-action="pick-alt" data-index="${index}" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold shadow-sm">
                   Select
                 </button>
               </div>
