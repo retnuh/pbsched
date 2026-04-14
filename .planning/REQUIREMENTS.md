@@ -121,12 +121,27 @@
 | SETT-02 | P6-POLISH | Pending |
 | SETT-03 | P6-POLISH | Done |
 | DEVP-01 | P1-FOUNDATION | Done |
+| DARK-01 | Phase 15 | Pending |
+| DARK-02 | Phase 15 | Pending |
+| DARK-04 | Phase 15 | Pending |
+| DARK-03 | Phase 16 | Pending |
+| DARK-05 | Phase 16 | Pending |
+| DARK-06 | Phase 16 | Pending |
+| TEST-01 | Phase 17 | Pending |
+| TEST-02 | Phase 17 | Pending |
+| TEST-03 | Phase 17 | Pending |
+| TEST-04 | Phase 17 | Pending |
+| DOCS-01 | Phase 18 | Pending |
+| DOCS-02 | Phase 18 | Pending |
+| DOCS-03 | Phase 18 | Pending |
 
 **Coverage:**
 - v1 requirements: 24 total
 - Mapped to phases: 24
+- Milestone 8 requirements: 13 total
+- Mapped to phases: 13
 - Unmapped: 0 ✅
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after justfile addition*
+*Last updated: 2026-04-14 — Milestone 8 traceability added (Phases 15-18)*
