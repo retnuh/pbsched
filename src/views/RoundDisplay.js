@@ -451,18 +451,10 @@ export function mount(el, params) {
           <div class="p-3 ${round.played ? 'bg-gray-50' : 'bg-blue-50'} flex justify-between items-center">
             <h3 class="font-bold ${round.played ? 'text-gray-500' : 'text-blue-800'}">Round ${round.index + 1}</h3>
             <div class="flex items-center space-x-2">
-              ${!round.played ? `
-                <button data-action="alternatives" data-index="${round.index}" class="text-xs font-bold text-blue-600 hover:underline px-2">
-                  Alternatives
-                </button>
-                <button data-action="play" data-index="${round.index}" class="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">
-                  Mark Played
-                </button>
-              ` : (round.index === lastPlayedIdx ? `
-                <button data-action="undo" data-index="${round.index}" class="text-xs font-bold text-red-500 hover:underline px-2">
-                  Undo
-                </button>
-              ` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Completed</span>')}
+              ${round.played ? (round.index === lastPlayedIdx ? `
+                <button data-action="edit" data-index="${round.index}" class="text-xs font-bold text-blue-600 hover:underline px-2">Edit</button>
+                <button data-action="undo" data-index="${round.index}" class="text-xs font-bold text-red-500 hover:underline px-2">Undo</button>
+              ` : '<span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Completed</span>') : ''}
             </div>
           </div>
           
@@ -503,6 +495,19 @@ export function mount(el, params) {
                 `).join('') : '<span class="text-sm text-gray-300 italic">None</span>'}
               </div>
             </div>
+            ${!round.played ? `
+              <div class="flex items-center gap-2 pt-3 border-t border-blue-100 mt-4">
+                <button data-action="alternatives" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-3 rounded-lg min-h-[44px]">
+                  Alternatives
+                </button>
+                <button data-action="edit" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-3 rounded-lg min-h-[44px]">
+                  Edit
+                </button>
+                <button data-action="play" data-index="${round.index}" class="flex-1 text-xs font-bold bg-blue-600 text-white px-3 py-3 rounded-lg shadow-sm min-h-[44px]">
+                  Mark Played
+                </button>
+              </div>
+            ` : ''}
           </div>
         </div>
       `).join('');
@@ -566,6 +571,14 @@ export function mount(el, params) {
         showingAlternativesFor = idx;
         Haptics.light();
         render();
+        return;
+      }
+
+      const editBtn = e.target.closest('[data-action="edit"]');
+      if (editBtn) {
+        const idx = parseInt(editBtn.getAttribute('data-index'));
+        Haptics.light();
+        navigate('/edit/' + idx);
         return;
       }
 
