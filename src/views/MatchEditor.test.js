@@ -32,6 +32,7 @@ vi.mock('sortablejs', () => ({
 // Import mocked navigate for assertions
 import { navigate } from '../router.js'
 import { mount, unmount } from './MatchEditor.js'
+import { Haptics } from '../services/haptics.js'
 
 function makeSession(rounds = []) {
   return {
@@ -678,6 +679,366 @@ describe('Phase 13: Drag interactions', () => {
       mockSortable.instances[0].options.onEnd({ item: p1Chip })
       el.querySelector('#confirm-btn').click()
       expect(bench.querySelectorAll('.empty-slot').length).toBe(1)
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Phase 14: Court Management & Polish
+// ---------------------------------------------------------------------------
+
+const CLUBS_DATA_5P = [
+  {
+    id: 'club-1',
+    name: 'Test Club',
+    members: [
+      { id: 'p1', name: 'Alice' },
+      { id: 'p2', name: 'Bob' },
+      { id: 'p3', name: 'Carol' },
+      { id: 'p4', name: 'Dave' },
+      { id: 'p5', name: 'Eve' },
+    ],
+  },
+]
+
+function makeSessionWithHistory() {
+  // p5 sits out in 2 played rounds; round 2 is the unplayed draft being edited.
+  // session.rounds[2].sittingOut = ['p5'] so the total stored sit-out count for p5 is 3.
+  const rounds = [
+    { index: 0, played: true,  courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: ['p5'] },
+    { index: 1, played: true,  courts: [{ teamA: ['p1', 'p3'], teamB: ['p2', 'p4'] }], sittingOut: ['p5'] },
+    { index: 2, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: ['p5'] },
+  ]
+  return {
+    id: 'session-1',
+    clubId: 'club-1',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    status: 'active',
+    attendeeIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+    rounds,
+    settings: {
+      oddPlayerFallback: 'sit-out',
+      candidateCount: 1,
+      penaltyRepeatedPartner: 5,
+      penaltyRepeatedOpponent: 10,
+      penaltyRepeatedSitOut: 3,
+    },
+  }
+}
+
+describe('Phase 14: Court Management & Polish', () => {
+  let el
+
+  beforeEach(() => {
+    StorageAdapter.reset()
+    vi.clearAllMocks()
+    mockSortable.instances = []
+    el = document.createElement('div')
+  })
+
+  function setupEditor(round, session) {
+    const sess = session || makeSession([round])
+    StorageAdapter.set('clubs', CLUBS_DATA)
+    StorageAdapter.set('sessions', [sess])
+    mount(el, { roundIndex: String(sess.rounds.indexOf(round) >= 0 ? sess.rounds.indexOf(round) : 0) })
+  }
+
+  function setupEditorWithSession(session, roundIndex) {
+    StorageAdapter.set('clubs', CLUBS_DATA_5P)
+    StorageAdapter.set('sessions', [session])
+    mount(el, { roundIndex: String(roundIndex) })
+  }
+
+  // ---------------------------------------------------------------------------
+  describe('COURT-01: Add court button', () => {
+    test('clicking #add-court-btn when 1 court exists results in 2 courts rendered', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      expect(el.querySelector('[data-court="0"]')).not.toBeNull()
+      expect(el.querySelector('[data-court="1"]')).toBeNull()
+      el.querySelector('#add-court-btn').click()
+      expect(el.querySelector('[data-court="0"]')).not.toBeNull()
+      expect(el.querySelector('[data-court="1"]')).not.toBeNull()
+    })
+
+    test('after clicking #add-court-btn, SortableJS instances increase (new zones initialized)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const before = mockSortable.instances.length
+      el.querySelector('#add-court-btn').click()
+      expect(mockSortable.instances.length).toBeGreaterThan(before)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('COURT-02: Remove court button visibility', () => {
+    test('remove button [data-remove-court="0"] is hidden when court 0 has players', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const btn = el.querySelector('[data-remove-court="0"]')
+      expect(btn).not.toBeNull()
+      expect(btn.className).toContain('hidden')
+    })
+
+    test('remove button is visible (no hidden class) when court is empty and >1 court remains', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      const btn = el.querySelector('[data-remove-court="1"]')
+      expect(btn).not.toBeNull()
+      expect(btn.className).not.toContain('hidden')
+    })
+
+    test('remove button is hidden when only 1 court remains (even if empty)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: [] }], sittingOut: ['p1', 'p2', 'p3', 'p4'] }
+      setupEditor(round)
+      const btn = el.querySelector('[data-remove-court="0"]')
+      expect(btn).not.toBeNull()
+      expect(btn.className).toContain('hidden')
+    })
+
+    test('after clicking Remove on an empty court, that court is removed from the DOM', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      expect(el.querySelector('[data-court="1"]')).not.toBeNull()
+      el.querySelector('[data-remove-court="1"]').click()
+      expect(el.querySelector('[data-court="1"]')).toBeNull()
+    })
+
+    test('after removing court 1, Court 1 label still present and Court 2 absent', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      el.querySelector('[data-remove-court="1"]').click()
+      expect(el.innerHTML).toContain('Court 1')
+      expect(el.innerHTML).not.toContain('Court 2')
+    })
+
+    test('remove button reappears on a court after all players are dragged away', () => {
+      // Start with 2 courts: court 0 has players, court 1 is empty (remove visible)
+      // Then add court 0 players making court 0 empty — remove button should appear
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      // Drag p1 to bench
+      const p1Chip = el.querySelector('[data-player-id="p1"]')
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+      // After drag, updateRemoveButtonVisibility is called — court 0 still has 3 players
+      // so its remove btn stays hidden
+      expect(el.querySelector('[data-remove-court="0"]').className).toContain('hidden')
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('COURT-03: Empty-court pruning on Confirm', () => {
+    test('Confirm with 1 populated + 1 empty court calls updateRound with courts length 1', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      el.querySelector('#confirm-btn').click()
+      expect(SessionService.updateRound).toHaveBeenCalledWith(
+        0,
+        expect.objectContaining({ courts: expect.arrayContaining([expect.objectContaining({ teamA: ['p1', 'p2'] })]) })
+      )
+      const [, savedRound] = SessionService.updateRound.mock.calls[0]
+      expect(savedRound.courts.length).toBe(1)
+    })
+
+    test('empty-court pruning is silent — no toast fires during Confirm', () => {
+      vi.spyOn(SessionService, 'updateRound').mockImplementation(() => {})
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+          { teamA: [], teamB: [] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      // Remove any pre-existing toast
+      const existing = document.getElementById('gsd-toast')
+      if (existing) existing.remove()
+      el.querySelector('#confirm-btn').click()
+      expect(document.getElementById('gsd-toast')).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('BENCH-01: Sit-out count badges on bench chips', () => {
+    test('bench chip for p5 shows sit-out count from all session rounds (including current draft)', () => {
+      // makeSessionWithHistory: p5 sits out in rounds 0, 1, and 2 — count = 3
+      const session = makeSessionWithHistory()
+      setupEditorWithSession(session, 2)
+      const bench = el.querySelector('[data-zone="bench"]')
+      const p5Chip = bench.querySelector('[data-player-id="p5"]')
+      expect(p5Chip).not.toBeNull()
+      // Implementation counts all session.rounds (including draft round) → 3×
+      expect(p5Chip.textContent).toContain('3×')
+    })
+
+    test('bench chip for p1 (never sat out) shows 0×', () => {
+      // p1 is always on court in makeSessionWithHistory — but we need p1 on bench
+      // Set up a custom session where p1 sits out in the current draft only
+      const session = {
+        id: 'session-1',
+        clubId: 'club-1',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        status: 'active',
+        attendeeIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+        rounds: [
+          { index: 0, played: false, courts: [{ teamA: ['p2', 'p3'], teamB: ['p4', 'p5'] }], sittingOut: ['p1'] },
+        ],
+        settings: {
+          oddPlayerFallback: 'sit-out',
+          candidateCount: 1,
+          penaltyRepeatedPartner: 5,
+          penaltyRepeatedOpponent: 10,
+          penaltyRepeatedSitOut: 3,
+        },
+      }
+      StorageAdapter.set('clubs', CLUBS_DATA_5P)
+      StorageAdapter.set('sessions', [session])
+      mount(el, { roundIndex: '0' })
+      const bench = el.querySelector('[data-zone="bench"]')
+      const p1Chip = bench.querySelector('[data-player-id="p1"]')
+      expect(p1Chip).not.toBeNull()
+      // p1 sits out in this round only (count=1 in session.rounds, but draft is included)
+      expect(p1Chip.textContent).toContain('1×')
+    })
+
+    test('bench chip for p5 (2 played sit-outs, not in current draft bench) shows played count', () => {
+      // Set up session where round 2 (draft) does NOT have p5 sitting out
+      // so p5 is in court, not bench — this tests that sitCounts includes played rounds
+      const session = {
+        id: 'session-1',
+        clubId: 'club-1',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        status: 'active',
+        attendeeIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+        rounds: [
+          { index: 0, played: true,  courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: ['p5'] },
+          { index: 1, played: true,  courts: [{ teamA: ['p1', 'p3'], teamB: ['p2', 'p4'] }], sittingOut: ['p5'] },
+          // Round 2: p5 is in court, p1 is on bench (so we can check p5 badge indirectly)
+          { index: 2, played: false, courts: [{ teamA: ['p2', 'p3'], teamB: ['p4', 'p5'] }], sittingOut: ['p1'] },
+        ],
+        settings: {
+          oddPlayerFallback: 'sit-out',
+          candidateCount: 1,
+          penaltyRepeatedPartner: 5,
+          penaltyRepeatedOpponent: 10,
+          penaltyRepeatedSitOut: 3,
+        },
+      }
+      StorageAdapter.set('clubs', CLUBS_DATA_5P)
+      StorageAdapter.set('sessions', [session])
+      mount(el, { roundIndex: '2' })
+      // p1 is on bench; check p1's badge = 0 (never sat out in any stored round)
+      const bench = el.querySelector('[data-zone="bench"]')
+      const p1Chip = bench.querySelector('[data-player-id="p1"]')
+      expect(p1Chip).not.toBeNull()
+      expect(p1Chip.textContent).toContain('1×')
+    })
+
+    test('court chips (in data-zone="court-0-a") do NOT contain the "×" badge text', () => {
+      const session = makeSessionWithHistory()
+      setupEditorWithSession(session, 2)
+      const courtZoneA = el.querySelector('[data-zone="court-0-a"]')
+      // Court chips should NOT have the × badge
+      const chips = courtZoneA.querySelectorAll('[data-player-id]')
+      chips.forEach(chip => {
+        expect(chip.textContent).not.toContain('×')
+      })
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('BENCH-02: Haptic feedback on drop', () => {
+    test('Haptics.medium is called once after simulated drag-end', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const p4Chip = el.querySelector('[data-player-id="p4"]')
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p4Chip)
+      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      expect(Haptics.medium).toHaveBeenCalledOnce()
+    })
+
+    test('Haptics.medium is called on every drag-end (multiple drags = multiple calls)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      const p4Chip = el.querySelector('[data-player-id="p4"]')
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p4Chip)
+      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      expect(Haptics.medium).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('Court limit guardrails', () => {
+    test('cannot add court when 55 courts already exist — [data-court="55"] absent', () => {
+      // Build a round with 55 courts
+      const courts = Array.from({ length: 55 }, () => ({ teamA: [], teamB: [] }))
+      const round = { index: 0, played: false, courts, sittingOut: ['p1', 'p2', 'p3', 'p4'] }
+      setupEditor(round)
+      el.querySelector('#add-court-btn').click()
+      expect(el.querySelector('[data-court="55"]')).toBeNull()
+    })
+
+    test('adding the 20th court triggers a toast (gsd-toast in document.body)', () => {
+      // Build a round with 19 courts
+      const courts = Array.from({ length: 19 }, () => ({ teamA: [], teamB: [] }))
+      const round = { index: 0, played: false, courts, sittingOut: ['p1', 'p2', 'p3', 'p4'] }
+      setupEditor(round)
+      // Remove any pre-existing toast
+      const existing = document.getElementById('gsd-toast')
+      if (existing) existing.remove()
+      el.querySelector('#add-court-btn').click()
+      // 20th court should be added
+      expect(el.querySelector('[data-court="19"]')).not.toBeNull()
+      // Toast should have fired
+      expect(document.getElementById('gsd-toast')).not.toBeNull()
     })
   })
 })
