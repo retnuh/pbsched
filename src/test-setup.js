@@ -24,3 +24,20 @@ import { beforeEach } from 'vitest'
 beforeEach(() => {
   Object.keys(_store).forEach(k => delete _store[k])
 })
+
+// window.matchMedia is not implemented in happy-dom 20.x — mock it globally.
+// Default: system prefers light (matches: false).
+// Individual tests that need system-dark behavior override with:
+//   Object.defineProperty(window, 'matchMedia', { writable: true, value: vi.fn().mockImplementation(...) })
+Object.defineProperty(globalThis, 'matchMedia', {
+  writable: true,
+  configurable: true,
+  value: (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
+})
