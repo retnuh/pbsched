@@ -2,6 +2,7 @@ import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { escapeHTML } from '../utils/html.js';
+import { Haptics } from '../services/haptics.js';
 import Sortable, { Swap } from 'sortablejs';
 Sortable.mount(new Swap());
 
@@ -11,6 +12,10 @@ let _draft = null;
 let _originalRound = null;
 let _roundIndex = null;
 let _el = null;
+let _session = null;
+let _club = null;
+let _round = null;
+let _getPlayerName = null;
 
 // --- Private helpers ---
 
@@ -83,7 +88,12 @@ function handleConfirm() {
     (c.teamA.length + c.teamB.length) === 1 || c.teamA.length > 2 || c.teamB.length > 2
   );
   if (anyInvalid) return;
-  SessionService.updateRound(_roundIndex, _draft);
+  // Phase 14: prune empty courts before save (silent)
+  const prunedDraft = {
+    ..._draft,
+    courts: _draft.courts.filter(c => c.teamA.length > 0 || c.teamB.length > 0),
+  };
+  SessionService.updateRound(_roundIndex, prunedDraft);
   navigate('/active');
 }
 
@@ -96,6 +106,31 @@ function makeEmptySlot({ bench = false } = {}) {
     div.className = 'empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full';
   }
   return div;
+}
+
+function showToast(message) {
+  const existing = document.getElementById('gsd-toast');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'gsd-toast';
+  div.className = 'fixed top-4 left-0 right-0 flex justify-center z-50 animate-bounce-in';
+  div.innerHTML = `<div class="bg-gray-900 text-white rounded-xl px-4 py-3 max-w-xs mx-auto text-sm font-medium shadow-lg">${escapeHTML(message)}</div>`;
+  document.body.appendChild(div);
+  setTimeout(() => {
+    div.style.transition = 'opacity 0.2s';
+    div.style.opacity = '0';
+    setTimeout(() => div.remove(), 200);
+  }, 2500);
+}
+
+function updateRemoveButtonVisibility(el) {
+  _draft.courts.forEach((court, i) => {
+    const btn = el.querySelector(`[data-remove-court="${i}"]`);
+    if (!btn) return;
+    const isEmpty = court.teamA.length === 0 && court.teamB.length === 0;
+    const isOnlyOne = _draft.courts.length <= 1;
+    btn.classList.toggle('hidden', !isEmpty || isOnlyOne);
+  });
 }
 
 // Keep exactly (2 - playerCount) empty slots in each court side after each drag.
@@ -118,11 +153,177 @@ function syncEmptySlots(el) {
   }
 }
 
+function buildHTML(draft, round, club, getPlayerName, session) {
+  // sitCounts — count sit-outs from ALL session rounds (current draft NOT included)
+  const sitCounts = {};
+  session.rounds.forEach(r => {
+    r.sittingOut.forEach(id => {
+      sitCounts[id] = (sitCounts[id] || 0) + 1;
+    });
+  });
+
+  // Two chip factories — court chips have no badge, bench chips show sit-out count
+  const courtChip = (id) =>
+    `<div data-player-id="${escapeHTML(id)}"
+          class="px-3 py-3 border rounded-full text-sm font-medium text-center min-h-[44px] flex items-center justify-center cursor-grab">
+       ${escapeHTML(getPlayerName(id))}
+     </div>`;
+
+  const benchChip = (id) =>
+    `<div data-player-id="${escapeHTML(id)}"
+          class="px-3 py-2 border rounded-full text-sm font-medium text-center min-h-[44px] flex flex-col items-center justify-center cursor-grab">
+       <span>${escapeHTML(getPlayerName(id))}</span>
+       <span class="text-xs font-medium text-gray-500">${sitCounts[id] || 0}×</span>
+     </div>`;
+
+  const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full"></div>';
+  const courtCol = (players) =>
+    players.map(courtChip).join('') +
+    Array(Math.max(0, 2 - players.length)).fill(emptySlotHTML).join('');
+
+  const courtsHTML = draft.courts.map((court, i) => `
+    <div data-court="${i}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-3 bg-gray-50 flex items-center justify-between">
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Court ${i + 1}</span>
+        <div class="flex items-center gap-2">
+          <span data-court-error class="hidden text-xs font-bold text-red-600">needs 2+ players</span>
+          <button data-remove-court="${i}"
+                  class="text-xs font-medium text-gray-400 hover:text-red-500 ${(court.teamA.length === 0 && court.teamB.length === 0 && draft.courts.length > 1) ? '' : 'hidden'}">
+            Remove
+          </button>
+        </div>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-2">
+          <div data-zone="court-${i}-a" class="space-y-2 pr-3 min-h-[96px]">
+            ${courtCol(court.teamA)}
+          </div>
+          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200 min-h-[96px]">
+            ${courtCol(court.teamB)}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const addCourtButtonHTML = `
+    <button id="add-court-btn"
+            class="flex items-center gap-2 justify-center w-full min-h-[44px] px-4 py-3
+                   bg-white border border-gray-200 rounded-xl text-blue-600 font-medium text-sm">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8M8 12h8"/>
+      </svg>
+      Add court
+    </button>
+  `;
+
+  const benchHTML = `
+    <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
+      <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
+      <div data-zone="bench" class="flex flex-wrap gap-2 min-h-[52px]">
+        ${draft.sittingOut.map(benchChip).join('')}
+        <div class="empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg">🛋️</div>
+      </div>
+    </div>
+  `;
+
+  const bottomBarHTML = `
+    <div class="fixed fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
+                bg-white/90 backdrop-blur-sm border-t border-gray-100">
+      <div class="flex items-center gap-3 p-4">
+        <button id="cancel-btn"
+                class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl font-bold border border-gray-200">
+          Cancel
+        </button>
+        <button id="confirm-btn"
+                class="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200">
+          Confirm
+        </button>
+      </div>
+    </div>
+  `;
+
+  const discardModalHTML = `
+    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center pb-48">
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white rounded-2xl mx-4 p-6 w-full max-w-lg space-y-4">
+        <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
+        <p class="text-sm text-gray-500">Your edits won't be saved.</p>
+        <div class="flex gap-3 pt-2">
+          <button id="discard-keep-btn"
+                  class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm">
+            Keep Editing
+          </button>
+          <button id="discard-confirm-btn"
+                  class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">
+            Discard
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="p-4 space-y-6 pb-48">
+      <header class="flex items-center space-x-4">
+        <h1 class="text-2xl font-bold">Edit Round ${round.index + 1}</h1>
+      </header>
+      ${courtsHTML}
+      ${addCourtButtonHTML}
+      ${benchHTML}
+      ${bottomBarHTML}
+    </div>
+    ${discardModalHTML}
+  `;
+}
+
+function wireListeners(el) {
+  el.querySelector('#add-court-btn').addEventListener('click', handleAddCourt);
+  el.querySelector('#cancel-btn').addEventListener('click', handleCancel);
+  el.querySelector('#confirm-btn').addEventListener('click', handleConfirm);
+  el.querySelector('#discard-keep-btn').addEventListener('click', handleDiscardKeep);
+  el.querySelector('#discard-confirm-btn').addEventListener('click', handleDiscardConfirm);
+  // Event delegation for Remove buttons (one listener on the scroll container)
+  el.querySelector('.space-y-6').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove-court]');
+    if (btn) handleRemoveCourt(parseInt(btn.dataset.removeCourt, 10));
+  });
+}
+
+function rerender(el) {
+  _sortableInstances.forEach(s => s.destroy());
+  _sortableInstances = [];
+  el.innerHTML = buildHTML(_draft, _round, _club, _getPlayerName, _session);
+  initSortables(el);
+  validateAndUpdateUI(el);
+  wireListeners(el);
+}
+
+function handleAddCourt() {
+  if (_draft.courts.length >= 55) {
+    showToast("Can't be better than Wimbledon!");
+    return;
+  }
+  _draft.courts.push({ teamA: [], teamB: [] });
+  if (_draft.courts.length === 20) {
+    showToast("Oooh, more than Wimbledon's Championship courts? Fancy");
+  }
+  rerender(_el);
+}
+
+function handleRemoveCourt(courtIndex) {
+  if (_draft.courts.length <= 1) return;
+  _draft.courts.splice(courtIndex, 1);
+  rerender(_el);
+}
+
 function handleDragEnd(evt) {
   reconcileDraftFromDOM(_el);
   syncEmptySlots(_el);
   validateAndUpdateUI(_el);
-  // Pop animation on the dropped chip
+  updateRemoveButtonVisibility(_el);  // Phase 14: re-evaluate Remove buttons after drag
+  Haptics.medium();                    // Phase 14: haptic on successful drop
   if (evt?.item) {
     evt.item.classList.add('drop-pop');
     evt.item.addEventListener('animationend', () => evt.item.classList.remove('drop-pop'), { once: true });
@@ -201,98 +402,11 @@ export function mount(el, params) {
 
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
-  // Chip — color driven by CSS zone selectors so it always reflects current position
-  const playerChip = (id) =>
-    `<div data-player-id="${escapeHTML(id)}"
-          class="px-3 py-3 border rounded-full text-sm font-medium text-center min-h-[44px] flex items-center justify-center cursor-grab">
-       ${escapeHTML(getPlayerName(id))}
-     </div>`;
-
-  const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 rounded-full"></div>';
-  const courtCol = (players) =>
-    players.map(playerChip).join('') +
-    Array(Math.max(0, 2 - players.length)).fill(emptySlotHTML).join('');
-
-  // Court zones — data-court for validation, data-zone for SortableJS init
-  const courtsHTML = round.courts.map((court, i) => `
-    <div data-court="${i}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-3 bg-gray-50 flex items-center justify-between">
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Court ${i + 1}</span>
-        <span data-court-error class="hidden text-xs font-bold text-red-600">needs 2+ players</span>
-      </div>
-      <div class="p-4">
-        <div class="grid grid-cols-2">
-          <div data-zone="court-${i}-a" class="space-y-2 pr-3 min-h-[96px]">
-            ${courtCol(court.teamA)}
-          </div>
-          <div data-zone="court-${i}-b" class="space-y-2 pl-3 border-l border-gray-200 min-h-[96px]">
-            ${courtCol(court.teamB)}
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  const benchHTML = `
-    <div class="rounded-xl bg-gray-100 border border-gray-200 p-4 space-y-3">
-      <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Rest Bench</h2>
-      <div data-zone="bench" class="flex flex-wrap gap-2 min-h-[52px]">
-        ${round.sittingOut.map(playerChip).join('')}
-        <div class="empty-slot min-h-[44px] px-6 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center text-gray-300 text-lg">🛋️</div>
-      </div>
-    </div>
-  `;
-
-  // Bottom bar — fixed above nav bar, always visible
-  const bottomBarHTML = `
-    <div class="fixed fixed-safe-bottom left-0 right-0 max-w-lg mx-auto z-40
-                bg-white/90 backdrop-blur-sm border-t border-gray-100">
-      <div class="flex items-center gap-3 p-4">
-        <button id="cancel-btn"
-                class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-xl
-                       font-bold border border-gray-200">
-          Cancel
-        </button>
-        <button id="confirm-btn"
-                class="flex-1 py-4 bg-blue-600 text-white rounded-xl
-                       font-bold shadow-lg shadow-blue-200">
-          Confirm
-        </button>
-      </div>
-    </div>
-  `;
-
-  const discardModalHTML = `
-    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center pb-48">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white rounded-2xl mx-4 p-6 w-full max-w-lg space-y-4">
-        <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
-        <p class="text-sm text-gray-500">Your edits won't be saved.</p>
-        <div class="flex gap-3 pt-2">
-          <button id="discard-keep-btn"
-                  class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm">
-            Keep Editing
-          </button>
-          <button id="discard-confirm-btn"
-                  class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">
-            Discard
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  el.innerHTML = `
-    <div class="p-4 space-y-6 pb-48">
-      <header class="flex items-center space-x-4">
-        <h1 class="text-2xl font-bold">Edit Round ${round.index + 1}</h1>
-      </header>
-      ${courtsHTML}
-      ${benchHTML}
-      ${bottomBarHTML}
-    </div>
-    ${discardModalHTML}
-  `;
+  // Phase 14: store references for rerender()
+  _session = session;
+  _club = club;
+  _round = round;
+  _getPlayerName = getPlayerName;
 
   // Initialize module-scope state
   _el = el;
@@ -300,12 +414,10 @@ export function mount(el, params) {
   _draft = JSON.parse(JSON.stringify(round));
   _originalRound = JSON.parse(JSON.stringify(round));
 
+  el.innerHTML = buildHTML(_draft, _round, _club, _getPlayerName, _session);
   initSortables(el);
   validateAndUpdateUI(el);
-  el.querySelector('#cancel-btn').addEventListener('click', handleCancel);
-  el.querySelector('#confirm-btn').addEventListener('click', handleConfirm);
-  el.querySelector('#discard-keep-btn').addEventListener('click', handleDiscardKeep);
-  el.querySelector('#discard-confirm-btn').addEventListener('click', handleDiscardConfirm);
+  wireListeners(el);
 }
 
 export function unmount() {
@@ -315,4 +427,8 @@ export function unmount() {
   _originalRound = null;
   _roundIndex = null;
   _el = null;
+  _session = null;
+  _club = null;
+  _round = null;
+  _getPlayerName = null;
 }
