@@ -2,7 +2,8 @@ import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { escapeHTML } from '../utils/html.js';
-import Sortable from 'sortablejs';
+import Sortable, { Swap } from 'sortablejs';
+Sortable.mount(new Swap());
 
 // Module-scope state — initialized in mount(), nulled in unmount()
 let _sortableInstances = [];
@@ -99,22 +100,30 @@ function handleDragEnd(evt) {
 function initSortables(el) {
   const zones = el.querySelectorAll('[data-zone]');
   zones.forEach(zone => {
+    const isBench = zone.dataset.zone === 'bench';
     const instance = new Sortable(zone, {
       group: 'players',
       animation: 150,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
+      swapClass: 'sortable-swap',
       delay: 150,
       delayOnTouchOnly: true,
       touchStartThreshold: 5,
       emptyInsertThreshold: 20,
       filter: '.bench-empty-marker',
+      // Swap plugin enabled on court zones — allows chip↔chip swap without overflow.
+      // Disabled on bench so bench always uses insertion mode (works when empty).
+      swap: !isBench,
       onMove: (evt) => {
-        const fromZone = evt.from?.dataset?.zone || '';
         const toZone = evt.to?.dataset?.zone || '';
-        // Only block bench → full court side; court↔court moves are always allowed
-        if (fromZone === 'bench' && toZone.startsWith('court-')) {
-          if (evt.to.querySelectorAll('[data-player-id]').length >= 2) return false;
+        if (toZone.startsWith('court-')) {
+          const chipCount = evt.to.querySelectorAll('[data-player-id]').length;
+          if (chipCount >= 2) {
+            // Allow only if Swap plugin found a swap partner (evt.related = chip being swapped)
+            const isSwap = evt.related?.hasAttribute('data-player-id');
+            if (!isSwap) return false;
+          }
         }
       },
       onEnd: (evt) => handleDragEnd(evt),

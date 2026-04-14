@@ -24,7 +24,9 @@ vi.mock('sortablejs', () => ({
       mockSortable.instances.push(this)
     }
     destroy() {}
+    static mount() {} // no-op for Swap plugin registration
   },
+  Swap: class MockSwap {},
 }))
 
 // Import mocked navigate for assertions
@@ -322,54 +324,63 @@ describe('Phase 13: Drag interactions', () => {
   })
 
   describe('MAXPLAYERS-01: Max 2 players per court side', () => {
-    test('onMove blocks a bench chip being dragged into a full court zone (2 players)', () => {
-      setupEditor(makeRoundWithBench())
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
-      const instance = mockSortable.instances.find(s => s._el === benchZone)
-      const result = instance.options.onMove({ from: benchZone, to: zoneA })
-      expect(result).toBe(false)
-    })
-
-    test('onMove allows a bench chip into a court zone with 1 player', () => {
-      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
-      setupEditor(round)
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      const instance = mockSortable.instances.find(s => s._el === benchZone)
-      const result = instance.options.onMove({ from: benchZone, to: zoneA })
-      expect(result).not.toBe(false)
-    })
-
-    test('onMove allows a bench chip into an empty court zone', () => {
-      const round = { index: 0, played: false, courts: [{ teamA: [], teamB: ['p1', 'p2'] }], sittingOut: ['p3', 'p4'] }
-      setupEditor(round)
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      const instance = mockSortable.instances.find(s => s._el === benchZone)
-      const result = instance.options.onMove({ from: benchZone, to: zoneA })
-      expect(result).not.toBe(false)
-    })
-
-    test('onMove always allows drops onto the bench', () => {
-      setupEditor(makeRoundWithBench())
-      const benchZone = el.querySelector('[data-zone="bench"]')
-      const zoneA = el.querySelector('[data-zone="court-0-a"]')
-      const instance = mockSortable.instances.find(s => s._el === zoneA)
-      const result = instance.options.onMove({ from: zoneA, to: benchZone })
-      expect(result).not.toBe(false)
-    })
-
-    test('SWAP: onMove allows court→court move even when target already has 2 players', () => {
-      // This is the swap scenario: p1 from court-0-a into court-0-b (which has p3+p4)
-      // Both sides are full, but court↔court moves must never be blocked
+    test('onMove blocks any chip dropped onto empty space in a full court zone (no swap partner)', () => {
       setupEditor(makeRoundWithBench())
       const zoneA = el.querySelector('[data-zone="court-0-a"]')
       const zoneB = el.querySelector('[data-zone="court-0-b"]')
       expect(zoneB.querySelectorAll('[data-player-id]').length).toBe(2)
       const instance = mockSortable.instances.find(s => s._el === zoneA)
-      const result = instance.options.onMove({ from: zoneA, to: zoneB })
+      // No evt.related = dropping into empty space, not onto a chip — must be blocked
+      const result = instance.options.onMove({ from: zoneA, to: zoneB, related: null })
+      expect(result).toBe(false)
+    })
+
+    test('onMove blocks a bench chip dropped onto empty space in a full court zone', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      expect(zoneA.querySelectorAll('[data-player-id]').length).toBe(2)
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA, related: null })
+      expect(result).toBe(false)
+    })
+
+    test('SWAP: onMove allows court→court when Swap plugin provides a swap partner (evt.related)', () => {
+      // Swap plugin sets evt.related to the chip being swapped — this is the real swap path
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const zoneB = el.querySelector('[data-zone="court-0-b"]')
+      const p3Chip = el.querySelector('[data-player-id="p3"]') // chip in zoneB to swap with
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ from: zoneA, to: zoneB, related: p3Chip })
+      expect(result).not.toBe(false)
+    })
+
+    test('SWAP: onMove allows bench→court when Swap plugin provides a swap partner', () => {
+      setupEditor(makeRoundWithBench())
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const p1Chip = el.querySelector('[data-player-id="p1"]') // chip in zoneA to swap with
+      const instance = mockSortable.instances.find(s => s._el === benchZone)
+      const result = instance.options.onMove({ from: benchZone, to: zoneA, related: p1Chip })
+      expect(result).not.toBe(false)
+    })
+
+    test('onMove allows a chip into a court zone with only 1 player (no cap)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p3', 'p4'] }], sittingOut: ['p2'] }
+      setupEditor(round)
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ to: zoneA, related: null })
+      expect(result).not.toBe(false)
+    })
+
+    test('onMove always allows drops onto the bench (bench uses insertion mode)', () => {
+      setupEditor(makeRoundWithBench())
+      const benchZone = el.querySelector('[data-zone="bench"]')
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      const instance = mockSortable.instances.find(s => s._el === zoneA)
+      const result = instance.options.onMove({ from: zoneA, to: benchZone })
       expect(result).not.toBe(false)
     })
   })
@@ -558,6 +569,16 @@ describe('Phase 13: Drag interactions', () => {
   })
 
   describe('SORTABLE-CONFIG: SortableJS is configured correctly', () => {
+    test('court zone instances have swap:true and bench instance has swap:false', () => {
+      setupEditor(makeRoundWithBench())
+      const courtA = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="court-0-a"]'))
+      const courtB = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="court-0-b"]'))
+      const bench  = mockSortable.instances.find(s => s._el === el.querySelector('[data-zone="bench"]'))
+      expect(courtA.options.swap).toBe(true)
+      expect(courtB.options.swap).toBe(true)
+      expect(bench.options.swap).toBe(false)
+    })
+
     test('instances use correct group, delay, ghostClass, and emptyInsertThreshold', () => {
       setupEditor(makeRoundWithBench())
       const opts = mockSortable.instances[0].options
