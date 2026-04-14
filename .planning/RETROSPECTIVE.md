@@ -2,7 +2,7 @@
 
 *A living document updated after each milestone. Lessons feed forward into future planning.*
 
-## Milestone: v1.0 — UX Polish & Scheduler Improvements
+## Milestone: Milestone 6 — UX Polish & Scheduler Improvements
 
 **Shipped:** 2026-04-14
 **Phases:** 3 (8-10) | **Plans:** 4 | **Quick Tasks:** 3
@@ -47,13 +47,13 @@
 
 | Milestone | Phases | Key Change |
 |-----------|--------|------------|
-| v1.0 | 3 (8-10) | First GSD-tracked milestone; established quick task workflow |
+| Milestone 6 | 3 (8-10) | First GSD-tracked milestone; established quick task workflow |
 
 ### Cumulative Quality
 
 | Milestone | Tests Added | Coverage Notes |
 |-----------|-------------|----------------|
-| v1.0 | 3 | Session immutability tests; scheduler logic untested |
+| Milestone 6 | 3 | Session immutability tests; scheduler logic untested |
 
 ### Top Lessons (Verified Across Milestones)
 

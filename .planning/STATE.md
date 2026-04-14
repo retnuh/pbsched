@@ -21,7 +21,7 @@ Milestone 6 (UX Polish & Scheduler Improvements) — **COMPLETE**
 Archived: .planning/milestones/v1.0-ROADMAP.md
 
 Status: Planning next milestone
-Last activity: 2026-04-14 — Milestone 6 archived
+Last activity: 2026-04-14 — Completed quick task 260414-ezp: update the instructions to not use semver unless explicitly requested by me
 
 ## Project Reference
 
@@ -39,10 +39,11 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 - Fairness-over-equality semantics: sit-out penalty uses base * 100^count to prevent repeated sit-outs before others have had a turn
 - Active requirements deferred to next milestone: JSON export/import (CLUB-05/06), in-session player change UI (SESS-03/04), alternative schedule picker (RGEN-03), default odd-player policy (SETT-02)
 
-## Quick Tasks (v1.0)
+## Quick Tasks (Milestone 6)
 
 | # | Description | Date | Commit |
 |---|-------------|------|--------|
 | 260414-dx9 | All fairness sliders to 0-50 range with plain-English copy | 2026-04-14 | 044450b |
 | 260414-e5s | Sitout fairness intent clarified in code and UI | 2026-04-14 | f83bbf9 |
 | 260414-eau | Restored phase 10 sliders lost in e5s regression | 2026-04-14 | bf282fe |
+| 260414-ezp | Update instructions — no semver unless explicit | 2026-04-14 | — | [260414-ezp](./quick/260414-ezp-update-the-instructions-to-not-use-semve/) |

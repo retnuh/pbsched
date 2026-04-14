@@ -8,12 +8,12 @@ A static single-page PWA hosted on GitHub Pages that helps a pickleball organize
 
 Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
 
-## Current State (after v1.0)
+## Current State (after Milestone 6)
 
-**Shipped:** 2026-04-14
+**Shipped:** 2026-04-14 (Milestone 6)
 **Codebase:** ~2,574 lines Vanilla JS, deployed as static PWA on GitHub Pages
 
-Milestone 6 (v1.0) delivered:
+Milestone 6 delivered:
 - Inline club name editing (tap pencil → edit → blur/Enter saves)
 - Vitest test suite for session immutability (mid-session roster changes don't mutate played rounds)
 - Configurable short-sided match penalties (singles, 3-way solo, 3-way pair) with Settings sliders
@@ -22,18 +22,18 @@ Milestone 6 (v1.0) delivered:
 
 ## Requirements
 
-### Validated (v1.0)
+### Validated (Milestone 6)
 
-- ✓ Multi-club support with named rosters — v1.0 (phases 1-3, pre-GSD)
-- ✓ Session management with attendance picker — v1.0 (phase 4, pre-GSD)
-- ✓ Round generation: 2v2 courts, odd-count fallback — v1.0 (phase 2, pre-GSD)
-- ✓ Variety algorithm: penalty-based scoring, best candidate auto-selected — v1.0 (phase 2, pre-GSD)
-- ✓ Mid-session player changes auto-regenerate unplayed rounds — v1.0 (phase 5, pre-GSD)
-- ✓ Advanced settings: scoring weight sliders with defaults — v1.0 (phase 6, pre-GSD)
-- ✓ PWA + offline support — v1.0 (phase 7, pre-GSD)
-- ✓ Inline club name editing — v1.0 (phase 8)
-- ✓ Session immutability tests — v1.0 (phase 9)
-- ✓ Configurable short-sided match penalties — v1.0 (phase 10)
+- ✓ Multi-club support with named rosters — Milestone 6 (phases 1-3)
+- ✓ Session management with attendance picker — Milestone 6 (phase 4)
+- ✓ Round generation: 2v2 courts, odd-count fallback — Milestone 6 (phase 2)
+- ✓ Variety algorithm: penalty-based scoring, best candidate auto-selected — Milestone 6 (phase 2)
+- ✓ Mid-session player changes auto-regenerate unplayed rounds — Milestone 6 (phase 5)
+- ✓ Advanced settings: scoring weight sliders with defaults — Milestone 6 (phase 6)
+- ✓ PWA + offline support — Milestone 6 (phase 7)
+- ✓ Inline club name editing — Milestone 6 (phase 8)
+- ✓ Session immutability tests — Milestone 6 (phase 9)
+- ✓ Configurable short-sided match penalties — Milestone 6 (phase 10)
 
 ### Active
 
@@ -87,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after v1.0 milestone*
+*Last updated: 2026-04-14 after Milestone 6*
