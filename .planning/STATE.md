@@ -20,15 +20,15 @@ progress:
 Milestone 6 (UX Polish & Scheduler Improvements) — **COMPLETE**
 Archived: .planning/milestones/v1.0-ROADMAP.md
 
-Status: Planning next milestone
-Last activity: 2026-04-14 — Completed quick task 260414-ezp: update the instructions to not use semver unless explicitly requested by me
+Status: Defining requirements
+Last activity: 2026-04-14 — Milestone 7 started
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
-**Current focus:** Planning next milestone
+**Current focus:** Milestone 7 — Match Editor
 
 ## Accumulated Context
 

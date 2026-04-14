@@ -8,6 +8,17 @@ A static single-page PWA hosted on GitHub Pages that helps a pickleball organize
 
 Generate fair, varied round matchups instantly — so the organizer can focus on running practice, not doing scheduling math in their head.
 
+## Current Milestone: Milestone 7 — Match Editor
+
+**Goal:** Let the organizer manually reassign players between courts and the rest bench before confirming or after a round is played.
+
+**Target features:**
+- Draggable player chips on a visual court layout
+- Rest Bench area for sitting-out players
+- Accessible from: current proposed match + most recently played match
+- Edits to played rounds update scheduler history
+- Mobile touch drag-and-drop
+
 ## Current State (after Milestone 6)
 
 **Shipped:** 2026-04-14 (Milestone 6)
@@ -87,4 +98,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after Milestone 6*
+*Last updated: 2026-04-14 — Milestone 7 started*
