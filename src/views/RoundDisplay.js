@@ -2,6 +2,7 @@ import { SessionService } from '../services/session.js';
 import { ClubService } from '../services/club.js';
 import { navigate } from '../router.js';
 import { Haptics } from '../services/haptics.js';
+import { escapeHTML } from '../utils/html.js';
 
 export function mount(el, params) {
   const session = SessionService.getActiveSession();
@@ -20,6 +21,16 @@ export function mount(el, params) {
   }
 
   const club = ClubService.getClub(session.clubId);
+  if (!club) {
+    el.innerHTML = `
+      <div class="p-8 text-center space-y-4">
+        <h1 class="text-2xl font-bold">Club Not Found</h1>
+        <p class="text-gray-500">This session references a club that no longer exists.</p>
+        <a href="#/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md">Go to Clubs</a>
+      </div>
+    `;
+    return;
+  }
   const getPlayerName = (id) => club.members.find(m => m.id === id)?.name || 'Unknown';
 
   let isManagingAttendees = false;
@@ -188,7 +199,7 @@ export function mount(el, params) {
         return `
           <label class="flex items-center justify-between p-4 bg-white rounded-xl border ${isChecked ? 'border-blue-500 bg-blue-50' : 'border-gray-100'} ${isDisabled ? 'opacity-40 grayscale' : 'cursor-pointer'}">
             <div class="flex flex-col">
-              <span class="font-bold ${isDisabled ? 'text-gray-400' : ''}">${getPlayerName(id)}</span>
+              <span class="font-bold ${isDisabled ? 'text-gray-400' : ''}">${escapeHTML(getPlayerName(id))}</span>
               ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
             </div>
             <input type="${inputType}" name="sitter" value="${id}" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -293,10 +304,10 @@ export function mount(el, params) {
                     </div>
                     <div class="flex-grow grid grid-cols-2 gap-1 text-center">
                       <div class="p-1.5 bg-blue-50 rounded border border-blue-100 text-xs font-bold">
-                        ${getPlayerName(court.teamA[0])} / ${court.teamA[1] ? getPlayerName(court.teamA[1]) : '—'}
+                        ${escapeHTML(getPlayerName(court.teamA[0]))} / ${court.teamA[1] ? escapeHTML(getPlayerName(court.teamA[1])) : '—'}
                       </div>
                       <div class="p-1.5 bg-orange-50 rounded border border-orange-100 text-xs font-bold">
-                        ${getPlayerName(court.teamB[0])} / ${court.teamB[1] ? getPlayerName(court.teamB[1]) : '—'}
+                        ${escapeHTML(getPlayerName(court.teamB[0]))} / ${court.teamB[1] ? escapeHTML(getPlayerName(court.teamB[1])) : '—'}
                       </div>
                     </div>
                   </div>
@@ -306,7 +317,7 @@ export function mount(el, params) {
                   <div class="mt-3 pt-3 border-t border-gray-50 flex flex-wrap gap-1.5">
                     <span class="text-[10px] font-bold text-gray-400 uppercase mr-1">Sitting:</span>
                     ${alt.round.sittingOut.map(id => `
-                      <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">${getPlayerName(id)}</span>
+                      <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">${escapeHTML(getPlayerName(id))}</span>
                     `).join('')}
                   </div>
                 ` : ''}
@@ -466,12 +477,12 @@ export function mount(el, params) {
                 </div>
                 <div class="flex-grow grid grid-cols-2 gap-2 text-center">
                   <div class="p-2 bg-blue-50 rounded border border-blue-100">
-                    <p class="text-sm font-bold">${getPlayerName(court.teamA[0])}</p>
-                    ${court.teamA[1] ? `<p class="text-sm font-bold">${getPlayerName(court.teamA[1])}</p>` : ''}
+                    <p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamA[0]))}</p>
+                    ${court.teamA[1] ? `<p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamA[1]))}</p>` : ''}
                   </div>
                   <div class="p-2 bg-orange-50 rounded border border-orange-100">
-                    <p class="text-sm font-bold">${getPlayerName(court.teamB[0])}</p>
-                    ${court.teamB[1] ? `<p class="text-sm font-bold">${getPlayerName(court.teamB[1])}</p>` : ''}
+                    <p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamB[0]))}</p>
+                    ${court.teamB[1] ? `<p class="text-sm font-bold">${escapeHTML(getPlayerName(court.teamB[1]))}</p>` : ''}
                   </div>
                 </div>
               </div>
@@ -491,7 +502,7 @@ export function mount(el, params) {
               </div>
               <div class="flex flex-wrap gap-2">
                 ${round.sittingOut.length > 0 ? round.sittingOut.map(id => `
-                  <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium text-gray-600 border border-gray-200">${getPlayerName(id)}</span>
+                  <span class="px-2 py-1 bg-gray-100 rounded text-sm font-medium text-gray-600 border border-gray-200">${escapeHTML(getPlayerName(id))}</span>
                 `).join('') : '<span class="text-sm text-gray-300 italic">None</span>'}
               </div>
             </div>
