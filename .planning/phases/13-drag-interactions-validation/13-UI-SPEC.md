@@ -60,8 +60,10 @@ Exceptions:
 Notes (source: existing MatchEditor.js and RoundDisplay.js patterns):
 - All section header labels use: `text-xs font-bold text-gray-500 uppercase tracking-widest`
 - Chip text uses: `text-sm font-medium`
-- Error labels (invalid court): `text-xs font-semibold` in the project's semantic error color (red-600)
+- Error labels (invalid court): `text-xs font-bold` in the project's semantic error color (red-600)
 - Bottom bar button text: `text-sm font-bold` (Cancel), `text-sm font-bold` (Confirm)
+
+Declared weights: exactly 2 — 500 (font-medium) for chip body text; 700 (font-bold) for all labels, headings, error labels, and button text.
 
 ---
 
@@ -86,6 +88,8 @@ Accent reserved for:
 Destructive reserved for:
 - Invalid court card border (exactly 1 player present)
 - "needs 2+ players" inline error label beneath the court header
+
+Primary focal point: the first invalid court card (red border) when validation errors exist; the Confirm button (blue-600) when all courts are valid.
 
 ---
 
@@ -134,7 +138,7 @@ Source: CONTEXT.md D-03, D-04.
 
 | Rule | Visual Response |
 |------|----------------|
-| Court has exactly 1 player | Red border on court card: `border-red-400`; inline label below court header: `"needs 2+ players"` in `text-xs font-semibold text-red-600` |
+| Court has exactly 1 player | Red border on court card: `border-red-400`; inline label below court header: `"needs 2+ players"` in `text-xs font-bold text-red-600` |
 | Court has 0, 2, 3, or 4 players | No error indicator; court card uses default `border-gray-200` |
 | Any invalid court exists | Confirm button: `opacity-50 cursor-not-allowed bg-gray-300 text-gray-500` (greyed, non-interactive) |
 | All courts valid | Confirm button: `bg-blue-600 text-white` (active) |
