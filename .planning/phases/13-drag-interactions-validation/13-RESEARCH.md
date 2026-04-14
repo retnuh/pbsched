@@ -544,17 +544,19 @@ const bottomBarHTML = `
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Position of bottom bar relative to bottom nav**
    - What we know: `.fixed-safe-bottom` puts elements at `calc(4rem + env(safe-area-inset-bottom, 0px))`. Both the bottom nav and the new Confirm/Cancel bar use this class.
    - What's unclear: Does the bottom nav already occupy this position, meaning a second element with the same class would overlap it?
    - Recommendation: In Wave 0, visually verify on device. If overlap occurs, the Confirm/Cancel bar needs a higher `z-index` and the bottom nav needs to be measured — or the bar sits above the nav by adding additional bottom offset. The planner should add a verification step for this.
+   - RESOLVED: The UI-SPEC copywriting contract and plan 13-02 Task 2 (human verify checkpoint #1) explicitly check for no overlap. The Confirm/Cancel bar uses `fixed-safe-bottom` per the design contract; the human checkpoint is the gate for visual verification before completion.
 
 2. **Bench zone: empty state rendering during drag**
    - What we know: The bench renders `--|--` when `sittingOut` is empty. When all bench players are dragged to courts, the bench becomes empty mid-edit.
    - What's unclear: Should the empty-state marker appear/disappear reactively as bench empties/fills?
    - Recommendation: `reconcileDraftFromDOM` already reads bench state; after reconciliation, re-render the empty-state marker inside the bench zone based on `_draft.sittingOut.length`. Add this to the `validateAndUpdateUI` pass.
+   - RESOLVED: Plan 13-01 Task 2 includes `filter: '.bench-empty-marker'` in the SortableJS bench zone config to prevent the empty-state marker from being draggable. `validateAndUpdateUI` (Plan 13-02 Task 1) handles reactive re-render of the bench empty state via `reconcileDraftFromDOM`.
 
 ---
 

@@ -19,7 +19,7 @@ created: 2026-04-14
 |----------|-------|
 | **Framework** | vitest |
 | **Config file** | `vitest.config.js` |
-| **Quick run command** | `npm test -- --run src/components/MatchEditor` |
+| **Quick run command** | `npm test -- --run src/views/MatchEditor.test.js` |
 | **Full suite command** | `npm test -- --run` |
 | **Estimated runtime** | ~15 seconds |
 
@@ -27,7 +27,7 @@ created: 2026-04-14
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npm test -- --run src/components/MatchEditor`
+- **After every task commit:** Run `npm test -- --run src/views/MatchEditor.test.js`
 - **After every plan wave:** Run `npm test -- --run`
 - **Before `/gsd-verify-work`:** Full suite must be green
 - **Max feedback latency:** 15 seconds
@@ -38,13 +38,13 @@ created: 2026-04-14
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 13-01-01 | 01 | 0 | DRAG-01 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-01-02 | 01 | 1 | DRAG-01 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-01-03 | 01 | 1 | DRAG-02 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-01-04 | 01 | 1 | DRAG-03 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-01-05 | 01 | 1 | DRAG-04 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-02-01 | 02 | 2 | VALID-01 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
-| 13-02-02 | 02 | 2 | VALID-02 | — | N/A | unit | `npm test -- --run src/components/MatchEditor` | ✅ W0 | ⬜ pending |
+| 13-01-01 | 01 | 0 | DRAG-01 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-01-02 | 01 | 1 | DRAG-01 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-01-03 | 01 | 1 | DRAG-02 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-01-04 | 01 | 1 | DRAG-03 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-01-05 | 01 | 1 | DRAG-04 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-02-01 | 02 | 2 | VALID-01 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
+| 13-02-02 | 02 | 2 | VALID-02 | — | N/A | unit | `npm test -- --run src/views/MatchEditor.test.js` | ✅ W0 | ⬜ pending |
 | 13-03-01 | 03 | 3 | VIS-01 | — | N/A | manual | See manual verifications | — | ⬜ pending |
 | 13-03-02 | 03 | 3 | DRAG-05 | — | N/A | manual | See manual verifications | — | ⬜ pending |
 | 13-03-03 | 03 | 3 | DRAG-06 | — | N/A | manual | See manual verifications | — | ⬜ pending |
@@ -55,8 +55,8 @@ created: 2026-04-14
 
 ## Wave 0 Requirements
 
-- [ ] `src/components/MatchEditor.test.js` — add stubs for DRAG-01 through DRAG-06, VALID-01, VALID-02
-- [ ] `src/components/MatchEditor.test.js` — add `vi.mock('sortablejs')` mock at top of test file
+- [ ] `src/views/MatchEditor.test.js.test.js` — add stubs for DRAG-01 through DRAG-06, VALID-01, VALID-02
+- [ ] `src/views/MatchEditor.test.js.test.js` — add `vi.mock('sortablejs')` mock at top of test file
 - [ ] `npm install sortablejs` — install missing production dependency
 
 *Existing vitest infrastructure covers the test framework; only mock setup and dependency install required.*
