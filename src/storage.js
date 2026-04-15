@@ -72,7 +72,12 @@ function migrate(data) {
  */
 function initStorage() {
   const rawData = localStorage.getItem(`${STORAGE_PREFIX}all`);
-  let data = rawData ? JSON.parse(rawData) : { schemaVersion: 0 };
+  let data;
+  try {
+    data = rawData ? JSON.parse(rawData) : { schemaVersion: 0 };
+  } catch (e) {
+    data = { schemaVersion: 0 };
+  }
 
   data = migrate(data);
   saveAll(data);
@@ -131,6 +136,7 @@ export const StorageAdapter = {
    * Runs migrations to ensure compatibility.
    */
   importData(data) {
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) return state;
     state = migrate(data);
     saveAll(state);
     return state;
