@@ -6,6 +6,10 @@ import { Haptics } from '../services/haptics.js';
 import Sortable, { Swap } from 'sortablejs';
 Sortable.mount(new Swap());
 
+// Named constants for court count limits (13-IN-03)
+const MAX_COURTS = 55;
+const WIMBLEDON_MILESTONE = 20;
+
 // Module-scope state — initialized in mount(), nulled in unmount()
 let _sortableInstances = [];
 let _draft = null;
@@ -70,7 +74,12 @@ function validateAndUpdateUI(el) {
 }
 
 function hasChanges() {
-  return JSON.stringify(_draft) !== JSON.stringify(_originalRound);
+  if (_draft.sittingOut.join(',') !== _originalRound.sittingOut.join(',')) return true;
+  if (_draft.courts.length !== _originalRound.courts.length) return true;
+  return _draft.courts.some((c, i) =>
+    c.teamA.join(',') !== _originalRound.courts[i].teamA.join(',') ||
+    c.teamB.join(',') !== _originalRound.courts[i].teamB.join(',')
+  );
 }
 
 function handleCancel() {
@@ -120,7 +129,10 @@ function showToast(message) {
   const div = document.createElement('div');
   div.id = 'gsd-toast';
   div.className = 'fixed top-4 left-0 right-0 flex justify-center z-50 animate-bounce-in';
-  div.innerHTML = `<div class="bg-gray-900 text-white rounded-xl px-4 py-3 max-w-xs mx-auto text-sm font-medium shadow-lg">${escapeHTML(message)}</div>`;
+  const inner = document.createElement('div');
+  inner.className = 'bg-gray-900 text-white rounded-xl px-4 py-3 max-w-xs mx-auto text-sm font-medium shadow-lg';
+  inner.textContent = message;
+  div.appendChild(inner);
   document.body.appendChild(div);
   _toastFadeTimer = setTimeout(() => {
     div.style.transition = 'opacity 0.2s';
@@ -160,10 +172,13 @@ function syncEmptySlots(el) {
 }
 
 function buildHTML(draft, round, club, getPlayerName, session) {
-  // sitCounts — count sit-outs from ALL session rounds (current draft NOT included)
+  // sitCounts — count sit-outs from all session rounds EXCEPT the round being edited.
+  // The stored sittingOut for the current round is stale during editing, so excluding it
+  // prevents the badge from being inflated by the pre-edit stored value (12-WR-03).
   const sitCounts = {};
-  session.rounds.forEach(r => {
-    r.sittingOut.forEach(id => {
+  session.rounds.forEach((r, i) => {
+    if (i === _roundIndex) return; // skip the round being edited — its sittingOut is stale during edit
+    (r.sittingOut || []).forEach(id => {
       sitCounts[id] = (sitCounts[id] || 0) + 1;
     });
   });
@@ -252,7 +267,7 @@ function buildHTML(draft, round, club, getPlayerName, session) {
 
   const discardModalHTML = `
     <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end">
-      <div class="absolute inset-0 bg-black/40"></div>
+      <div id="discard-backdrop" class="absolute inset-0 bg-black/40"></div>
       <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Discard changes?</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">Your edits won't be saved.</p>
@@ -290,6 +305,7 @@ function wireListeners(el) {
   el.querySelector('#confirm-btn').addEventListener('click', handleConfirm);
   el.querySelector('#discard-keep-btn').addEventListener('click', handleDiscardKeep);
   el.querySelector('#discard-confirm-btn').addEventListener('click', handleDiscardConfirm);
+  el.querySelector('#discard-backdrop')?.addEventListener('click', handleDiscardKeep);
   // Event delegation for Remove buttons (one listener on the scroll container)
   el.querySelector('.space-y-6').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-remove-court]');
@@ -307,12 +323,12 @@ function rerender(el) {
 }
 
 function handleAddCourt() {
-  if (_draft.courts.length >= 55) {
+  if (_draft.courts.length >= MAX_COURTS) {
     showToast("Can't be better than Wimbledon!");
     return;
   }
   _draft.courts.push({ teamA: [], teamB: [] });
-  if (_draft.courts.length === 20) {
+  if (_draft.courts.length === WIMBLEDON_MILESTONE) {
     showToast("Oooh, more than Wimbledon's Championship courts? Fancy");
   }
   rerender(_el);
@@ -323,6 +339,7 @@ function handleRemoveCourt(courtIndex) {
   const court = _draft.courts[courtIndex];
   if (court && (court.teamA.length > 0 || court.teamB.length > 0)) return;
   _draft.courts.splice(courtIndex, 1);
+  showToast('Court removed'); // 14-L-03: feedback when court is removed and numbering shifts
   rerender(_el);
 }
 
@@ -354,12 +371,14 @@ function syncBenchBadges(el) {
 }
 
 function handleDragEnd(evt) {
+  const beforeStr = JSON.stringify(_draft);
   reconcileDraftFromDOM(_el);
+  const changed = JSON.stringify(_draft) !== beforeStr;
   syncEmptySlots(_el);
   syncBenchBadges(_el);
   validateAndUpdateUI(_el);
   updateRemoveButtonVisibility(_el);  // Phase 14: re-evaluate Remove buttons after drag
-  Haptics.medium();                    // Phase 14: haptic on successful drop
+  if (changed) Haptics.medium();      // Phase 14: haptic only when drag actually changed something
   if (evt?.item) {
     evt.item.classList.add('drop-pop');
     const removeDropPop = () => evt.item.classList.remove('drop-pop');
@@ -385,6 +404,8 @@ function initSortables(el) {
       onMove: (evt) => {
         const toZone = evt.to?.dataset?.zone || '';
         if (toZone.startsWith('court-')) {
+          // Empty court slots intentionally have no data-player-id, so this count
+          // reflects only actual players. Do not add data-player-id to empty slots.
           const chipCount = evt.to.querySelectorAll('[data-player-id]').length;
           if (chipCount >= 2) {
             // Only allow if swapping with an actual player chip (not an empty slot).
@@ -400,6 +421,12 @@ function initSortables(el) {
 }
 
 export function mount(el, params) {
+  // 14-L-01: Guard against double-mount — destroy any existing Sortable instances
+  if (_sortableInstances.length) {
+    _sortableInstances.forEach(s => s.destroy());
+    _sortableInstances = [];
+  }
+
   const session = SessionService.getActiveSession();
 
   if (!session) {
@@ -448,7 +475,7 @@ export function mount(el, params) {
 
   // Initialize module-scope state
   _el = el;
-  _roundIndex = parseInt(params.roundIndex, 10);
+  _roundIndex = roundIndex; // 14-L-02: reuse already-parsed roundIndex (no duplicate parseInt)
   _draft = JSON.parse(JSON.stringify(round));
   _originalRound = JSON.parse(JSON.stringify(round));
 
