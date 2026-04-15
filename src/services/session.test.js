@@ -107,6 +107,29 @@ describe('SessionService — WR-03: morphRoundStrategy player accounting', () =>
   })
 })
 
+describe('SessionService — 11-IN-02: updateRound with empty scheduler result', () => {
+  beforeEach(() => {
+    StorageAdapter.reset()
+  })
+
+  test('session remains valid (no null round appended) when scheduler returns []', () => {
+    const session = makeSession({
+      attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+      rounds: [makeRound(0, ['p1', 'p2', 'p3', 'p4'], true)],
+    })
+    StorageAdapter.set('sessions', [session])
+
+    vi.spyOn(schedulerModule, 'generateRounds').mockReturnValueOnce([])
+    const editedRound = makeRound(0, ['p3', 'p4', 'p1', 'p2'], true)
+    SessionService.updateRound(0, editedRound)
+    vi.restoreAllMocks()
+
+    const rounds = SessionService.getActiveSession().rounds
+    expect(rounds.every(r => r !== null && r !== undefined)).toBe(true)
+    expect(rounds[0].played).toBe(true)
+  })
+})
+
 describe('SessionService — updateRound', () => {
   beforeEach(() => {
     StorageAdapter.reset()
@@ -132,6 +155,45 @@ describe('SessionService — updateRound', () => {
     const session = makeSession({
       attendeeIds: ['p1', 'p2', 'p3', 'p4'],
       rounds: [makeRound(0, ['p1', 'p2', 'p3', 'p4'], true)],
+    })
+    StorageAdapter.set('sessions', [session])
+
+    const editedRound = makeRound(0, ['p3', 'p4', 'p1', 'p2'], true)
+    SessionService.updateRound(0, editedRound)
+
+    const updated = SessionService.getActiveSession()
+    expect(updated.rounds[0].source).toBe('edited')
+    expect(updated.rounds[0].played).toBe(true)
+    expect(updated.rounds[0].courts[0].teamA).toContain('p3') // courts from editedRound
+  })
+
+  test('11-L-02: updateRound on played round with a sitter correctly records sitter path', () => {
+    function makeRoundWithSitter(index, playerIds, sitterId, played = false) {
+      return {
+        index,
+        courts: [{ teamA: [playerIds[0], playerIds[1]], teamB: [playerIds[2], playerIds[3]] }],
+        sittingOut: [sitterId],
+        played,
+      }
+    }
+    const session = makeSession({
+      attendeeIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+      rounds: [makeRoundWithSitter(0, ['p1', 'p2', 'p3', 'p4'], 'p5', true)],
+    })
+    StorageAdapter.set('sessions', [session])
+
+    const editedRound = makeRoundWithSitter(0, ['p2', 'p3', 'p4', 'p1'], 'p5', true)
+    SessionService.updateRound(0, editedRound)
+
+    const updated = SessionService.getActiveSession()
+    expect(updated.rounds[0].source).toBe('edited')
+    expect(updated.rounds[0].sittingOut).toContain('p5')
+  })
+
+  test('11-IN-03: re-editing an already-edited round keeps source: edited', () => {
+    const session = makeSession({
+      attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+      rounds: [{ ...makeRound(0, ['p1', 'p2', 'p3', 'p4'], true), source: 'edited' }],
     })
     StorageAdapter.set('sessions', [session])
 
