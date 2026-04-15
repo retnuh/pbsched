@@ -62,4 +62,4 @@ function showUpdateBanner(reg) {
   });
 }
 
-console.log('Pickleball Practice Scheduler Initialized');
+if (import.meta.env.DEV) console.log('Pickleball Practice Scheduler Initialized');

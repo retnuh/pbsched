@@ -60,7 +60,7 @@ export function mount(el, params) {
       </section>
 
       <footer class="text-center pt-4">
-        <p class="text-xs text-gray-400 dark:text-gray-500">Pickleball Practice Scheduler v1.0</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Pickleball Practice Scheduler ${__APP_VERSION__}</p>
       </footer>
     </div>
   `;
