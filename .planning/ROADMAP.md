@@ -33,7 +33,7 @@
 
 - [ ] **Phase 15: Dark Mode Foundation** — Storage v2 migration, ThemeService, FOUC prevention script, @custom-variant CSS line; system-preference detection and theme persistence
 - [x] **Phase 16: Dark Mode Visuals & Toggle** — dark: utilities on all views; zone chip and SortableJS dark overrides; Settings toggle with manual override (light/dark/auto)
-- [ ] **Phase 17: Test Coverage** — Install @vitest/coverage-v8; ThemeService tests, storage migration regression test, club.js/html.js unit tests; coverage report via `npm run coverage`
+- [x] **Phase 17: Test Coverage** — Install @vitest/coverage-v8; ThemeService tests, storage migration regression test, club.js/html.js unit tests; coverage report via `npm run coverage` (completed 2026-04-15)
 - [ ] **Phase 18: Documentation & Copy** — Help screen rewrite; README rewrite; plain-language copy audit across all views
 
 ## Phase Details
@@ -145,9 +145,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Install @vitest/coverage-v8, add coverage script and vite.config.js coverage block (TEST-01)
-- [ ] 17-02-PLAN.md — Write club.test.js (9 tests) and html.test.js (6 tests) (TEST-02)
-- [ ] 17-03-PLAN.md — Audit and gap-fill theme.test.js and storage.test.js; run npm run coverage smoke test (TEST-03, TEST-04)
+- [x] 17-01-PLAN.md — Install @vitest/coverage-v8, add coverage script and vite.config.js coverage block (TEST-01)
+- [x] 17-02-PLAN.md — Write club.test.js (9 tests) and html.test.js (6 tests) (TEST-02)
+- [x] 17-03-PLAN.md — Audit and gap-fill theme.test.js and storage.test.js; run npm run coverage smoke test (TEST-03, TEST-04)
 
 ### Phase 18: Documentation & Copy
 **Goal**: A non-developer organizer can understand what the app does and how to use it from both the in-app Help screen and the GitHub README
@@ -165,7 +165,7 @@ Plans:
 
 **Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
 **Requirements:** TBD
-**Plans:** 4/5 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
@@ -183,5 +183,5 @@ Plans:
 | 14. Court Management & Polish | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
-| 17. Test Coverage | Milestone 8 | 0/3 | Not started | - |
+| 17. Test Coverage | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
 | 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
