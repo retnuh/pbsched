@@ -13,6 +13,10 @@ let _mediaListener = null;
 
 export const ThemeService = {
   init() {
+    // Remove stale listener before re-registering to avoid duplicates on repeated init() calls
+    if (_mediaQuery && _mediaListener) {
+      _mediaQuery.removeEventListener('change', _mediaListener);
+    }
     this.applyTheme();
     try {
       _mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -52,7 +56,7 @@ export const ThemeService = {
     } else {
       // 'auto' or unset — follow system preference
       try {
-        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        isDark = (_mediaQuery ?? window.matchMedia('(prefers-color-scheme: dark)')).matches;
       } catch (e) {
         isDark = false; // safe default: light
       }
