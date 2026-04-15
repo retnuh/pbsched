@@ -92,7 +92,7 @@ export function mount(el, params) {
             return `
               <label class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border ${isAttending ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-100 dark:border-gray-700'} cursor-pointer">
                 <div class="flex flex-col">
-                  <span class="font-bold">${member.name}</span>
+                  <span class="font-bold">${escapeHTML(member.name)}</span>
                   ${sitCount > 0 ? `<span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold">Sat out ${sitCount}x</span>` : ''}
                 </div>
                 <input type="checkbox" data-id="${member.id}" ${isAttending ? 'checked' : ''} class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -227,7 +227,7 @@ export function mount(el, params) {
 
     el.querySelectorAll('[data-action="pick-alt"]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const altIndex = parseInt(btn.getAttribute('data-index'));
+        const altIndex = parseInt(btn.getAttribute('data-index'), 10);
         const newRound = alternatives[altIndex].round;
         SessionService.replaceRound(showingAlternativesFor, newRound);
         Haptics.success();
@@ -250,7 +250,7 @@ export function mount(el, params) {
         <header class="flex justify-between items-center">
           <div>
             <h1 class="text-2xl font-bold">${sessionDate}</h1>
-            <p class="text-xs text-gray-500">${club.name}</p>
+            <p class="text-xs text-gray-500">${escapeHTML(club.name)}</p>
           </div>
           <div class="flex items-center space-x-2">
             <a href="#/help" class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 font-bold text-sm">?</a>
@@ -313,7 +313,7 @@ export function mount(el, params) {
 
       const hasPlayed = rounds.some(r => r.played);
       listEl.innerHTML = rounds.map((round, i) => `
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${round.played ? 'border-gray-100 dark:border-gray-700 opacity-60' : 'border-blue-200'} overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${round.played ? 'border-gray-100 dark:border-gray-700 opacity-60' : 'border-blue-200 dark:border-blue-700'} overflow-hidden">
           <div class="p-3 ${round.played ? 'bg-gray-50 dark:bg-gray-700' : 'bg-blue-50 dark:bg-blue-900/30'} flex justify-between items-center">
             <h3 class="font-bold ${round.played ? 'text-gray-500 dark:text-gray-400' : 'text-blue-800 dark:text-blue-300'}">Round ${round.index + 1}</h3>
             <div class="flex items-center space-x-2">
@@ -354,7 +354,7 @@ export function mount(el, params) {
               </div>
             ` : ''}
             ${!round.played ? `
-              <div class="flex items-center gap-2 pt-3 border-t border-blue-100 dark:border-blue-900 mt-4">
+              <div class="flex items-center gap-2 pt-3 border-t border-blue-100 dark:border-gray-600 mt-4">
                 <button data-action="alternatives" data-index="${round.index}" class="flex-1 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 px-3 py-3 rounded-lg min-h-[44px]">
                   Alternatives
                 </button>
@@ -389,7 +389,7 @@ export function mount(el, params) {
     listEl.addEventListener('click', (e) => {
       const playBtn = e.target.closest('[data-action="play"]');
       if (playBtn) {
-        const idx = parseInt(playBtn.getAttribute('data-index'));
+        const idx = parseInt(playBtn.getAttribute('data-index'), 10);
         SessionService.markRoundPlayed(idx);
         Haptics.success();
         
@@ -404,7 +404,7 @@ export function mount(el, params) {
 
       const undoBtn = e.target.closest('[data-action="undo"]');
       if (undoBtn) {
-        const idx = parseInt(undoBtn.getAttribute('data-index'));
+        const idx = parseInt(undoBtn.getAttribute('data-index'), 10);
         SessionService.markRoundUnplayed(idx);
         SessionService.deleteUnplayedRoundsAfter(idx);
         Haptics.medium();
@@ -414,7 +414,7 @@ export function mount(el, params) {
 
       const altBtn = e.target.closest('[data-action="alternatives"]');
       if (altBtn) {
-        const idx = parseInt(altBtn.getAttribute('data-index'));
+        const idx = parseInt(altBtn.getAttribute('data-index'), 10);
         showingAlternativesFor = idx;
         Haptics.light();
         render();
@@ -423,7 +423,7 @@ export function mount(el, params) {
 
       const editBtn = e.target.closest('[data-action="edit"]');
       if (editBtn) {
-        const idx = parseInt(editBtn.getAttribute('data-index'));
+        const idx = parseInt(editBtn.getAttribute('data-index'), 10);
         Haptics.light();
         navigate('/edit/' + idx);
         return;
