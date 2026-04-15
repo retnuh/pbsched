@@ -25,7 +25,6 @@ const migrations = {
         penaltyRepeatedSitOut: 3,
         candidateCount: 200,
         topNToShow: 3,
-        oddPlayerFallback: 'three-player-court',
       },
       schemaVersion: 1,
     };

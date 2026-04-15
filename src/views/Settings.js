@@ -1,6 +1,7 @@
 import { StorageAdapter } from '../storage.js';
 import { Haptics } from '../services/haptics.js';
 import { ThemeService } from '../services/theme.js';
+import { SessionService } from '../services/session.js';
 
 export function mount(el, params) {
   const settings = StorageAdapter.get('settings') || {};
@@ -242,6 +243,15 @@ export function mount(el, params) {
     threeWayPairVal.innerText = threeWayPairInput.value;
 
     StorageAdapter.set('settings', settings);
+
+    SessionService.updateSettings({
+      penaltyRepeatedPartner: settings.penaltyRepeatedPartner,
+      penaltyRepeatedOpponent: settings.penaltyRepeatedOpponent,
+      penaltyRepeatedSitOut: settings.penaltyRepeatedSitOut,
+      penaltySingles: settings.penaltySingles,
+      penaltyThreeWaySolo: settings.penaltyThreeWaySolo,
+      penaltyThreeWayPair: settings.penaltyThreeWayPair,
+    });
   }
 
   partnerInput.addEventListener('input', () => {

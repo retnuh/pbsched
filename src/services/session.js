@@ -29,10 +29,7 @@ export const SessionService = {
       status: 'active',
       attendeeIds,
       rounds: [],
-      settings: { 
-        oddPlayerFallback: 'three-player-court', // Force smart default (2v1)
-        ...settings 
-      }
+      settings: { ...settings }
     };
 
     // Update member recency
@@ -116,85 +113,22 @@ export const SessionService = {
   },
 
   /**
-   * Updates settings for the active session (e.g. odd player fallback).
-   * If strategy changes, it tries to reconfigure the current unplayed round 
-   * without a full randomization of standard courts.
+   * Updates settings for the active session and regenerates the current unplayed round.
+   * Called when penalty sliders change so the live round reflects the new weights.
    */
   updateSettings(updates) {
     const session = this.getActiveSession();
     if (!session) return;
 
-    const oldStrat = session.settings.oddPlayerFallback;
     session.settings = { ...session.settings, ...updates };
-    const newStrat = session.settings.oddPlayerFallback;
 
-    if (oldStrat !== newStrat) {
-      const currentRoundIdx = session.rounds.length - 1;
-      const round = session.rounds[currentRoundIdx];
-      
-      if (round && !round.played) {
-        // Try to morph the round instead of a full regenerate
-        this.morphRoundStrategy(round, session.attendeeIds, session.settings);
-      }
+    const currentRoundIdx = session.rounds.length - 1;
+    const round = session.rounds[currentRoundIdx];
+    if (round && !round.played) {
+      this.regenerateRound(currentRoundIdx);
     }
 
     this.updateSession(session);
-  },
-
-  /**
-   * Morphs a round to a new strategy while preserving standard 4-player courts.
-   */
-  morphRoundStrategy(round, attendeeIds, settings) {
-    const num4Packs = Math.floor(attendeeIds.length / 4);
-    const oddCount = attendeeIds.length % 4;
-    if (oddCount === 0) return; // Nothing to morph
-
-    // 1. Identify standard courts (full 2v2) vs extra court
-    const standardCourts = round.courts.filter(c => c.teamA.length === 2 && c.teamB.length === 2);
-    const extraCourt = round.courts.find(c => c.teamA.length < 2 || c.teamB.length < 2);
-    
-    // 2. Identify all players involved in the "remainder" (extra court + sitters)
-    let leftoverPlayers = [...round.sittingOut];
-    if (extraCourt) {
-      leftoverPlayers = [...leftoverPlayers, ...extraCourt.teamA, ...extraCourt.teamB];
-    }
-
-    // 3. Re-assign standard courts if for some reason we have the wrong number
-    // (This shouldn't happen with our logic, but keeps it safe)
-    if (standardCourts.length !== num4Packs) {
-      this.regenerateRound(round.index);
-      return;
-    }
-
-    // 4. Re-configure the leftover players based on new strategy
-    const strat = settings.oddPlayerFallback;
-    const newExtraCourts = [];
-    let newSitOut = [];
-
-    // Shuffle leftovers (Fisher-Yates) to ensure fair pick if dropping from 2v1 -> 1v1
-    for (let i = leftoverPlayers.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [leftoverPlayers[i], leftoverPlayers[j]] = [leftoverPlayers[j], leftoverPlayers[i]];
-    }
-
-    if (strat === 'three-player-court' && oddCount === 3) {
-      newExtraCourts.push({
-        teamA: [leftoverPlayers[0], leftoverPlayers[1]],
-        teamB: [leftoverPlayers[2]]
-      });
-    } else if (strat === 'two-player-court' && oddCount >= 2) {
-      newExtraCourts.push({
-        teamA: [leftoverPlayers[0]],
-        teamB: [leftoverPlayers[1]]
-      });
-      newSitOut = leftoverPlayers.slice(2);
-    } else {
-      // sit-out
-      newSitOut = leftoverPlayers;
-    }
-
-    round.courts = [...standardCourts, ...newExtraCourts];
-    round.sittingOut = newSitOut;
   },
 
   /**

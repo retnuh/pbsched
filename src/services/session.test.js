@@ -4,7 +4,6 @@ import { SessionService } from './session.js'
 import * as schedulerModule from '../scheduler.js'
 
 const MOCK_SETTINGS = {
-  oddPlayerFallback: 'sit-out',
   candidateCount: 1,
   penaltyRepeatedPartner: 5,
   penaltyRepeatedOpponent: 10,
@@ -80,30 +79,57 @@ describe('SessionService — WR-02: updateSession index re-stamping', () => {
   })
 })
 
-describe('SessionService — WR-03: morphRoundStrategy player accounting', () => {
+describe('SessionService — WR-03: updateSettings propagates penalty weights', () => {
   beforeEach(() => {
     StorageAdapter.reset()
   })
 
-  test('no player is lost or duplicated after strategy change', () => {
-    const players = ['p1', 'p2', 'p3', 'p4', 'p5']
+  test('updates session.settings with new penalty values', () => {
     const session = makeSession({
-      attendeeIds: players,
-      rounds: [{
-        index: 0,
-        courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }],
-        sittingOut: ['p5'],
-        played: false,
-      }],
-      settings: { ...MOCK_SETTINGS, oddPlayerFallback: 'sit-out' },
+      attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+      rounds: [makeRound(0, ['p1', 'p2', 'p3', 'p4'], false)],
     })
     StorageAdapter.set('sessions', [session])
 
-    SessionService.updateSettings({ oddPlayerFallback: 'three-player-court' })
+    SessionService.updateSettings({ penaltyRepeatedPartner: 25, penaltyRepeatedOpponent: 30 })
 
-    const round = SessionService.getActiveSession().rounds[0]
-    const assigned = [...round.courts.flatMap(c => [...c.teamA, ...c.teamB]), ...round.sittingOut]
-    expect(assigned.sort()).toEqual([...players].sort())
+    const updated = SessionService.getActiveSession()
+    expect(updated.settings.penaltyRepeatedPartner).toBe(25)
+    expect(updated.settings.penaltyRepeatedOpponent).toBe(30)
+    expect(updated.settings.penaltyRepeatedSitOut).toBe(3) // unchanged
+  })
+
+  test('regenerates the current unplayed round after weight change', () => {
+    const session = makeSession({
+      attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+      rounds: [makeRound(0, ['p1', 'p2', 'p3', 'p4'], false)],
+    })
+    StorageAdapter.set('sessions', [session])
+
+    const regenerateSpy = vi.spyOn(SessionService, 'regenerateRound')
+    SessionService.updateSettings({ penaltyRepeatedPartner: 25 })
+    vi.restoreAllMocks()
+
+    expect(regenerateSpy).toHaveBeenCalledWith(0)
+  })
+
+  test('does not regenerate if the current round is already played', () => {
+    const session = makeSession({
+      attendeeIds: ['p1', 'p2', 'p3', 'p4'],
+      rounds: [makeRound(0, ['p1', 'p2', 'p3', 'p4'], true)],
+    })
+    StorageAdapter.set('sessions', [session])
+
+    const regenerateSpy = vi.spyOn(SessionService, 'regenerateRound')
+    SessionService.updateSettings({ penaltyRepeatedPartner: 25 })
+    vi.restoreAllMocks()
+
+    expect(regenerateSpy).not.toHaveBeenCalled()
+  })
+
+  test('is a no-op when there is no active session', () => {
+    // No session in storage
+    expect(() => SessionService.updateSettings({ penaltyRepeatedPartner: 25 })).not.toThrow()
   })
 })
 
