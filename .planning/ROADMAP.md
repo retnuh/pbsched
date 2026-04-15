@@ -164,6 +164,22 @@ Plans:
 - [x] 18-02-PLAN.md — README restructure: organizer opener first, developer content below rule (DOCS-02)
 - [x] 18-03-PLAN.md — Copy audit: quality labels in alternatives panel, plain-language Settings labels (DOCS-03)
 
+### Phase 19: View Test Coverage
+
+**Goal**: Raise test coverage for the five largely-untested view files so overall line/function/branch thresholds can be lifted to ≥65%/≥70%/≥60%
+**Depends on**: Phase 17
+**Requirements**: TEST-05
+**Success Criteria** (what must be TRUE):
+  1. `ClubManager.js`, `MemberEditor.js`, `SessionSetup.js`, `Settings.js` each have unit tests covering their main code paths using the existing `mount()` + `StorageAdapter.reset()` + happy-dom pattern
+  2. `RoundDisplay.js` coverage improves from ~36% to ≥70%
+  3. Overall coverage thresholds in `vite.config.js` raised to: lines ≥65, functions ≥70, branches ≥60
+  4. `just coverage` exits 0
+
+**Plans**: TBD
+
+Plans:
+- [ ] TBD
+
 ## Backlog
 
 ### Phase 999.1: Court Side Penalty to Encourage Swapping Sides (BACKLOG)
@@ -190,3 +206,4 @@ Plans:
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
 | 17. Test Coverage | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
 | 18. Documentation & Copy | Milestone 8 | 4/4 | Complete   | 2026-04-15 |
+| 19. View Test Coverage | Milestone 8 | 0/TBD | Not started | - |
