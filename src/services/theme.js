@@ -35,6 +35,13 @@ export const ThemeService = {
     } catch (e) { /* matchMedia unavailable — do nothing */ }
   },
 
+  /**
+   * Sets the theme mode and applies it immediately.
+   *
+   * NOTE (15-MD-02): If localStorage.setItem throws (private browsing or quota exceeded),
+   * applyTheme() is still called so the UI reflects the choice for this session.
+   * However, getMode() will return 'auto' on the next call since the value was not persisted.
+   */
   setMode(mode) {
     if (!VALID_MODES.includes(mode)) return;
     try {
@@ -49,6 +56,14 @@ export const ThemeService = {
       return VALID_MODES.includes(stored) ? stored : 'auto';
     } catch (e) {
       return 'auto';
+    }
+  },
+
+  destroy() {
+    if (_mediaQuery && _mediaListener) {
+      _mediaQuery.removeEventListener('change', _mediaListener);
+      _mediaQuery = null;
+      _mediaListener = null;
     }
   },
 
