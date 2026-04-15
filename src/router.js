@@ -80,11 +80,12 @@ export function initRouter(el) {
         const isClubs = (hashIsHome() || hash.startsWith('#/club') || hash.startsWith('#/setup')) && navTarget === 'ClubManager';
         const isSession = (hash.startsWith('#/active') || hash.startsWith('#/edit')) && navTarget === 'RoundDisplay';
         const isSettings = hash.startsWith('#/settings') && navTarget === 'Settings';
-        
-        link.classList.toggle('text-blue-600', isClubs || isSession || isSettings);
-        link.classList.toggle('text-gray-400', !(isClubs || isSession || isSettings));
-        link.classList.toggle('dark:text-blue-400', isClubs || isSession || isSettings);
-        link.classList.toggle('dark:text-gray-500', !(isClubs || isSession || isSettings));
+        const isHelp = hash.startsWith('#/help') && navTarget === 'Help';
+
+        link.classList.toggle('text-blue-600', isClubs || isSession || isSettings || isHelp);
+        link.classList.toggle('text-gray-400', !(isClubs || isSession || isSettings || isHelp));
+        link.classList.toggle('dark:text-blue-400', isClubs || isSession || isSettings || isHelp);
+        link.classList.toggle('dark:text-gray-500', !(isClubs || isSession || isSettings || isHelp));
       });
     } else {
       el.innerHTML = '<div class="p-4 text-red-500 font-bold">404 - Not Found</div>';

@@ -262,9 +262,9 @@ export function mount(el, params) {
 
   // Start Session
   el.querySelector('#start-session').addEventListener('click', () => {
-    if (ClubService.getClub(clubId).members.length < 4) {
+    if (ClubService.getClub(clubId).members.length < 2) {
       Haptics.error();
-      alert('You need at least 4 members in the club to start a session.');
+      alert('You need at least 2 members in the club to start a session.');
       return;
     }
     Haptics.success();

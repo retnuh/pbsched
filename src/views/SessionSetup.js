@@ -47,11 +47,11 @@ export function mount(el, params) {
   function updateStartButton() {
     const startBtn = el.querySelector('#start-btn');
     const count = selectedIds.size;
-    startBtn.disabled = count < 4;
-    startBtn.innerText = count < 4 ? `Select at least 4 (${count})` : `Start Session with ${count}`;
-    startBtn.classList.toggle('opacity-50', count < 4);
-    startBtn.classList.toggle('bg-blue-600', count >= 4);
-    startBtn.classList.toggle('bg-gray-400', count < 4);
+    startBtn.disabled = count < 2;
+    startBtn.innerText = count < 2 ? `Select at least 2 (${count})` : `Start Session with ${count}`;
+    startBtn.classList.toggle('opacity-50', count < 2);
+    startBtn.classList.toggle('bg-blue-600', count >= 2);
+    startBtn.classList.toggle('bg-gray-400', count < 2);
   }
 
   el.innerHTML = `
@@ -102,7 +102,7 @@ export function mount(el, params) {
   });
 
   el.querySelector('#start-btn').addEventListener('click', () => {
-    if (selectedIds.size >= 4) {
+    if (selectedIds.size >= 2) {
       SessionService.createSession(clubId, Array.from(selectedIds));
       SessionService.generateNextRound(); 
       Haptics.success();

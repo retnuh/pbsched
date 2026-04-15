@@ -23,7 +23,7 @@ export function mount(el, params) {
       <section class="space-y-4">
         <h2 class="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center">
           <span class="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-xs mr-2">2</span>
-          Running a Session
+          Running a Practice Session
         </h2>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Generate a round:</strong> Tap "Generate Round" and the app instantly proposes court assignments. Call out the matchups to your group.</p>
@@ -35,7 +35,7 @@ export function mount(el, params) {
       <section class="space-y-4">
         <h2 class="text-lg font-bold text-blue-600 dark:text-blue-400 flex items-center">
           <span class="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-xs mr-2">3</span>
-          Fixing Things
+          Changing Things
         </h2>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Don't like the matchup?</strong> Tap "Alternatives" to see other options for that round, then tap "Select" on the one you prefer.</p>
