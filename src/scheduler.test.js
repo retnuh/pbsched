@@ -37,8 +37,8 @@ describe('Scheduler Logic', () => {
     const history = {
       partnerCount: { 'p1': { 'p2': 1 } },
       partnerStreak: { 'p1': { 'p2': 1 } },
-      opponentCount: { 'p1': { 'p3': 0 }, 'p1': { 'p4': 0 }, 'p2': { 'p3': 0 }, 'p2': { 'p4': 0 } },
-      opponentStreak: { 'p1': { 'p3': 0 }, 'p1': { 'p4': 0 }, 'p2': { 'p3': 0 }, 'p2': { 'p4': 0 } },
+      opponentCount: { 'p1': { 'p3': 0, 'p4': 0 }, 'p2': { 'p3': 0, 'p4': 0 } },
+      opponentStreak: { 'p1': { 'p3': 0, 'p4': 0 }, 'p2': { 'p3': 0, 'p4': 0 } },
       sitOutCount: {},
       sitOutStreak: {}
     };
@@ -378,6 +378,19 @@ describe('Scheduler Logic', () => {
       expect(isNaN(score)).toBe(false);
       // p1: 15 * 2^0 = 15, p2: 15 * 2^0 = 15 => total 30
       expect(score).toBe(30);
+    });
+
+    test('batch generateRounds produces different partner pairs across rounds', () => {
+      // With 4 players generating 2 rounds, the partners in round 2 should differ from round 1
+      // to verify the incremental history update is working
+      const attendees = [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }];
+      const attendeeIds = attendees.map(a => a.id);
+      const rounds = generateRounds(attendeeIds, [], 2, MOCK_SETTINGS);
+      expect(rounds).toHaveLength(2);
+      const r1Partners = new Set([rounds[0].courts[0].teamA.slice().sort().join(',')]);
+      const r2Partners = new Set([rounds[1].courts[0].teamA.slice().sort().join(',')]);
+      // Partner pairs should differ (the scheduler should avoid repeating the same pairing)
+      expect(r1Partners).not.toEqual(r2Partners);
     });
 
     test('scoreRound with custom penaltySingles scores higher than lower penaltySingles', () => {
