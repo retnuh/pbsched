@@ -16,6 +16,8 @@ let _session = null;
 let _club = null;
 let _round = null;
 let _getPlayerName = null;
+let _toastFadeTimer = null;
+let _toastRemoveTimer = null;
 
 // --- Private helpers ---
 
@@ -83,6 +85,7 @@ function handleDiscardKeep() {
 }
 
 function handleConfirm() {
+  reconcileDraftFromDOM(_el);
   const anyInvalid = _draft.courts.some(c => {
     const total = c.teamA.length + c.teamB.length;
     return total === 1 || c.teamA.length > 2 || c.teamB.length > 2 ||
@@ -110,6 +113,8 @@ function makeEmptySlot({ bench = false } = {}) {
 }
 
 function showToast(message) {
+  clearTimeout(_toastFadeTimer);
+  clearTimeout(_toastRemoveTimer);
   const existing = document.getElementById('gsd-toast');
   if (existing) existing.remove();
   const div = document.createElement('div');
@@ -117,10 +122,10 @@ function showToast(message) {
   div.className = 'fixed top-4 left-0 right-0 flex justify-center z-50 animate-bounce-in';
   div.innerHTML = `<div class="bg-gray-900 text-white rounded-xl px-4 py-3 max-w-xs mx-auto text-sm font-medium shadow-lg">${escapeHTML(message)}</div>`;
   document.body.appendChild(div);
-  setTimeout(() => {
+  _toastFadeTimer = setTimeout(() => {
     div.style.transition = 'opacity 0.2s';
     div.style.opacity = '0';
-    setTimeout(() => div.remove(), 200);
+    _toastRemoveTimer = setTimeout(() => div.remove(), 200);
   }, 2500);
 }
 
@@ -315,6 +320,8 @@ function handleAddCourt() {
 
 function handleRemoveCourt(courtIndex) {
   if (_draft.courts.length <= 1) return;
+  const court = _draft.courts[courtIndex];
+  if (court && (court.teamA.length > 0 || court.teamB.length > 0)) return;
   _draft.courts.splice(courtIndex, 1);
   rerender(_el);
 }
@@ -355,7 +362,9 @@ function handleDragEnd(evt) {
   Haptics.medium();                    // Phase 14: haptic on successful drop
   if (evt?.item) {
     evt.item.classList.add('drop-pop');
-    evt.item.addEventListener('animationend', () => evt.item.classList.remove('drop-pop'), { once: true });
+    const removeDropPop = () => evt.item.classList.remove('drop-pop');
+    evt.item.addEventListener('animationend', removeDropPop, { once: true });
+    setTimeout(removeDropPop, 400);
   }
 }
 
@@ -460,4 +469,8 @@ export function unmount() {
   _club = null;
   _round = null;
   _getPlayerName = null;
+  clearTimeout(_toastFadeTimer);
+  clearTimeout(_toastRemoveTimer);
+  _toastFadeTimer = null;
+  _toastRemoveTimer = null;
 }
