@@ -355,20 +355,18 @@ export function generateRounds(attendees, playedRounds, countToGenerate, setting
     bestCandidate.courts.forEach(court => {
       const { teamA, teamB } = court;
       const inc = (obj, p1, p2) => {
-        if (!obj[p1]) obj[p1] = {};
-        obj[p1][p2] = (obj[p1][p2] || 0) + 1;
+        const [a, b] = [p1, p2].sort();
+        if (!obj[a]) obj[a] = {};
+        obj[a][b] = (obj[a][b] || 0) + 1;
       };
       if (teamA.length === 2) {
         inc(currentHistory.partnerCount, teamA[0], teamA[1]);
-        inc(currentHistory.partnerCount, teamA[1], teamA[0]);
       }
       if (teamB.length === 2) {
         inc(currentHistory.partnerCount, teamB[0], teamB[1]);
-        inc(currentHistory.partnerCount, teamB[1], teamB[0]);
       }
       teamA.forEach(a => teamB.forEach(b => {
         inc(currentHistory.opponentCount, a, b);
-        inc(currentHistory.opponentCount, b, a);
       }));
 
       // Short-sided fast-path count increment (per D-03; streaks are not fast-pathed, matching existing pattern)
