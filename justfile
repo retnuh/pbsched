@@ -18,7 +18,7 @@ test-watch:
 
 # Build the project for production
 build:
-    npm run build
+    VITE_APP_VERSION=$(git describe --tags --always) npm run build
 
 # Preview the production build locally
 preview: build
