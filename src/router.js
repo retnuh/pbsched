@@ -54,7 +54,7 @@ function resolveRoute() {
   return { route: matchedRoute, params };
 }
 
-export async function navigate(path) {
+export function navigate(path) {
   window.location.hash = path;
 }
 
