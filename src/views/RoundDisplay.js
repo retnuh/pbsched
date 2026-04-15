@@ -171,7 +171,7 @@ export function mount(el, params) {
           ${alternatives.map((alt, index) => `
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div class="p-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
-                <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">${index === 0 ? 'Best Match' : index === 1 ? 'Good Match' : `Option ${index + 1}`}</h3>
+                <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">${['Best Match', 'Good Match', 'Okay Match', 'Meh', 'Not Great', 'Bad'][index] ?? 'Bad'}</h3>
                 <button data-action="pick-alt" data-index="${index}" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold shadow-sm">
                   Select
                 </button>

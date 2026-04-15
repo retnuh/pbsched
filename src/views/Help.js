@@ -16,7 +16,7 @@ export function mount(el, params) {
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Create a club:</strong> Tap the club icon and add your club's name. Then add your regular players — you only need to do this once.</p>
           <p><strong>Check in who showed up:</strong> When you start a session, pick the players who are present today. The app puts your most frequent players at the top so check-in is fast.</p>
-          <p>You need at least 4 players to generate rounds.</p>
+          <p>You need at least 2 players to generate rounds.</p>
         </div>
       </section>
 
@@ -28,12 +28,7 @@ export function mount(el, params) {
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Generate a round:</strong> Tap "Generate Round" and the app instantly proposes court assignments. Call out the matchups to your group.</p>
           <p><strong>Mark it played:</strong> Once the round is finished, tap "Mark Played." This locks the result into history and queues up the next round.</p>
-          <p><strong>Odd number of players?</strong> When your group doesn't divide evenly into 4-person courts, choose a fallback strategy:</p>
-          <ul class="list-disc ml-5 space-y-2">
-            <li><strong>Play 2v1:</strong> Creates one 3-player court so everyone is playing.</li>
-            <li><strong>Play 1v1:</strong> Creates a singles court; any remaining player sits out.</li>
-            <li><strong>All Sit:</strong> Standard 2v2 only; extra players sit out this round.</li>
-          </ul>
+          <p><strong>Odd number of players?</strong> If the round doesn't look right, tap Edit to rearrange players between courts however you like.</p>
         </div>
       </section>
 
@@ -44,8 +39,8 @@ export function mount(el, params) {
         </h2>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Don't like the matchup?</strong> Tap "Alternatives" to see other options for that round, then tap "Select" on the one you prefer.</p>
-          <p><strong>Need to swap players?</strong> Tap "Edit" on any unplayed round. Drag players between courts or to the bench, then tap "Confirm" to save your changes.</p>
-          <p><strong>Change who sits out:</strong> Tap the sitting-out area on an unplayed round to pick a specific player. The courts will regenerate around your choice.</p>
+          <p><strong>Need to swap players?</strong> Tap "Edit" on any unplayed round. Drag players between courts or to the bench (bench means the player is sitting out / resting that round), then tap "Confirm" to save your changes.</p>
+          <p><strong>Need to correct a played round?</strong> Tap "Edit" on the most recently played round to fix it — keeping the history accurate helps the app suggest better matchups going forward.</p>
           <p><strong>Marked played by mistake?</strong> Tap "Undo" on the most recent completed round to reverse it.</p>
         </div>
       </section>
@@ -57,7 +52,7 @@ export function mount(el, params) {
         </h2>
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-3 text-sm leading-relaxed dark:text-gray-300">
           <p><strong>Appearance:</strong> Choose light mode, dark mode, or follow your device's system setting. Find this at the top of Settings.</p>
-          <p><strong>Fairness sliders:</strong> Under "Scheduling Preferences" you can adjust how strongly the app avoids repeating the same partners, opponents, or sit-out players. The defaults work well for most groups.</p>
+          <p><strong>Fairness sliders:</strong> Under "Scheduling Preferences" you can adjust how strongly the app avoids repeating the same partners, opponents, or sit-out players. The defaults work well for most groups. The exact numbers aren't critical — what matters is how the sliders compare to each other.</p>
           <p><strong>Backup & Restore:</strong> Share your club data to keep a backup or move to a new device — all from the Settings screen.</p>
         </div>
       </section>
