@@ -28,9 +28,20 @@ preview: build
 deploy: check
     git push origin main
 
+# Run test coverage report
+coverage: install
+    npm run coverage
+
+# Open coverage report in browser (runs coverage first)
+open-coverage: coverage
+    open coverage/index.html
+
 # Clean up build artifacts and node_modules
 clean:
     rm -rf dist node_modules
+
+# Full CI pass: install, test, coverage, build
+ci: install test coverage build
 
 # Check project status and run all tests
 check: install test build
