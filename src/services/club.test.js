@@ -64,10 +64,49 @@ describe('ClubService', () => {
     const club = ClubService.createClub('Club')
     const m1 = ClubService.addMember(club.id, 'Alice')
     const m2 = ClubService.addMember(club.id, 'Bob')
-    const ts = new Date().toISOString()
+    const ts = '2026-04-15T10:00:00.000Z'
     ClubService.updateMembersLastPlayed(club.id, [m1.id], ts)
     const updated = ClubService.getClub(club.id)
     expect(updated.members.find(m => m.id === m1.id).lastPlayed).toBe(ts)
     expect(updated.members.find(m => m.id === m2.id).lastPlayed).toBeUndefined()
+  })
+
+  // 17-HI-03: not-found branch tests
+  test('addMember returns undefined for non-existent club', () => {
+    expect(ClubService.addMember('no-such-club', 'Ghost')).toBeUndefined()
+  })
+
+  test('getClub returns undefined for non-existent id', () => {
+    expect(ClubService.getClub('no-such-id')).toBeUndefined()
+  })
+
+  test('renameMember is a no-op for invalid memberId (member name unchanged)', () => {
+    const club = ClubService.createClub('Club')
+    ClubService.addMember(club.id, 'Alice')
+    ClubService.renameMember(club.id, 'bad-member-id', 'Ghost')
+    const found = ClubService.getClub(club.id)
+    expect(found.members[0].name).toBe('Alice')
+  })
+
+  test('removeMember is a no-op for invalid clubId (no crash)', () => {
+    expect(() => ClubService.removeMember('bad-club-id', 'any-id')).not.toThrow()
+  })
+
+  test('updateMembersLastPlayed is a no-op for invalid clubId (no crash)', () => {
+    expect(() => ClubService.updateMembersLastPlayed('bad-club-id', ['p1'], '2026-01-01T00:00:00.000Z')).not.toThrow()
+  })
+
+  // 17-ME-02: updateClub on non-existent id is a no-op
+  test('updateClub on a non-existent id is a no-op and returns undefined', () => {
+    const result = ClubService.updateClub('no-such-id', { name: 'Ghost' })
+    expect(result).toBeUndefined()
+    expect(ClubService.getClubs()).toHaveLength(0)
+  })
+
+  // 17-LO-01: two clubs created in sequence get different ids
+  test('two clubs created in sequence get different ids', () => {
+    const c1 = ClubService.createClub('Alpha')
+    const c2 = ClubService.createClub('Beta')
+    expect(c1.id).not.toBe(c2.id)
   })
 })

@@ -18,6 +18,11 @@ export default defineConfig({
       include: ['src/**/*.js'],
       exclude: ['src/**/*.test.js', 'src/test-setup.js', 'node_modules/**'],
       all: true,
+      thresholds: {
+        lines: 60,
+        functions: 65,
+        branches: 50,
+      },
     },
   },
 })
