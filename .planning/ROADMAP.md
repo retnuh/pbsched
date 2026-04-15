@@ -142,7 +142,12 @@ Plans:
   2. `club.js` and `html.js` utilities have passing unit tests that cover their main code paths
   3. ThemeService tests cover system-preference detection, manual override to each of the three modes, and storage read/write
   4. A regression test verifies the storage v1-to-v2 migration runs correctly when old-format data is present
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Install @vitest/coverage-v8, add coverage script and vite.config.js coverage block (TEST-01)
+- [ ] 17-02-PLAN.md — Write club.test.js (9 tests) and html.test.js (6 tests) (TEST-02)
+- [ ] 17-03-PLAN.md — Audit and gap-fill theme.test.js and storage.test.js; run npm run coverage smoke test (TEST-03, TEST-04)
 
 ### Phase 18: Documentation & Copy
 **Goal**: A non-developer organizer can understand what the app does and how to use it from both the in-app Help screen and the GitHub README
@@ -178,5 +183,5 @@ Plans:
 | 14. Court Management & Polish | Milestone 7 | 2/2 | Complete | 2026-04-14 |
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
-| 17. Test Coverage | Milestone 8 | 0/TBD | Not started | - |
+| 17. Test Coverage | Milestone 8 | 0/3 | Not started | - |
 | 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
