@@ -11,7 +11,7 @@ export function mount(el, params) {
     el.innerHTML = `
       <div class="p-8 text-center space-y-4">
         <h1 class="text-2xl font-bold">No Active Session</h1>
-        <p class="text-gray-500">Go to your clubs and select members to start a practice.</p>
+        <p class="text-gray-500 dark:text-gray-400">Go to your clubs and select members to start a practice.</p>
         <a href="#/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md">
           Go to Clubs
         </a>
@@ -25,7 +25,7 @@ export function mount(el, params) {
     el.innerHTML = `
       <div class="p-8 text-center space-y-4">
         <h1 class="text-2xl font-bold">Club Not Found</h1>
-        <p class="text-gray-500">This session references a club that no longer exists.</p>
+        <p class="text-gray-500 dark:text-gray-400">This session references a club that no longer exists.</p>
         <a href="#/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md">Go to Clubs</a>
       </div>
     `;
