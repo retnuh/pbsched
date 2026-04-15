@@ -14,9 +14,10 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '.claude/worktrees/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: [['text', { skipFull: false }], 'html'],
       include: ['src/**/*.js'],
       exclude: ['src/**/*.test.js', 'src/test-setup.js', 'node_modules/**'],
+      all: true,
     },
   },
 })
