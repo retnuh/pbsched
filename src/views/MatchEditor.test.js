@@ -994,7 +994,7 @@ describe('Phase 14: Court Management & Polish', () => {
       StorageAdapter.set('clubs', CLUBS_DATA_5P)
       StorageAdapter.set('sessions', [session])
       mount(el, { roundIndex: '2' })
-      // p1 is on bench; check p1's badge = 0 (never sat out in any stored round)
+      // p1 sits out in rounds[2] (stored in session), so count = 1
       const bench = el.querySelector('[data-zone="bench"]')
       const p1Chip = bench.querySelector('[data-player-id="p1"]')
       expect(p1Chip).not.toBeNull()
@@ -1044,8 +1044,12 @@ describe('Phase 14: Court Management & Polish', () => {
       const courts = Array.from({ length: 55 }, () => ({ teamA: [], teamB: [] }))
       const round = { index: 0, played: false, courts, sittingOut: ['p1', 'p2', 'p3', 'p4'] }
       setupEditor(round)
+      const existing = document.getElementById('gsd-toast')
+      if (existing) existing.remove()
       el.querySelector('#add-court-btn').click()
       expect(el.querySelector('[data-court="55"]')).toBeNull()
+      expect(document.getElementById('gsd-toast')).not.toBeNull()
+      expect(document.getElementById('gsd-toast').textContent).toContain('Wimbledon')
     })
 
     test('adding the 20th court triggers a toast (gsd-toast in document.body)', () => {
@@ -1105,6 +1109,67 @@ describe('Phase 14: Court Management & Polish', () => {
       mockSortable.instances[0].options.onEnd({ item: p1Chip })
 
       expect(p1Chip.querySelector('.sit-badge').textContent).toContain('0×')
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // 14-IN-03: remove court at index 0, remaining courts renumber correctly
+  describe('14-IN-03: Remove court at index 0 renumbers remaining courts', () => {
+    test('after removing court 0, former court 1 becomes data-court="0"', () => {
+      const round = {
+        index: 0,
+        played: false,
+        courts: [
+          { teamA: [], teamB: [] },
+          { teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] },
+        ],
+        sittingOut: [],
+      }
+      setupEditor(round)
+      expect(el.querySelector('[data-court="0"]')).not.toBeNull()
+      expect(el.querySelector('[data-court="1"]')).not.toBeNull()
+      el.querySelector('[data-remove-court="0"]').click()
+      expect(el.querySelector('[data-court="0"]')).not.toBeNull()
+      expect(el.querySelector('[data-court="1"]')).toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // 14-IN-04: Cancel after Add Court shows discard modal
+  describe('14-IN-04: Cancel after Add Court shows discard modal', () => {
+    test('clicking Cancel after adding a court shows the discard modal', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      el.querySelector('#add-court-btn').click()
+      el.querySelector('#cancel-btn').click()
+      expect(el.querySelector('#discard-modal').classList.contains('hidden')).toBe(false)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // 13-WR-01: 1v2 court is currently considered valid
+  describe('13-WR-01: 1v2 court is valid per current validateAndUpdateUI spec', () => {
+    test('a court with [p1] vs [p2, p3] passes validation (confirm enabled)', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1'], teamB: ['p2', 'p3'] }], sittingOut: ['p4'] }
+      setupEditor(round)
+      expect(el.querySelector('#confirm-btn').disabled).toBe(false)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // 13-IN-01: mount → unmount → mount again renders fresh state without crashing
+  describe('13-IN-01: remount renders fresh state', () => {
+    test('mount then unmount then mount again renders correctly without crashing', () => {
+      const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
+      setupEditor(round)
+      unmount()
+      // Re-seed storage (unmount clears module state, storage still has it)
+      const session = makeSession([round])
+      StorageAdapter.set('clubs', CLUBS_DATA)
+      StorageAdapter.set('sessions', [session])
+      mount(el, { roundIndex: '0' })
+      expect(el.innerHTML).toContain('Court 1')
+      expect(el.querySelector('#confirm-btn')).not.toBeNull()
     })
   })
 })
