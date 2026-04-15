@@ -1,14 +1,32 @@
 {
   "version": "1.0",
-  "timestamp": "2026-04-14T23:23:23.944Z",
+  "timestamp": "2026-04-15T09:34:21.641Z",
   "phase": "16",
   "phase_name": "dark-mode-visuals-toggle",
   "phase_dir": ".planning/phases/16-dark-mode-visuals-toggle",
-  "plan": 5,
-  "task": 2,
-  "status": "paused",
-  "human_actions_pending": [
-    {"action": "Review app in dark mode, type approved or report issues", "blocking": true}
+  "plan": null,
+  "task": null,
+  "status": "paused — mid-UAT at test 3/11",
+  "completed_tasks": [
+    {"id": "UAT-1", "name": "Dark Mode Toggle in Settings", "status": "pass"},
+    {"id": "UAT-2", "name": "Settings Page in Dark Mode", "status": "pass"}
   ],
-  "next_action": "npm run dev, enable dark mode, check all views per 16-05-PLAN.md, type approved"
+  "remaining_tasks": [
+    {"id": "UAT-3", "name": "Nav Bar in Dark Mode", "status": "not_started"},
+    {"id": "UAT-4", "name": "Zone Chips in Dark Mode", "status": "not_started"},
+    {"id": "UAT-5", "name": "Round Display in Dark Mode", "status": "not_started"},
+    {"id": "UAT-6", "name": "Match Editor in Dark Mode", "status": "not_started"},
+    {"id": "UAT-7", "name": "Bottom-Sheet Modals in Dark Mode", "status": "not_started"},
+    {"id": "UAT-8", "name": "Bench Badge Sync", "status": "not_started"},
+    {"id": "UAT-9", "name": "Club Manager in Dark Mode", "status": "not_started"},
+    {"id": "UAT-10", "name": "Member Editor & Session Setup in Dark Mode", "status": "not_started"},
+    {"id": "UAT-11", "name": "Paste Data Uses Inline Modal", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "Complete UAT tests 3-11 in browser", "context": "User manually testing dark mode UI", "blocking": true}
+  ],
+  "uncommitted_files": [".planning/phases/16-dark-mode-visuals-toggle/16-UAT.md"],
+  "next_action": "Run /gsd-verify-work 16 — resume at test 3 (Nav Bar in Dark Mode). UAT file has tests 1-2 marked pass.",
+  "context_notes": "Phase 17 (Test Coverage) fully executed this session — 146 tests pass, npm run coverage works. Phase 16 execution was previously complete; now doing deferred UAT. User confirmed tests 1-2 pass and paused."
 }
