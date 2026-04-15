@@ -99,7 +99,7 @@ export const SessionService = {
   deleteUnplayedRoundsAfter(roundIndex) {
     const session = this.getActiveSession();
     if (session) {
-      session.rounds = session.rounds.filter(r => r.played || r.index <= roundIndex);
+      session.rounds = session.rounds.filter((r, i) => r.played || i <= roundIndex);
       this.updateSession(session);
     }
   },
@@ -270,7 +270,8 @@ export const SessionService = {
    */
   updateRound(roundIndex, updatedRound) {
     const session = this.getActiveSession();
-    if (!session || !session.rounds[roundIndex]) return;
+    if (!session) return false;
+    if (roundIndex < 0 || !session.rounds[roundIndex]) return false;
 
     const round = session.rounds[roundIndex];
 
@@ -280,7 +281,7 @@ export const SessionService = {
 
       // HIST-03: inline-delete subsequent unplayed rounds
       // (not delegating to deleteUnplayedRoundsAfter — that method has its own updateSession call)
-      session.rounds = session.rounds.filter(r => r.played || r.index <= roundIndex);
+      session.rounds = session.rounds.filter((r, i) => r.played || i <= roundIndex);
 
       // Persist BEFORE generateNextRound — generateNextRound reads from localStorage (D-01)
       this.updateSession(session);
@@ -289,9 +290,12 @@ export const SessionService = {
       this.generateNextRound();
     } else {
       // HIST-01: replace unplayed round in place (D-02)
-      session.rounds[roundIndex] = { ...updatedRound, index: roundIndex };
+      // Explicitly omit 'source' to prevent caller-supplied source from leaking in
+      const { source: _omit, ...rest } = updatedRound;
+      session.rounds[roundIndex] = { ...rest, index: roundIndex };
       this.updateSession(session);
     }
+    return true;
   },
 
   updateSession(updatedSession) {
