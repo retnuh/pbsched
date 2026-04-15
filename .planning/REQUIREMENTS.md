@@ -78,9 +78,9 @@
 
 ### Documentation & Copy
 
-- [ ] **DOCS-01**: In-app Help screen uses plain language and accurately describes all current features including dark mode and match editing
-- [ ] **DOCS-02**: GitHub README opens with what the app does in one plain sentence, with step-by-step instructions written for a phone-holding organizer at a court
-- [ ] **DOCS-03**: All user-facing text in the app (button labels, hint text, toast messages, error states, empty states) uses plain language appropriate for a non-developer organizer
+- [x] **DOCS-01**: In-app Help screen uses plain language and accurately describes all current features including dark mode and match editing
+- [x] **DOCS-02**: GitHub README opens with what the app does in one plain sentence, with step-by-step instructions written for a phone-holding organizer at a court
+- [x] **DOCS-03**: All user-facing text in the app (button labels, hint text, toast messages, error states, empty states) uses plain language appropriate for a non-developer organizer
 
 ## Out of Scope
 
@@ -131,9 +131,9 @@
 | TEST-02 | Phase 17 | Pending |
 | TEST-03 | Phase 17 | Pending |
 | TEST-04 | Phase 17 | Pending |
-| DOCS-01 | Phase 18 | Pending |
-| DOCS-02 | Phase 18 | Pending |
-| DOCS-03 | Phase 18 | Pending |
+| DOCS-01 | Phase 18 | Complete |
+| DOCS-02 | Phase 18 | Complete |
+| DOCS-03 | Phase 18 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total

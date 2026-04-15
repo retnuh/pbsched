@@ -170,7 +170,7 @@ Plans:
 
 **Goal:** Track which side of the court (teamA/teamB) each player has been on and apply a small penalty (1–2) to discourage always playing the same side
 **Requirements:** TBD
-**Plans:** 3/3 plans complete
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
@@ -189,4 +189,4 @@ Plans:
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
 | 17. Test Coverage | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
-| 18. Documentation & Copy | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
+| 18. Documentation & Copy | Milestone 8 | 4/4 | Complete   | 2026-04-15 |
