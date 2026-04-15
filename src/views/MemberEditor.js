@@ -83,7 +83,7 @@ export function mount(el, params) {
     `).join('');
     // Set member names via textContent to avoid XSS from localStorage values
     freshClub.members.forEach(member => {
-      const span = memberListEl.querySelector(`[data-member-name="${member.id}"]`);
+      const span = memberListEl.querySelector(`[data-member-name="${CSS.escape(member.id)}"]`);
       if (span) span.textContent = member.name;
     });
   }
@@ -223,8 +223,9 @@ export function mount(el, params) {
       `;
       // T-08-02: set text via textContent to prevent XSS from crafted localStorage values
       nameDisplay.querySelector('#club-name-heading').textContent = displayName;
-      // Re-bind the edit button after innerHTML replacement
+      // Re-bind the edit button and heading click after innerHTML replacement
       nameDisplay.querySelector('#edit-club-name').addEventListener('click', activateEdit);
+      nameDisplay.querySelector('#club-name-heading').addEventListener('click', activateEdit);
     }
 
     input.addEventListener('keydown', (e) => {
@@ -283,7 +284,7 @@ export function mount(el, params) {
     } else if (action === 'rename-member') {
       const member = ClubService.getClub(clubId).members.find(m => m.id === memberId);
       if (!member) return;
-      const nameSpan = el.querySelector(`[data-member-name="${memberId}"]`);
+      const nameSpan = el.querySelector(`[data-member-name="${CSS.escape(memberId)}"]`);
       if (!nameSpan) return;
 
       const currentName = member.name;
