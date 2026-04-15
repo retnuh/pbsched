@@ -171,7 +171,7 @@ export function mount(el, params) {
           ${alternatives.map((alt, index) => `
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div class="p-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
-                <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">Option ${index + 1} (Score: ${Math.round(alt.score)})</h3>
+                <h3 class="font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-xs">${index === 0 ? 'Best Match' : index === 1 ? 'Good Match' : `Option ${index + 1}`}</h3>
                 <button data-action="pick-alt" data-index="${index}" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold shadow-sm">
                   Select
                 </button>
@@ -296,7 +296,7 @@ export function mount(el, params) {
     if (rounds.length === 0) {
       listEl.innerHTML = `
         <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-          <p class="text-gray-500 dark:text-gray-400">Wait, where did the rounds go?</p>
+          <p class="text-gray-500 dark:text-gray-400">No rounds yet — tap Generate Round to get started.</p>
           <button id="gen-first" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">
             Generate Round
           </button>
