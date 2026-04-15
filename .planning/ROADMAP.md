@@ -157,7 +157,12 @@ Plans:
   1. The in-app Help screen accurately describes all current features — including dark mode and match editing — using plain language with no technical jargon
   2. The GitHub README opens with one plain sentence describing the app, followed by step-by-step instructions a phone-holding organizer can follow at a court
   3. All button labels, hint text, toast messages, error states, and empty states across the app use plain organizer-appropriate language (no developer terms, no placeholder copy)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Help screen rewrite: workflow-based sections covering all current features (DOCS-01)
+- [ ] 18-02-PLAN.md — README restructure: organizer opener first, developer content below rule (DOCS-02)
+- [ ] 18-03-PLAN.md — Copy audit: quality labels in alternatives panel, plain-language Settings labels (DOCS-03)
 
 ## Backlog
 
