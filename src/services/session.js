@@ -267,6 +267,13 @@ export const SessionService = {
    *   - marks round with source: 'edited' (played: true preserved)
    *   - deletes all subsequent unplayed rounds
    *   - persists FIRST, then calls generateNextRound (generateNextRound reads from storage)
+   *
+   * NOTE (11-M-01): QuotaExceededError is swallowed by StorageAdapter.set. On storage-full failures
+   * the in-memory state will appear correct, but the data will revert on hard refresh since it was
+   * never persisted.
+   *
+   * NOTE (11-M-02): This method always calls generateNextRound() after a played-round edit,
+   * creating a new unplayed round even if the session was at its natural end.
    */
   updateRound(roundIndex, updatedRound) {
     const session = this.getActiveSession();
@@ -300,7 +307,7 @@ export const SessionService = {
 
   updateSession(updatedSession) {
     // Re-stamp index to match array position before persisting (WR-02: keeps r.index in sync)
-    updatedSession.rounds.forEach((r, i) => { r.index = i; });
+    updatedSession.rounds = updatedSession.rounds.map((r, i) => ({ ...r, index: i }));
     const sessions = this.getSessions();
     const idx = sessions.findIndex(s => s.id === updatedSession.id);
     if (idx !== -1) {
