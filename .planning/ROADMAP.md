@@ -34,7 +34,7 @@
 - [ ] **Phase 15: Dark Mode Foundation** — Storage v2 migration, ThemeService, FOUC prevention script, @custom-variant CSS line; system-preference detection and theme persistence
 - [x] **Phase 16: Dark Mode Visuals & Toggle** — dark: utilities on all views; zone chip and SortableJS dark overrides; Settings toggle with manual override (light/dark/auto)
 - [x] **Phase 17: Test Coverage** — Install @vitest/coverage-v8; ThemeService tests, storage migration regression test, club.js/html.js unit tests; coverage report via `npm run coverage` (completed 2026-04-15)
-- [ ] **Phase 18: Documentation & Copy** — Help screen rewrite; README rewrite; plain-language copy audit across all views
+- [x] **Phase 18: Documentation & Copy** — Help screen rewrite; README rewrite; plain-language copy audit across all views (completed 2026-04-15)
 
 ## Phase Details
 
@@ -160,9 +160,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Help screen rewrite: workflow-based sections covering all current features (DOCS-01)
-- [ ] 18-02-PLAN.md — README restructure: organizer opener first, developer content below rule (DOCS-02)
-- [ ] 18-03-PLAN.md — Copy audit: quality labels in alternatives panel, plain-language Settings labels (DOCS-03)
+- [x] 18-01-PLAN.md — Help screen rewrite: workflow-based sections covering all current features (DOCS-01)
+- [x] 18-02-PLAN.md — README restructure: organizer opener first, developer content below rule (DOCS-02)
+- [x] 18-03-PLAN.md — Copy audit: quality labels in alternatives panel, plain-language Settings labels (DOCS-03)
 
 ## Backlog
 
@@ -189,4 +189,4 @@ Plans:
 | 15. Dark Mode Foundation | Milestone 8 | 0/2 | Not started | - |
 | 16. Dark Mode Visuals & Toggle | Milestone 8 | 4/5 | In Progress|  |
 | 17. Test Coverage | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
-| 18. Documentation & Copy | Milestone 8 | 0/TBD | Not started | - |
+| 18. Documentation & Copy | Milestone 8 | 3/3 | Complete   | 2026-04-15 |
