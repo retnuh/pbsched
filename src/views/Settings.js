@@ -27,10 +27,10 @@ export function mount(el, params) {
           </div>
         </div>
 
-        <!-- Scheduler Optimization -->
+        <!-- Scheduling Preferences -->
         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
           <div>
-            <h2 class="font-bold text-gray-700 dark:text-gray-200">Scheduler Optimization</h2>
+            <h2 class="font-bold text-gray-700 dark:text-gray-200">Scheduling Preferences</h2>
             <p class="text-xs text-gray-500 dark:text-gray-400 italic">Control how strongly the scheduler avoids repeating matchups. Drag to 0 to turn off a preference entirely.</p>
           </div>
 
@@ -62,7 +62,7 @@ export function mount(el, params) {
               <p class="text-[10px] text-gray-400 dark:text-gray-500">How strongly to avoid making the same player sit out again before others have had a turn.</p>
             </div>
 
-            <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-2">Short-Sided Matches</p>
+            <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-2">Uneven Courts</p>
 
             <div class="space-y-2">
               <div class="flex justify-between text-sm font-bold">
@@ -77,7 +77,7 @@ export function mount(el, params) {
 
             <div class="space-y-2">
               <div class="flex justify-between text-sm font-bold">
-                <label>3-Way Solo</label>
+                <label>Solo on 3-Player Court</label>
                 <span id="val-threeway-solo" class="text-blue-600 dark:text-blue-400">${settings.penaltyThreeWaySolo || 20}</span>
               </div>
               <input type="range" id="weight-threeway-solo" min="0" max="50"
@@ -88,7 +88,7 @@ export function mount(el, params) {
 
             <div class="space-y-2">
               <div class="flex justify-between text-sm font-bold">
-                <label>3-Way Pair</label>
+                <label>Pair on 3-Player Court</label>
                 <span id="val-threeway-pair" class="text-blue-600 dark:text-blue-400">${settings.penaltyThreeWayPair || 15}</span>
               </div>
               <input type="range" id="weight-threeway-pair" min="0" max="50"

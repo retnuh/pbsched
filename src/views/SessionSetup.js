@@ -63,7 +63,7 @@ export function mount(el, params) {
 
       <div class="flex justify-between items-center text-sm">
         <p class="text-gray-500 dark:text-gray-400">Pick attending players from <strong>${club.name}</strong></p>
-        <button id="toggle-all" class="text-blue-600 dark:text-blue-400 font-bold">Invert</button>
+        <button id="toggle-all" class="text-blue-600 dark:text-blue-400 font-bold">Invert Selection</button>
       </div>
 
       <div id="attendees-list" class="space-y-2 pb-24"></div>
