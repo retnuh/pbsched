@@ -20,9 +20,15 @@ export const ThemeService = {
     this.applyTheme();
     try {
       _mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      _mediaListener = () => {
+      _mediaListener = (evt) => {
         if (this.getMode() === 'auto') {
-          this.applyTheme();
+          // Use the event's matches value when available (avoids a redundant matchMedia() call);
+          // fall back to applyTheme() for environments that don't pass the event.
+          if (evt && typeof evt.matches === 'boolean') {
+            document.documentElement.classList.toggle('dark', evt.matches);
+          } else {
+            this.applyTheme();
+          }
         }
       };
       _mediaQuery.addEventListener('change', _mediaListener);
@@ -56,7 +62,7 @@ export const ThemeService = {
     } else {
       // 'auto' or unset — follow system preference
       try {
-        isDark = (_mediaQuery ?? window.matchMedia('(prefers-color-scheme: dark)')).matches;
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       } catch (e) {
         isDark = false; // safe default: light
       }
