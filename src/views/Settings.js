@@ -97,7 +97,7 @@ export function mount(el, params) {
               <p class="text-[10px] text-gray-400 dark:text-gray-500">How strongly to avoid repeating the same pair on the full-side of a 3-player court again.</p>
             </div>
 
-            <button id="reset-weights" class="text-xs font-bold text-blue-600 hover:underline">Reset to Defaults</button>
+            <button id="reset-weights" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Reset to Defaults</button>
           </div>
         </div>
 
@@ -202,8 +202,8 @@ export function mount(el, params) {
     el.querySelectorAll('[data-mode]').forEach(b => {
       const isActive = b.getAttribute('data-mode') === mode;
       b.className = `flex-1 py-3 text-sm font-bold transition ${
-        isActive ? 'bg-blue-600 text-white'
-                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+        isActive ? 'bg-blue-600 text-white transition'
+                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition'
       }`;
     });
   });
