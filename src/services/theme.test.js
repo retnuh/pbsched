@@ -61,13 +61,8 @@ describe('ThemeService — DARK-01: system preference detection', () => {
     // get the change callback registered by init()
     const [eventName, callback] = addListenerMock.mock.calls[0]
     expect(eventName).toBe('change')
-    // simulate OS switching to dark
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      configurable: true,
-      value: vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
-    })
-    callback()
+    // simulate OS switching to dark — pass evt.matches directly (realistic MediaQueryListEvent)
+    callback({ matches: true })
     expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 

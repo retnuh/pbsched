@@ -62,7 +62,7 @@ export const ThemeService = {
     } else {
       // 'auto' or unset — follow system preference
       try {
-        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        isDark = (_mediaQuery ?? window.matchMedia('(prefers-color-scheme: dark)')).matches;
       } catch (e) {
         isDark = false; // safe default: light
       }
