@@ -927,20 +927,20 @@ describe('Phase 14: Court Management & Polish', () => {
 
   // ---------------------------------------------------------------------------
   describe('BENCH-01: Sit-out count badges on bench chips', () => {
-    test('bench chip for p5 shows sit-out count from all session rounds (including current draft)', () => {
-      // makeSessionWithHistory: p5 sits out in rounds 0, 1, and 2 — count = 3
+    test('bench chip for p5 shows sit-out count from all session rounds except the round being edited', () => {
+      // makeSessionWithHistory: p5 sits out in rounds 0, 1 (played) and round 2 (being edited).
+      // sit-count excludes the current round (round 2), so count = 2.
       const session = makeSessionWithHistory()
       setupEditorWithSession(session, 2)
       const bench = el.querySelector('[data-zone="bench"]')
       const p5Chip = bench.querySelector('[data-player-id="p5"]')
       expect(p5Chip).not.toBeNull()
-      // Implementation counts all session.rounds (including draft round) → 3×
-      expect(p5Chip.textContent).toContain('3×')
+      expect(p5Chip.textContent).toContain('2×')
     })
 
-    test('bench chip for p1 (never sat out) shows 0×', () => {
-      // p1 is always on court in makeSessionWithHistory — but we need p1 on bench
-      // Set up a custom session where p1 sits out in the current draft only
+    test('bench chip for p1 sitting out only in the current draft shows 0× (current round excluded)', () => {
+      // Set up a session where p1 sits out only in the round being edited (round 0).
+      // Since sit-count excludes the round being edited, p1's badge should show 0×.
       const session = {
         id: 'session-1',
         clubId: 'club-1',
@@ -964,8 +964,8 @@ describe('Phase 14: Court Management & Polish', () => {
       const bench = el.querySelector('[data-zone="bench"]')
       const p1Chip = bench.querySelector('[data-player-id="p1"]')
       expect(p1Chip).not.toBeNull()
-      // p1 sits out in this round only (count=1 in session.rounds, but draft is included)
-      expect(p1Chip.textContent).toContain('1×')
+      // Current round is excluded from sit-count, so p1 shows 0×
+      expect(p1Chip.textContent).toContain('0×')
     })
 
     test('bench chip for p5 (2 played sit-outs, not in current draft bench) shows played count', () => {
@@ -994,11 +994,12 @@ describe('Phase 14: Court Management & Polish', () => {
       StorageAdapter.set('clubs', CLUBS_DATA_5P)
       StorageAdapter.set('sessions', [session])
       mount(el, { roundIndex: '2' })
-      // p1 sits out in rounds[2] (stored in session), so count = 1
+      // p1 sits out in rounds[2] (the round being edited), which is excluded from sit-count.
+      // p1 has never sat out in any other stored round, so badge shows 0×.
       const bench = el.querySelector('[data-zone="bench"]')
       const p1Chip = bench.querySelector('[data-player-id="p1"]')
       expect(p1Chip).not.toBeNull()
-      expect(p1Chip.textContent).toContain('1×')
+      expect(p1Chip.textContent).toContain('0×')
     })
 
     test('court chips (in data-zone="court-0-a") do NOT contain the "×" badge text', () => {
@@ -1025,14 +1026,19 @@ describe('Phase 14: Court Management & Polish', () => {
       expect(Haptics.medium).toHaveBeenCalledOnce()
     })
 
-    test('Haptics.medium is called on every drag-end (multiple drags = multiple calls)', () => {
+    test('Haptics.medium is called for each drag-end that changes state', () => {
       const round = { index: 0, played: false, courts: [{ teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] }], sittingOut: [] }
       setupEditor(round)
+      // First drag: move p4 to bench
       const p4Chip = el.querySelector('[data-player-id="p4"]')
       const bench = el.querySelector('[data-zone="bench"]')
       bench.appendChild(p4Chip)
       mockSortable.instances[0].options.onEnd({ item: p4Chip })
-      mockSortable.instances[0].options.onEnd({ item: p4Chip })
+      expect(Haptics.medium).toHaveBeenCalledTimes(1)
+      // Second drag: move p3 to bench (another real change)
+      const p3Chip = el.querySelector('[data-player-id="p3"]')
+      bench.appendChild(p3Chip)
+      mockSortable.instances[0].options.onEnd({ item: p3Chip })
       expect(Haptics.medium).toHaveBeenCalledTimes(2)
     })
   })
