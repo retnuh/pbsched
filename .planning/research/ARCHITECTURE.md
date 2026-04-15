@@ -1,7 +1,7 @@
 # Architecture Research
 
 **Domain:** Client-only static SPA — scheduling/round-generation tool
-**Researched:** 2026-04-02
+**Researched:** 2026-04-02 (original) / 2026-04-14 (Milestone 8 integration update)
 **Confidence:** HIGH (well-established patterns, no novel technology required)
 
 ## Standard Architecture
@@ -127,6 +127,7 @@ interface AppSettings {
   candidateCount: number;            // default: 200
   topNToShow: number;                // default:   3
   oddPlayerFallback: 'sit-out' | 'three-player-court';
+  theme: 'system' | 'light' | 'dark';  // added Milestone 8
 }
 
 interface SessionSettings extends AppSettings {}  // snapshot copy
@@ -338,13 +339,15 @@ The nav bar is rendered outside `#/app` as a persistent shell element. The route
 │   ├── scheduler.js      # pure functions: buildPairHistory, generateRounds, score
 │   ├── services/
 │   │   ├── club.js       # ClubService: CRUD via StorageAdapter
-│   │   └── session.js    # SessionService: session lifecycle, round state
+│   │   ├── session.js    # SessionService: session lifecycle, round state
+│   │   └── theme.js      # ThemeService: dark mode (added Milestone 8)
 │   └── views/
 │       ├── ClubManager.js
 │       ├── MemberEditor.js
 │       ├── SessionSetup.js
 │       ├── RoundDisplay.js
-│       └── Settings.js
+│       ├── Settings.js
+│       └── Help.js
 ```
 
 No bundler required. All `src/` files are ES modules loaded via `<script type="module">` in `index.html`. Works natively in all modern browsers and deploys to GitHub Pages as plain files.
@@ -443,6 +446,165 @@ This order ensures each phase has a complete, runnable foundation before the nex
 
 ---
 
+## Milestone 8 Integration: Dark Mode, Test Coverage, Help Rewrite
+
+This section documents how Milestone 8 features integrate with the existing architecture. All changes are additive; no structural refactoring is needed.
+
+### Component Map: New vs Modified
+
+```
+src/
+├── services/
+│   └── theme.js          [NEW — ThemeService]
+│   └── theme.test.js     [NEW — unit tests]
+├── views/
+│   ├── Help.js           [MODIFIED — content rewrite only, same interface]
+│   ├── MatchEditor.test.js  [MODIFIED — gap-filling tests added]
+│   ├── RoundDisplay.test.js [MODIFIED — gap-filling tests added]
+│   └── Settings.js       [MODIFIED — add Appearance section with dark toggle]
+├── main.js               [MODIFIED — ThemeService.init() before initRouter()]
+├── storage.js            [MODIFIED — SCHEMA_VERSION bump + v2 migration]
+└── style.css             [MODIFIED — dark variant config + zone/sortable overrides]
+index.html                [MODIFIED — dark: classes on body and nav]
+```
+
+The router, all other view modules, ClubService, SessionService, and SchedulerService are untouched.
+
+### Dark Mode: ThemeService
+
+ThemeService is a plain ES module singleton in `src/services/theme.js`. It:
+- reads `StorageAdapter.get('settings').theme` on init (values: `'system' | 'light' | 'dark'`, default `'system'`)
+- checks `window.matchMedia('(prefers-color-scheme: dark)')` when preference is `'system'`
+- adds or removes `class="dark"` on `document.documentElement`
+- registers a `matchMedia` change listener (only active when preference is `'system'`)
+- exposes `toggle()` (cycles system → light → dark → system) and `current()` for Settings UI
+
+`main.js` calls `ThemeService.init()` before `initRouter()` so the dark class is present before the first view paints. This eliminates the flash-of-wrong-theme.
+
+### Dark Mode: CSS Strategy
+
+The project uses Tailwind CSS v4 via `@tailwindcss/vite`. The CSS dark mode variant is declared once in `style.css`:
+
+```css
+@variant dark (&:where(.dark, .dark *));
+```
+
+This makes all Tailwind `dark:` utilities cascade automatically from `<html class="dark">`. No per-view changes are needed for standard Tailwind utility classes.
+
+Exception: `style.css` contains hardcoded `background-color` values (not Tailwind utilities) for zone chips and SortableJS drag states. These need explicit dark overrides added in `style.css`:
+
+```css
+/* zone chip dark overrides */
+.dark [data-zone$="-a"] [data-player-id] { background-color: #1e3a5f; border-color: #2563eb; color: #bfdbfe; }
+.dark [data-zone$="-b"] [data-player-id] { background-color: #431407; border-color: #ea580c; color: #fed7aa; }
+.dark [data-zone="bench"] [data-player-id] { background-color: #374151; border-color: #4b5563; color: #d1d5db; }
+/* sortable dark overrides */
+.dark .sortable-ghost { border-color: #f9fafb !important; }
+.dark .sortable-swap  { border-color: #60a5fa !important; }
+```
+
+`index.html` body and nav need dark-mode Tailwind utility classes added inline:
+
+```html
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 ...">
+<nav class="... bg-white/90 dark:bg-gray-900/90 border-gray-200 dark:border-gray-700 ...">
+```
+
+### Dark Mode: Persistence Data Flow
+
+```
+App boot
+  → main.js: ThemeService.init()
+    → StorageAdapter.get('settings').theme  (default: 'system' via v2 migration)
+    → if 'system': matchMedia check → resolve to light or dark
+    → document.documentElement.classList.toggle('dark', shouldBeDark)
+    → if 'system': matchMedia.addEventListener('change', reEvaluate)
+
+User taps toggle in Settings
+  → ThemeService.toggle()
+    → cycles: system → light → dark → system
+    → StorageAdapter.set('settings', { ...settings, theme: newValue })
+    → document.documentElement.classList.toggle('dark', ...)
+    → Settings view updates toggle label (re-reads ThemeService.current())
+```
+
+### Dark Mode: Storage Migration
+
+`storage.js` currently has `SCHEMA_VERSION = 1`. Milestone 8 increments it to 2. The v2 migration adds `theme: 'system'` to the `settings` object in any existing state blob:
+
+```javascript
+2: (data) => ({
+  ...data,
+  settings: { theme: 'system', ...data.settings },
+  schemaVersion: 2,
+}),
+```
+
+This is non-destructive: existing settings keys survive; `theme` is set only when absent.
+
+### Help Rewrite: No Architecture Change
+
+`Help.js` keeps the identical `mount(el, params)` / `export function unmount() {}` signature. The router calls these by convention; no router change is needed. Only the `el.innerHTML` template string changes. The current Help content references jargon ("three-player court", "2v1", penalty weight specifics) that real users find confusing — the rewrite addresses language only.
+
+### Test Coverage: Gap-Filling
+
+Existing test files and what needs adding:
+
+| File | Gap | Approach |
+|------|-----|----------|
+| `views/MatchEditor.test.js` | Interaction paths for save/cancel/validation are partial | Add tests for: invalid court state blocks save; valid state enables save; cancel navigates back |
+| `views/RoundDisplay.test.js` | Undo button behavior, player-add mid-session flow | Add tests for: undo marks last played round as unplayed; add-player triggers round regeneration |
+| `services/session.test.js` | Already has good coverage; minor edge cases around empty rounds | Add: session with 0 unplayed rounds when extending |
+| `services/theme.test.js` | Does not exist — ThemeService is new | New file; stubs `window.matchMedia`; tests init, toggle cycle, StorageAdapter persistence |
+| `storage.test.js` | v2 migration path not yet covered | Extend: existing data without `theme` key migrates cleanly to `'system'` |
+
+The test environment (happy-dom + vitest) does not implement `window.matchMedia`. Tests for ThemeService must stub it:
+
+```javascript
+vi.stubGlobal('matchMedia', (query) => ({
+  matches: query.includes('dark') ? false : true,
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+}))
+```
+
+Follow the existing `test-setup.js` pattern: globals patched at setup time, not inside individual `beforeEach`.
+
+### Build Order for Milestone 8
+
+```
+1. storage.js — SCHEMA_VERSION 1→2; v2 migration adds theme:'system'
+   Extend storage.test.js to cover the migration
+
+2. services/theme.js + services/theme.test.js
+   ThemeService reads StorageAdapter, applies <html> class, handles matchMedia
+   Fully tested before being wired to UI
+
+3. main.js — ThemeService.init() before initRouter()
+   Ensures dark class is on <html> before any view paints
+
+4. style.css — @variant dark config + zone chip/sortable dark overrides
+   index.html — dark: classes on <body> and <nav>
+   (Visual steps; verify in browser; not unit-testable)
+
+5. Settings.js — Appearance section with theme toggle
+   Depends on ThemeService (step 2)
+
+6. Test gap-filling — MatchEditor, RoundDisplay, SessionService
+   Independent of dark mode; can overlap with steps 4-5
+
+7. Help.js — plain-language content rewrite
+   No dependencies; independent of dark mode
+   Can be done in parallel with steps 4-6
+
+8. README.md — non-developer rewrite
+   External; no code dependencies; last
+```
+
+Steps 6-7-8 are fully independent of each other and of dark mode once step 5 is stable.
+
+---
+
 ## Architectural Patterns
 
 ### Pattern 1: Module as Singleton Service
@@ -492,6 +654,12 @@ export function unmount() {
 **When to use:** Always for the scheduler — makes unit testing trivial.
 **Trade-offs:** Rebuilding history on each regeneration call is O(rounds × players²) but negligible at target scale (< 0.5 ms).
 
+### Pattern 4: ThemeService as Pre-Router Bootstrap (Milestone 8)
+
+**What:** `ThemeService.init()` runs in `main.js` before `initRouter(appEl)` so the `dark` class is on `<html>` before any view mounts. All Tailwind `dark:` utilities cascade from there without per-view logic.
+**When to use:** Any time a global CSS state must be applied before first paint.
+**Trade-offs:** None at this scale — one synchronous localStorage read. Not a network call.
+
 ---
 
 ## Anti-Patterns
@@ -526,6 +694,18 @@ export function unmount() {
 **Why it's wrong:** Combinatorial explosion. For 10 players across 8 rounds, the search space is astronomically large. Overkill for a tool where "good enough" is indistinguishable from optimal to the user.
 **Do this instead:** Greedy slot-by-slot generation with 200 random candidates per slot. Produces fair schedules in < 5 ms total.
 
+### Anti-Pattern 6: Dark Mode Preference Outside StorageAdapter (Milestone 8)
+
+**What people do:** `localStorage.setItem('theme', 'dark')` as a standalone key outside the `pb:all` blob.
+**Why it's wrong:** Bypasses migrations, invisible to import/export backup, creates a second source of truth alongside `StorageAdapter`.
+**Do this instead:** Add `theme` to the settings object inside the StorageAdapter blob via a v2 migration. It travels with backup/restore automatically.
+
+### Anti-Pattern 7: Per-View Dark Class Application (Milestone 8)
+
+**What people do:** Each view's `mount()` checks ThemeService and appends `dark:` classes manually to rendered HTML.
+**Why it's wrong:** Tailwind dark variants cascade automatically from `<html class="dark">`. Manual per-view dark classes duplicate work, miss new views added later, and defeat CSS cascade.
+**Do this instead:** Toggle `class="dark"` on `<html>` once in ThemeService. All views pick up dark variants with no changes.
+
 ---
 
 ## Scaling Considerations
@@ -552,6 +732,23 @@ This app has no server and no network calls, so "scaling" means "handles edge ca
 | Service ↔ StorageAdapter | Direct function call (imported) | Services import storage; views do not |
 | View ↔ SchedulerService | Views do NOT call scheduler directly | Only SessionService calls scheduler |
 | Router ↔ Views | `mount(el, params)` / `unmount()` protocol | Router owns the container element |
+| ThemeService ↔ StorageAdapter | ThemeService reads/writes `settings.theme` via StorageAdapter | Same rule as other services |
+| ThemeService ↔ DOM | Writes only `document.documentElement.classList` | Only ThemeService touches this class |
+
+### Milestone 8 Touch Points Summary
+
+| File | Change Type | Notes |
+|------|-------------|-------|
+| `src/services/theme.js` | New file | ThemeService module |
+| `src/services/theme.test.js` | New file | Stubs matchMedia; tests init/toggle/persistence |
+| `src/storage.js` | Modified | SCHEMA_VERSION 1→2; v2 migration adds `settings.theme:'system'` |
+| `src/main.js` | Modified | `ThemeService.init()` before `initRouter()` |
+| `src/style.css` | Modified | `@variant dark` config; zone chip dark overrides; sortable dark overrides |
+| `index.html` | Modified | `dark:` classes on `<body>` and `<nav>` |
+| `src/views/Settings.js` | Modified | Appearance section with toggle; calls ThemeService |
+| `src/views/Help.js` | Modified | Content only — mount/unmount interface unchanged |
+| `src/views/MatchEditor.test.js` | Modified | Gap-filling: save/cancel/validation paths |
+| `src/views/RoundDisplay.test.js` | Modified | Gap-filling: undo, mid-session add-player |
 
 ### External Integrations
 
@@ -564,10 +761,10 @@ None. The entire app is self-contained static files. No analytics, no CDN depend
 - Hash routing for GitHub Pages static sites: [DEV Community — SPA Routing Using Hash or URL](https://dev.to/thedevdrawer/single-page-application-routing-using-hash-or-url-9jh) (MEDIUM confidence — community article, pattern is well-established)
 - localStorage migration pattern: [Simple Frontend Data Migration — Jan Monschke](https://janmonschke.com/simple-frontend-data-migration/) (HIGH confidence — describes recursive versioned migration pattern used widely)
 - Vanilla JS state management patterns: [CSS-Tricks — Build a State Management System with Vanilla JavaScript](https://css-tricks.com/build-a-state-management-system-with-vanilla-javascript/) (HIGH confidence — established reference)
-- Random candidate scheduling for small groups: [Diamond Scheduler — Optimizing Game Scheduling With Round-Robin Algorithms](https://cactusware.com/blog/round-robin-scheduling-algorithms) (MEDIUM confidence — domain-specific)
-- Pickleball round robin practices: [Pickleheads Round Robin Tool](https://www.pickleheads.com/round-robin) and [PlayRez Organizer Guide](https://playrez.com/blog/pickleball-round-robin) (MEDIUM confidence — confirms industry norms for partner variety)
+- Tailwind v4 dark mode strategy: direct inspection of `vite.config.js` (`@tailwindcss/vite` v4), `package.json`, and Tailwind v4 `@variant` syntax (HIGH confidence)
+- Codebase direct inspection: `src/main.js`, `src/router.js`, `src/style.css`, `src/storage.js`, `src/views/Settings.js`, `src/views/Help.js`, `index.html`, all test files (HIGH confidence)
 
 ---
 
 *Architecture research for: static pickleball practice scheduler SPA*
-*Researched: 2026-04-02*
+*Original: 2026-04-02 | Updated for Milestone 8: 2026-04-14*

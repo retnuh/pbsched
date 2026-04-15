@@ -1,8 +1,16 @@
 # Stack Research
 
-**Domain:** Static SPA — no backend, GitHub Pages deployment, mobile-first, localStorage persistence
-**Researched:** 2026-04-02
-**Confidence:** HIGH (all versions verified against official sources)
+**Domain:** Static SPA — Milestone 8 additions: dark mode, test coverage, documentation
+**Researched:** 2026-04-14
+**Confidence:** HIGH (all approaches verified against official Tailwind v4 docs and Vitest 4.x docs)
+
+---
+
+> **Scope note:** This document covers only the NEW capabilities for Milestone 8. The foundational stack
+> (Vite 8, Tailwind CSS v4, Vitest 4, vanilla JS, SortableJS, localStorage) is unchanged and already
+> in place. See the prior STACK.md (dated 2026-04-02) for foundational rationale.
+
+---
 
 ## Recommended Stack
 
@@ -10,120 +18,218 @@
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Vite | 8.x (latest: 8.0.3) | Build tool, dev server | Industry standard for static SPAs. Zero-config HMR, fast Rolldown-based builds. GitHub Pages deployment is first-class with official docs. No alternatives come close for DX in 2025. |
-| Vanilla JS (ES Modules) | ES2022+ | UI and app logic | Project constraint says "Vanilla JS or lightweight framework." For a scheduler app with ~5 screens and no complex shared state tree, vanilla JS with modules avoids framework overhead entirely. Preact is the right escalation path if component complexity grows. |
-| Tailwind CSS v4 | 4.x (latest: 4.2.2) | Utility-first styling | v4 integrates directly into Vite via `@tailwindcss/vite` — no PostCSS config, no separate config file, single `@import "tailwindcss"` in CSS. Zero-config mobile-first utilities. Fastest builds in v4 history (full builds 5x faster than v3). |
-| GitHub Actions | N/A | CI/CD for GitHub Pages | Official Vite docs recommend GitHub Actions over the legacy `gh-pages` branch approach. Push-to-deploy on main. Vite's static deploy guide has a copy-paste workflow. |
+| Tailwind CSS v4 dark variant | 4.2.2 (already installed) | Dark mode styling | No new dependency. v4 dark variant works out of the box with `@custom-variant dark` in CSS. Class-based toggle fits the "user-toggleable + system fallback" requirement. |
+| `@vitest/coverage-v8` | ^4.1.2 (matches vitest) | Coverage measurement | V8-native instrumentation — no Babel transform needed, works with the existing vanilla JS/ESM setup. Vitest auto-prompts install when `--coverage` is first run. |
 
 ### Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| `@tailwindcss/vite` | 4.x (matches tailwindcss) | Vite plugin for Tailwind v4 | Required alongside `tailwindcss` — this replaces the old PostCSS integration. Always install together. |
-| Vitest | 4.x (latest: 4.1.2) | Unit testing | Use for testing the variety/scoring algorithm (penalty weights, candidate scoring, round generation). Shares Vite config — zero additional setup. Do NOT use Jest: it requires separate transpilation config and doesn't share Vite's module graph. |
+| None new required | — | — | Dark mode is pure CSS+JS. Coverage is a dev dependency. Docs are Markdown files. No additional runtime libraries needed. |
 
 ### Development Tools
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| Vite dev server | Local development with HMR | `npm run dev` — instant start, no config needed for vanilla JS |
-| GitHub Actions deploy workflow | Push-to-deploy to GitHub Pages | Set `base` in `vite.config.js` to `'/<repo-name>/'` for project pages; `'/'` for user/org pages. Case-sensitive — match repo name exactly. |
-| ESLint | Linting | Optional but recommended. `npm create @eslint/config` for vanilla JS. Catches the localStorage type errors early. |
+| `@vitest/coverage-v8` | Code coverage provider | Install as dev dependency; invoke via `vitest --coverage`. Generates lcov, html, and text reports from V8's built-in coverage engine. |
+| `npx vitest --coverage` | Run tests with coverage | One-shot command; add as `"coverage"` script in package.json. No server required at runtime — output is static HTML files in `coverage/`. |
+
+---
+
+## Feature-by-Feature Approach
+
+### Dark Mode
+
+**Approach: Tailwind v4 class-based dark variant + inline FOUC-prevention script**
+
+Tailwind v4 ships with a `dark` variant that defaults to `prefers-color-scheme: dark` media query. For user-toggleable dark mode with a system-preference fallback, override to a class-based variant — this lets JS toggle the `.dark` class on `<html>` without requiring any new library.
+
+**CSS change (one line in `src/style.css`):**
+
+```css
+@import "tailwindcss";
+
+/* Override dark variant to use class — enables JS toggle */
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+**FOUC prevention (inline script in `<head>` of `index.html`):**
+
+```html
+<script>
+  (function () {
+    var stored = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (stored === 'dark' || (!stored && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
+```
+
+This script must be inline in `<head>`, before any CSS loads, to prevent flash of unstyled content (FOUC). It cannot live in a module script — modules are deferred.
+
+**JS toggle logic (new `src/utils/theme.js` module):**
+
+```js
+export function getTheme() {
+  return localStorage.getItem('theme') || 'system';
+}
+
+export function setTheme(value) {
+  // value: 'light' | 'dark' | 'system'
+  if (value === 'system') {
+    localStorage.removeItem('theme');
+  } else {
+    localStorage.setItem('theme', value);
+  }
+  applyTheme();
+}
+
+export function applyTheme() {
+  var stored = localStorage.getItem('theme');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle(
+    'dark',
+    stored === 'dark' || (!stored && prefersDark)
+  );
+}
+```
+
+**Why NOT CSS custom properties alone or media-query only:**
+
+- Media-query-only (`@media (prefers-color-scheme: dark)`) gives no user toggle — system setting is the only lever. The milestone requires both system detection AND a manual override that persists.
+- CSS custom properties alone (without the Tailwind `dark:` variant) would require rewriting all color utilities as variables — a large refactor of every view file. The Tailwind v4 `@custom-variant` approach requires zero changes to existing utility classes.
+- The class-based Tailwind variant has zero runtime cost: it's a CSS selector change compiled at build time. No JS framework, no extra CSS-in-JS.
+
+**Integration point:** Settings view gets a three-state toggle (Light / Dark / System). The `setTheme()` call is the only integration required — all `dark:` Tailwind classes in views are additive, not replacements.
+
+---
+
+### Test Coverage
+
+**Approach: `@vitest/coverage-v8` (V8 provider)**
+
+Vitest 4.x supports two coverage providers: `v8` and `istanbul`. V8 is the right choice for this project.
+
+**Why V8 over Istanbul:**
+
+| Criterion | V8 (`@vitest/coverage-v8`) | Istanbul (`@vitest/coverage-istanbul`) |
+|-----------|---------------------------|----------------------------------------|
+| Instrumentation method | Native V8 engine (zero transform overhead) | Babel source transform |
+| Works with vanilla JS ESM | Yes — no transform needed | Yes, but adds Babel to the chain |
+| Requires build config changes | No | No |
+| Reports | lcov, html, text, json | lcov, html, text, json (identical) |
+| Accuracy for vanilla JS | Slightly lower (byte-level, not statement) | Higher (statement-level) |
+| Recommended for | ESM projects without TypeScript | TypeScript projects, legacy CJS |
+
+For vanilla JS with no TypeScript, V8 native coverage is simpler and faster. The marginal accuracy difference (byte-level vs statement-level) does not matter for the goal (identifying untested files and functions).
+
+**Installation (one dev dependency):**
+
+```bash
+npm install -D @vitest/coverage-v8
+```
+
+**`vite.config.js` addition:**
+
+```js
+test: {
+  environment: 'happy-dom',
+  globals: true,
+  setupFiles: ['./src/test-setup.js'],
+  coverage: {
+    provider: 'v8',
+    include: ['src/**/*.js'],
+    exclude: [
+      'src/test-setup.js',
+      'src/**/*.test.js',
+    ],
+    reporter: ['text', 'html'],
+    reportsDirectory: './coverage',
+  },
+},
+```
+
+**`package.json` script addition:**
+
+```json
+"coverage": "vitest run --coverage"
+```
+
+The `html` reporter produces a static `coverage/index.html` file — open locally with any browser, no server required. The `text` reporter prints a summary table to the terminal. Neither requires a running Node.js process after the run completes.
+
+**Note on `coverage.all` (removed in Vitest 4.0):** The old `coverage.all: true` option was removed in Vitest 4.0. Use `coverage.include` to specify which files get reported even if not imported during tests. The config above covers all `src/**/*.js` files.
+
+---
+
+### Documentation Tooling
+
+**Approach: No tooling — plain Markdown files only**
+
+Neither the in-app Help screen nor the GitHub README needs a documentation generator for this project.
+
+- **In-app Help screen:** Rendered as static HTML inside the SPA's existing router/view pattern (`src/views/Help.js`). Content is plain strings or HTML in the JS file — the same pattern as all other views. No markdown parser, no MDX, no documentation framework.
+- **GitHub README:** Standard `README.md` at the project root. GitHub renders it automatically. No generator, no static site docs tool (Docusaurus, VitePress, etc.) is justified at this scope.
+
+Why NOT to add a documentation tool:
+
+| Option | Problem |
+|--------|---------|
+| VitePress | Adds a second build pipeline and `docs/` site, separate from the app. Overkill for one README and one help screen. |
+| Docusaurus | React-based, Node.js dev server, entirely separate project. Massively over-engineered. |
+| MDX in Vite | Requires `@vitejs/plugin-react` or `@vitejs/plugin-vue`. Introduces a framework dependency to the project solely for Markdown — wrong tradeoff. |
+| Marked / markdown-it (runtime) | Parsing Markdown at runtime in the browser adds a dependency and requires fetching `.md` files — network request, Content-Security-Policy concerns on GitHub Pages. Unnecessary when the content is short and maintained by a developer. |
+
+The Help screen content is short (one screen), changes rarely, and is written by the developer — not end-users. Plain JS string templates are appropriate.
+
+---
 
 ## Installation
 
 ```bash
-# Scaffold project
-npm create vite@latest pickle-ball -- --template vanilla
+# Dark mode — no new install required
+# (Tailwind v4 already installed; @custom-variant is a CSS directive, not a package)
 
-cd pickle-ball
-
-# Tailwind v4 with Vite plugin (replaces PostCSS approach)
-npm install tailwindcss @tailwindcss/vite
-
-# Testing (optional but recommended for algorithm code)
-npm install -D vitest
+# Coverage — one dev dependency
+npm install -D @vitest/coverage-v8
 ```
-
-Then update `vite.config.js`:
-
-```js
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-
-export default defineConfig({
-  base: '/pickle-ball/',   // match repo name exactly
-  plugins: [tailwindcss()],
-})
-```
-
-And in `src/style.css`:
-
-```css
-@import "tailwindcss";
-```
-
-That's the entire setup — no `tailwind.config.js`, no `postcss.config.js`.
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|-------------------------|
-| Vanilla JS | Preact 10.x | If the app grows to 8+ interactive components with shared state. Preact is 3kB, React-compatible hooks, drops in via Vite's preact template. Use it when prop drilling becomes painful. |
-| Vanilla JS | Vue 3 (via CDN/Vite) | If you already know Vue. No strong reason to pick it over vanilla for this scope; adds 40kB+ to bundle. |
-| Vanilla JS | React/Next.js | Overkill. React alone is ~30kB. This is a static tool, not a product with complex routing. |
-| Tailwind CSS v4 | Pico CSS | If you want zero-JS, pure semantic HTML styling with no build step at all. Valid for a proof of concept; outgrown quickly when you need custom mobile thumb zones and specific layout control. |
-| Tailwind CSS v4 | Bootstrap 5 | If the team knows Bootstrap cold. However, Bootstrap v5 adds ~22kB CSS + JS and is component-centric, not utility-first — fights mobile-first custom layouts. |
-| GitHub Actions | `gh-pages` npm package | Only if you refuse to use Actions. The `gh-pages` package works but requires a manual deploy command; Actions gives push-to-deploy automatically. |
-| Vitest | Jest | Never for a Vite project. Jest requires Babel or ts-jest transpilation, doesn't share Vite's module resolution. Vitest is Jest-compatible and needs zero extra config in a Vite project. |
+| Tailwind class-based dark variant | CSS custom properties (`--color-bg` etc.) | If you needed to theme third-party components or non-Tailwind elements extensively. For a pure Tailwind project, `dark:` utilities are simpler. |
+| Tailwind class-based dark variant | Media-query only (no toggle) | If the requirement were "system preference only, no manual override." It's simpler — but the milestone explicitly requires a manual toggle. |
+| `@vitest/coverage-v8` | `@vitest/coverage-istanbul` | If the project moved to TypeScript (Istanbul gives more accurate statement coverage for transpiled code). Not needed here. |
+| Plain Markdown docs | VitePress / Docusaurus | If documentation grew to 20+ pages, needed versioning, or had non-developer contributors. Not the case here. |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Tailwind Play CDN (`@tailwindcss/browser`) | Officially marked "not for production." Requires runtime CSS scanning — adds ~100ms on every page load. `@apply` is disabled. | `@tailwindcss/vite` plugin with a build step |
-| `create-react-app` | Unmaintained since 2022. No active maintainer, broken with Node 18+. | `npm create vite@latest` with the framework of your choice |
-| `gh-pages` branch (manual) | Error-prone, requires running a deploy script. Superseded by GitHub Actions. | `.github/workflows/deploy.yml` via GitHub Actions |
-| IndexedDB directly | Correct persistence choice for large structured data, but massively over-engineered for this app's data model (clubs + members + session history). localStorage is synchronous and simple. | localStorage with a thin JSON wrapper |
-| Sass/SCSS | Unnecessary with Tailwind v4. Tailwind v4 supports `@theme` and CSS custom properties natively — the main reasons to reach for Sass are gone. | Tailwind v4 `@theme` blocks in CSS |
-| Webpack | Obsolete as a greenfield choice. Config complexity is high, cold starts are slow. | Vite |
-
-## Stack Patterns by Variant
-
-**If the algorithm logic grows complex (penalty tuning, many weight parameters):**
-- Extract scheduling logic into pure ES module functions (`src/scheduler.js`)
-- Cover with Vitest unit tests
-- Keep UI layer as plain DOM manipulation — don't mix algorithm into event handlers
-
-**If you want to add a PWA manifest (offline support, "Add to Home Screen"):**
-- Add `vite-plugin-pwa` to Vite config — it generates the service worker and manifest automatically
-- This is not required for v1 but is a one-dependency addition later
-
-**If Vanilla JS state management becomes unwieldy (multiple views need the same data):**
-- Escalate to Preact 10.x (`npm create vite@latest -- --template preact`)
-- State stays in a top-level component, localStorage sync goes in a `useEffect`-equivalent
-- No other changes to tooling needed
+| Tailwind Play CDN for dark mode testing | CDN is "not for production," disables `@apply`, adds 100ms runtime cost | The existing `@tailwindcss/vite` build pipeline — dark mode classes compile to static CSS |
+| Deferred `<script type="module">` for FOUC prevention | Module scripts are deferred by the browser — they execute after the page renders, causing a visible flash | Inline `<script>` in `<head>` (synchronous, before CSS) |
+| `coverage.all: true` | Removed in Vitest 4.0 — will throw a config error | `coverage.include: ['src/**/*.js']` |
+| Istanbul provider | Requires Babel transform for ESM; adds complexity without benefit for plain vanilla JS | `@vitest/coverage-v8` |
+| Runtime Markdown parser for Help screen | Adds a library dependency and a network fetch for content that never changes at runtime | Static HTML/string content in the view's JS file |
 
 ## Version Compatibility
 
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| `vite@8.x` | Node.js 18+ | Vite 8 requires Node 18 minimum. GitHub Actions `node-version: '20'` is the safe default. |
-| `tailwindcss@4.x` + `@tailwindcss/vite@4.x` | `vite@5+` and `vite@8.x` | Keep both at the same major version (both `4.x`). Do not mix with the old `postcss`-based Tailwind v3 config. |
-| `vitest@4.x` | `vite@8.x` | Vitest 4 targets Vite 5+. Works with Vite 8. Both can share a single `vite.config.js`. |
+| `@vitest/coverage-v8@4.x` | `vitest@4.1.2` | Must match Vitest major version. Install `@vitest/coverage-v8@^4.1.2` to match. |
+| Tailwind `@custom-variant dark` directive | `tailwindcss@4.x` | This directive does not exist in Tailwind v3. Already on v4.2.2 — no issue. |
+| Inline `<script>` FOUC script | All browsers + PWA WebView | Synchronous inline scripts in `<head>` are supported universally. Works inside the existing PWA service worker scope without modification. |
 
 ## Sources
 
-- [Vite — Deploying a Static Site](https://vite.dev/guide/static-deploy) — GitHub Pages workflow verified, Vite 8.0.3 confirmed as current stable (HIGH confidence)
-- [GitHub Releases — vitejs/vite](https://github.com/vitejs/vite/releases) — v8.0.3 released March 26, 2026 (HIGH confidence)
-- [Tailwind CSS v4 Blog Post](https://tailwindcss.com/blog/tailwindcss-v4) — v4 architecture, Vite plugin, zero-config setup verified (HIGH confidence)
-- [Tailwind GitHub Releases](https://github.com/tailwindlabs/tailwindcss/releases) — v4.2.2 confirmed latest (HIGH confidence)
-- [Tailwind Play CDN Docs](https://tailwindcss.com/docs/installation/play-cdn) — "not intended for production" confirmed (HIGH confidence)
-- [Vitest 4.0 release announcement](https://vitest.dev/blog/vitest-4) — v4.1.2 confirmed current (HIGH confidence)
-- [Preact npm / GitHub releases](https://github.com/preactjs/preact/releases) — 10.27.2 stable, 11.0.0-beta.0 not production-ready (HIGH confidence)
-- WebSearch: mobile-first CSS frameworks 2025 — Pico CSS, Beer CSS, Tachyons alternatives reviewed (MEDIUM confidence)
-- WebSearch: localStorage best practices 2025 — JSON.parse/stringify wrapper pattern, try-catch availability check (MEDIUM confidence)
+- [Tailwind CSS v4 Dark Mode docs](https://tailwindcss.com/docs/dark-mode) — `@custom-variant dark`, three-way toggle pattern, FOUC prevention verified (HIGH confidence)
+- [Vitest 4.x Coverage docs — GitHub](https://github.com/vitest-dev/vitest/blob/main/docs/guide/coverage.md) — v8 vs istanbul providers, `coverage.include`, reporter options verified via Context7 (HIGH confidence)
+- [Vitest 4.0 Migration Guide](https://github.com/vitest-dev/vitest/blob/main/docs/guide/migration.md) — `coverage.all` removal, `coverage.include` replacement confirmed (HIGH confidence)
+- [Vitest Coverage Config reference](https://github.com/vitest-dev/vitest/blob/main/docs/config/coverage.md) — `thresholds`, `reporter`, `htmlDir` options verified via Context7 (HIGH confidence)
+- WebSearch: Tailwind CSS v4 dark mode class toggle localStorage 2025 — class-based pattern, inline script placement confirmed across multiple sources (MEDIUM, corroborated by official docs)
 
 ---
-*Stack research for: Pickleball Practice Scheduler — static SPA, GitHub Pages, mobile-first, localStorage*
-*Researched: 2026-04-02*
+*Stack research for: Pickleball Practice Scheduler — Milestone 8 dark mode, coverage, docs*
+*Researched: 2026-04-14*

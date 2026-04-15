@@ -280,3 +280,355 @@ This app has no authentication, no server, and stores no sensitive data. Securit
 ---
 *Pitfalls research for: Static pickleball practice scheduler SPA*
 *Researched: 2026-04-02*
+
+---
+---
+
+# Milestone 8 Pitfalls: Dark Mode, Test Coverage, and Help Content
+
+**Domain:** Adding dark mode, Vitest coverage improvements, and plain-language help to an existing vanilla JS / Tailwind v4 / Vitest / happy-dom mobile SPA
+**Researched:** 2026-04-14
+**Confidence:** HIGH (dark mode — Tailwind v4 docs + direct code inspection), MEDIUM (happy-dom coverage gaps — community issues + official docs), HIGH (help content — direct code audit + UX literature)
+
+---
+
+## Critical Pitfalls
+
+### Pitfall M8-1: Flash of Wrong Theme on Load (FOUC)
+
+**What goes wrong:**
+The page renders in light mode for a visible instant before JavaScript loads and applies the `dark` class to `<html>`. On OLED mobile screens at evening pickleball sessions — exactly when dark mode matters — this flash is jarring and signals a broken implementation.
+
+**Why it happens:**
+`src/main.js` is loaded via `<script type="module">`, which is always deferred. Module scripts execute after the document is parsed and initial paint occurs. Any theme initialization logic placed inside `main.js`, `initRouter()`, or a view's `mount()` function runs too late — the `bg-gray-50` body class has already painted white.
+
+**How to avoid:**
+Place a tiny blocking inline `<script>` in `<head>` — before any stylesheet link — that reads `localStorage.getItem('theme')` and sets the `dark` class on `<html>` synchronously:
+
+```html
+<script>
+  (function() {
+    var t = localStorage.getItem('theme');
+    if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
+```
+
+This script must be inline (not `src=`), because external scripts require a network round-trip that creates its own delay even if not deferred.
+
+**Warning signs:**
+- White flash visible on hard reload when OS is in dark mode
+- Flash visible when toggling from light to dark and then reloading the page
+- Dark mode toggle works mid-session but not after a fresh load
+
+**Phase to address:** Dark mode implementation — very first task before any component markup changes.
+
+---
+
+### Pitfall M8-2: Tailwind v4 Requires @custom-variant for Class-Based Dark Mode
+
+**What goes wrong:**
+Developer adds `dark:bg-gray-800` to every view, adds the JS toggle, verifies `.dark` appears on `<html>` in DevTools — and nothing changes visually. The `dark:` utilities do nothing when driven by a class toggle.
+
+**Why it happens:**
+Tailwind v4 removed `darkMode: 'class'` from `tailwind.config.js` (which no longer exists). The equivalent must be declared in `style.css` using the new CSS-first API. Without it, Tailwind generates only `@media (prefers-color-scheme: dark)` rules. The `.dark` class is on the DOM element but no CSS rule targets it.
+
+**How to avoid:**
+Add this line to `style.css` immediately after `@import "tailwindcss"`:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+This is a one-line change but it must happen before writing a single `dark:` utility anywhere in the codebase.
+
+**Warning signs:**
+- `dark:bg-gray-800` on a div; adding `.dark` to `<html>` via DevTools does nothing
+- Dark mode only activates by changing OS system preference
+- DevTools Elements panel shows no matching CSS rule for any `dark:` utility
+
+**Phase to address:** Dark mode implementation — first change to `style.css`, before any HTML edits.
+
+---
+
+### Pitfall M8-3: Hardcoded Hex Colors in style.css Bypass Dark Mode Entirely
+
+**What goes wrong:**
+The existing `style.css` contains 11+ hardcoded hex color values for zone-based player chips, SortableJS ghost states, and swap target highlights. None of these respond to `dark:` Tailwind utilities or to the `.dark` class on `<html>`. In dark mode, blue-team chips remain `#EFF6FF` — a near-white background — on top of a dark card, making them visually pop in the wrong direction. The drag ghost border stays `#111827` (fine), but the orange chip zone (`#FFF7ED`, `#FED7AA`) and bench zone (`#E5E7EB`) will look broken.
+
+**Why it happens:**
+These styles were written before dark mode was a requirement, using raw hex because Tailwind utility classes cannot be used inside `[data-zone$="-a"] [data-player-id]` attribute-descendant selectors. There was no reason to use CSS variables at the time.
+
+**How to avoid:**
+Convert each hex block to a CSS custom property pair defined under `:root { }` and `.dark { }`:
+
+```css
+:root {
+  --chip-a-bg: #EFF6FF;
+  --chip-a-border: #BFDBFE;
+  --chip-a-text: #1E40AF;
+}
+.dark {
+  --chip-a-bg: #1e3a5f;
+  --chip-a-border: #3b82f6;
+  --chip-a-text: #93C5FD;
+}
+[data-zone$="-a"] [data-player-id] {
+  background-color: var(--chip-a-bg);
+  border-color: var(--chip-a-border);
+  color: var(--chip-a-text);
+}
+```
+
+Repeat for zone `-b` (orange), bench (gray), and the SortableJS swap ring.
+
+**Warning signs:**
+- Enabling dark mode shows bright blue or orange player chips unchanged against a dark card background
+- Running `grep -n '#[0-9A-Fa-f]' src/style.css` returns any result not addressed with a `.dark` counterpart
+
+**Phase to address:** Dark mode implementation — audit style.css before touching any view markup.
+
+---
+
+### Pitfall M8-4: index.html Shell Has No Dark Mode Styles
+
+**What goes wrong:**
+Dark mode utilities are added to all the view components but `index.html`'s static markup — `<body class="bg-gray-50 text-gray-900">` and the bottom `<nav class="bg-white/90 border-gray-200">` — has no `dark:` variants. The nav bar stays white over a dark page. The body background doesn't match the card surfaces.
+
+**Why it happens:**
+The bottom nav and body are defined once in `index.html` and are never re-rendered by the router. Developers focus dark mode work on view components returned from `mount()` and forget the persistent shell.
+
+**How to avoid:**
+Treat `index.html` as a first-class dark mode target. Checklist of elements that need `dark:` variants: `<body>` background and text, `<nav>` background, border, and backdrop, each `<a>` element's active/inactive color classes, and any SVG stroke colors that reference Tailwind color classes.
+
+**Warning signs:**
+- Views look correct in dark mode but the nav bar is blindingly white at the bottom
+- Body background is a different dark value than the card surfaces, creating a mismatched stripe effect
+
+**Phase to address:** Dark mode implementation — add `index.html` to the audit checklist alongside views.
+
+---
+
+### Pitfall M8-5: window.matchMedia Throws in happy-dom Tests
+
+**What goes wrong:**
+Any test that imports a module which calls `window.matchMedia('(prefers-color-scheme: dark)')` at module scope or during initialization throws `TypeError: window.matchMedia is not a function`. This causes unrelated test failures and hides real bugs behind a test infrastructure error.
+
+**Why it happens:**
+happy-dom has partial `matchMedia` support added in v9.19.0, but the implementation of `prefers-color-scheme` matching is incomplete and may not be reliable without explicit configuration. The existing `test-setup.js` already demonstrates this pattern: it patches `localStorage` because happy-dom's default is a no-op. The same treatment is needed for `matchMedia`.
+
+**How to avoid:**
+Add a `window.matchMedia` mock to `src/test-setup.js` alongside the existing localStorage patch:
+
+```js
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  configurable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+```
+
+For tests that simulate dark system preference, override `matches: true` locally in the test body.
+
+**Warning signs:**
+- `TypeError: window.matchMedia is not a function` in any test run after dark mode logic is added
+- Tests pass locally on a macOS dark-mode system but fail in CI where system preference is light
+
+**Phase to address:** Test coverage — add to `test-setup.js` at the same time as dark mode theme logic tests are written.
+
+---
+
+### Pitfall M8-6: Coverage Report Hides Untested Files
+
+**What goes wrong:**
+`vitest --coverage` reports 75%+ overall coverage, which looks healthy. But `Help.js`, `Settings.js`, and any newly added dark mode module are never imported by any test file, so they contribute 0 lines to the denominator and don't appear in the report at all. The number is meaningless.
+
+**Why it happens:**
+Vitest's default coverage behavior (both v8 and Istanbul providers) only instruments files that are imported during the test run. Files with no test coverage are simply absent from the report rather than shown at 0%.
+
+**How to avoid:**
+Add coverage configuration to `vite.config.js` before running the initial coverage audit:
+
+```js
+test: {
+  coverage: {
+    provider: 'v8',
+    all: true,
+    include: ['src/**/*.js'],
+    exclude: ['src/test-setup.js'],
+  },
+}
+```
+
+With `all: true`, files with zero tests appear in the report at 0%, making gaps immediately visible.
+
+**Warning signs:**
+- Coverage summary shows a clean percentage but you know a view file has never been tested
+- Running `vitest --coverage` produces no row for `Help.js` or `Settings.js`
+
+**Phase to address:** Test coverage audit phase — configure before interpreting any coverage number.
+
+---
+
+### Pitfall M8-7: Help Screen Describes UI That No Longer Matches the App
+
+**What goes wrong:**
+The new help content references button labels, flows, or features that changed in earlier milestones. For example, the current `Help.js` describes "Tap Alternatives" — if that label changed in the MatchEditor during Milestone 13, the help text sends organizers looking for a button that doesn't exist. Even subtle drift (a flow that requires one more tap than described) erodes trust.
+
+**Why it happens:**
+Help screens are written once early in a project and rarely updated as the UI evolves. A rewrite done from memory of the intended design — rather than the shipped design — reproduces the same staleness in fresh prose.
+
+**How to avoid:**
+Before writing any new help content, walk through the live app on a real mobile device (or mobile-emulation mode) and record every visible button label, section heading, and interactive step. Use those exact strings in the help text. Treat the help rewrite as a documentation task that requires a test-pass against the running app, not a creative writing exercise.
+
+**Warning signs:**
+- Any help section that refers to a button name not present in the current view source files
+- A described workflow that requires more or fewer taps than the current app requires
+
+**Phase to address:** Help content rewrite — start with a live-app audit pass, not a blank document.
+
+---
+
+### Pitfall M8-8: Help Content Retains Developer Vocabulary for Non-Technical Organizers
+
+**What goes wrong:**
+The rewritten help uses terms like "generate," "algorithm," "session," "fallback strategy," "simulation," or "penalty weights." The current `Help.js` already contains "simulations," "strategy toggle," and "optimized." Non-technical pickleball organizers — the sole audience — do not know what these mean in context and will not connect them to what they see on screen.
+
+**Why it happens:**
+Developers write from the codebase's conceptual model, not the organizer's mental model. "The scheduler runs hundreds of simulations" is technically accurate and feels natural to a developer. It is meaningless to someone who just wants to know who plays who.
+
+**How to avoid:**
+Apply a strict plain-language filter after drafting. Read each sentence and ask: "would the person running tonight's pickleball practice understand this without explanation?" Replace:
+- "Generate" with "Create" or "Set up"
+- "Session" with "Practice" (the organizer's own word for it)
+- "Fallback strategy" with "What to do when someone's left over"
+- "Penalty weights / scoring weights" with "Fairness settings"
+- "Simulations / candidates" — remove entirely; the organizer doesn't need to know how the math works
+
+**Warning signs:**
+- Any sentence in the help that uses a word ending in "-ation" as a concept the user must understand
+- Terms that appear verbatim in variable names or function names in the codebase
+- The current "v1.0" version number in the footer — remove it; it will always be stale
+
+**Phase to address:** Help content rewrite — budget a dedicated jargon-elimination pass after the first draft.
+
+---
+
+### Pitfall M8-9: Dark Mode Preference Lost After Service Worker Update
+
+**What goes wrong:**
+After a service worker update triggers `window.location.reload()`, the page reloads cleanly. If the dark mode init logic was ever moved from an inline `<head>` script to an external JS file, the SW may serve a stale cached version of that file — causing the FOUC to return for one page load after each update.
+
+**Why it happens:**
+The update flow in `main.js` posts `SKIP_WAITING`, the new SW takes over, and `controllerchange` triggers a reload. The new SW serves the updated `index.html` correctly, but external scripts are cached separately and may lag. Inline scripts are part of the HTML document itself — they update atomically with `index.html`.
+
+**How to avoid:**
+Keep the dark mode initialization script inline in `<head>` as a stated constraint, never in an external file. This is the same reason the existing update banner is built dynamically in `main.js` rather than loaded from a template.
+
+**Warning signs:**
+- Any PR that extracts the head init script into a separate `.js` file
+- FOUC reappears for exactly one load after a SW update, then goes away
+
+**Phase to address:** Dark mode implementation — state "keep inline" as an explicit constraint in the implementation plan.
+
+---
+
+## Technical Debt Patterns (Milestone 8)
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Apply `dark:` only to card elements; skip body and nav | Faster implementation | Nav bar stays white in dark mode — immediately visible at runtime | Never |
+| Use `prefers-color-scheme` media only, no toggle | No JS, no FOUC | Organizer cannot override OS preference; useless if phone is always in light mode | Only for a throw-away proof of concept |
+| Write dark mode tests that only assert class names | Tests pass quickly | Wrong dark colors pass; no verification of actual visual correctness | Acceptable if paired with a manual visual review session |
+| Skip `coverage.all: true` | Simpler config | Coverage looks healthy; untested files are invisible | Never — configure before reporting any coverage number |
+| Rewrite Help from memory without auditing the live app | Faster writing | Produces stale help text that directs organizers to missing buttons | Never |
+| Leave "v1.0" in the Help footer | No extra work | Version becomes wrong immediately and may confuse users | Never — remove from user-visible content |
+
+---
+
+## Integration Gotchas (Milestone 8)
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Tailwind v4 + manual dark class toggle | Forgetting `@custom-variant dark` in style.css | Add `@custom-variant dark (&:where(.dark, .dark *))` as first thing after `@import "tailwindcss"` |
+| Dark mode + hash router SPA | Putting theme init in router.js or a mount() function | Theme init belongs in an inline `<head>` script only — before any CSS paint |
+| Dark mode + SortableJS styles | Sortable ghost/swap use hardcoded hex in style.css | Audit all `.sortable-*` rules; convert to CSS variables with `.dark` overrides |
+| happy-dom + matchMedia | Calling `window.matchMedia` in module scope with no mock | Mock matchMedia in test-setup.js before any importing module calls it |
+| Vitest coverage + new/untested files | Assuming the coverage report is complete | Add `coverage.all: true` and `coverage.include` to vite.config.js |
+| Service worker + dark mode init script | Extracting inline script to an external JS file | Keep inline in `<head>`; external scripts are SW-cached separately |
+| Help back button + hash router | `window.history.back()` from a deep-linked `#/help` URL | Verify behavior when user arrives at `#/help` directly (e.g., from a shared link), not just via in-app navigation |
+
+---
+
+## "Looks Done But Isn't" Checklist (Milestone 8)
+
+- [ ] **Dark mode FOUC:** Hard-reload the page with OS in dark mode — verify no white flash before dark styles apply
+- [ ] **style.css hex values:** Run `grep -n '#[0-9A-Fa-f]' src/style.css` — every result must have a `.dark` CSS variable counterpart
+- [ ] **Nav bar dark mode:** Confirm bottom nav background, border, icon colors, and active state all change in dark mode
+- [ ] **Body background:** Confirm `<body>` background matches card dark backgrounds (no light-on-dark stripe)
+- [ ] **Toggle persistence:** Set to dark, close tab, reopen — should open in dark mode without flash
+- [ ] **System preference follow:** Toggle OS dark mode while app is open — app should follow if no manual override is set
+- [ ] **Coverage all files visible:** Run `vitest --coverage` — verify `Help.js` and `Settings.js` appear in the coverage table
+- [ ] **matchMedia mock active:** Confirm no `matchMedia is not a function` TypeError in test output after dark mode logic is added
+- [ ] **Help button labels accurate:** Every button name mentioned in help text exists verbatim in the current view source files
+- [ ] **Help jargon eliminated:** Read help text aloud to a non-developer — flag any word that requires technical context
+- [ ] **Help version number removed:** Footer "v1.0" label is gone from the Help view
+
+---
+
+## Recovery Strategies (Milestone 8)
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| FOUC discovered after dark mode ships | LOW | Add 3-line inline script to index.html `<head>`; redeploy |
+| Hardcoded hex not dark-aware | MEDIUM | Audit style.css, convert to CSS variables, test each zone color in dark mode; redeploy |
+| @custom-variant missing; dark: classes do nothing | LOW | Add one line to style.css; rebuild and redeploy |
+| Coverage report missing files | LOW | Add `coverage.all: true` to vite.config.js |
+| matchMedia throws in tests | LOW | Add mock to test-setup.js |
+| Help text references non-existent buttons | LOW | Re-audit live app; rewrite affected sections |
+
+---
+
+## Pitfall-to-Phase Mapping (Milestone 8)
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| FOUC (M8-1) | Dark mode — before any component work | Hard reload with OS in dark mode; no white flash |
+| Missing @custom-variant (M8-2) | Dark mode — first line added to style.css | `dark:bg-gray-800` responds to `.dark` on `<html>` in DevTools |
+| Hardcoded hex bypasses dark mode (M8-3) | Dark mode — style.css audit | Grep for hex literals; visual check of chip colors in dark mode |
+| Shell missing dark styles (M8-4) | Dark mode — index.html pass | Nav bar and body correct in dark mode |
+| matchMedia not mocked (M8-5) | Test coverage — update test-setup.js | No TypeError in test output |
+| Coverage hiding untested files (M8-6) | Test coverage — configure before first report | Help.js and Settings.js appear in coverage table |
+| Help describes stale UI (M8-7) | Help rewrite — live-app audit pass | Every button name in help matches current view source |
+| Help jargon (M8-8) | Help rewrite — review pass after first draft | Plain-language read-aloud passes |
+| SW caching inline script (M8-9) | Dark mode — stated as implementation constraint | Init script remains inline in index.html |
+
+---
+
+## Sources (Milestone 8)
+
+- [Tailwind CSS v4 Dark Mode — official docs](https://tailwindcss.com/docs/dark-mode) — HIGH confidence
+- [Tailwind v4 dark variant doesn't apply properly — GitHub issue #16068](https://github.com/tailwindlabs/tailwindcss/issues/16068) — HIGH confidence (maintainer confirmed behavior)
+- [How to Fix Dark Classes Not Applying in Tailwind CSS v4](https://www.sujalvanjare.com/blog/fix-dark-class-not-applying-tailwind-css-v4) — MEDIUM confidence
+- [Dark and light themes with Tailwind: common pitfalls](https://www.dimitribourreau.dev/en/blog/themes-sombres-et-clairs-tailwind) — MEDIUM confidence
+- [MatchMedia.matches support in happy-dom — GitHub issue #921](https://github.com/capricorn86/happy-dom/issues/921) — HIGH confidence
+- [Fix "window.matchMedia is not a function" in Vitest](https://rebeccamdeprey.com/blog/mock-windowmatchmedia-in-vitest) — MEDIUM confidence
+- [Vitest Coverage — all: true config](https://vitest.dev/guide/coverage) — official, HIGH confidence
+- [Basics of Plain Language in Technical Documentation](https://clickhelp.com/clickhelp-technical-writing-blog/basics-of-plain-language-in-technical-documentation/) — MEDIUM confidence
+- [NN/G UX Writing Study Guide](https://www.nngroup.com/articles/ux-writing-study-guide/) — HIGH confidence
+- Project source inspection: `src/style.css`, `index.html`, `src/main.js`, `src/router.js`, `src/test-setup.js`, `src/views/Help.js` — HIGH confidence (direct code audit)
+
+---
+*Milestone 8 pitfalls addendum for: Dark mode, test coverage, help content (vanilla JS / Tailwind v4 / Vitest / happy-dom)*
+*Researched: 2026-04-14*
