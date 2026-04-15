@@ -256,7 +256,7 @@ export function mount(el, params) {
     }
   };
   addBtn.addEventListener('click', handleAdd);
-  nameInput.addEventListener('keypress', (e) => {
+  nameInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleAdd();
   });
 
