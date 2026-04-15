@@ -124,7 +124,7 @@ export function mount(el, params) {
     <!-- Remove member confirmation modal -->
     <div id="remove-member-modal" class="hidden fixed inset-0 z-[200] flex items-end">
       <div id="remove-member-backdrop" class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Remove member?</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">They'll be removed from the roster. This can't be undone.</p>
         <div class="flex gap-3 pt-2">

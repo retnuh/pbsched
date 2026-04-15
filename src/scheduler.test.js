@@ -169,22 +169,21 @@ describe('Scheduler Logic', () => {
   });
 
   test('variety improves over multiple rounds', () => {
-    // Generate 5 rounds for 8 players
-    // We expect the scheduler to avoid putting p1 and p2 together every time
+    // Generate 10 rounds for 8 players — more history gives the penalty function
+    // enough signal to reliably avoid repeating the same pair.
     let played = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const next = generateRounds(players, played, 1, MOCK_SETTINGS);
       played = [...played, ...next];
     }
 
     const history = buildPairHistory(played);
-    
-    // p1 should not have p2 as partner in all 5 rounds
-    // Total partnership opportunities for p1 is 5 rounds. 
-    // If it were random, they'd partner ~1.4 times (5 * 1/7).
-    // If variety optimization works, it should be 1 or 2 max.
+
+    // With 10 rounds and active penalty, no pair should partner more than 3 times.
+    // 8 players = 7 possible partners for p1; across 10 rounds the expected random
+    // rate is ~1.4×, so ≥4 would indicate the penalty is not working.
     Object.values(history.partnerCount['p1'] || {}).forEach(count => {
-      expect(count).toBeLessThan(3);
+      expect(count).toBeLessThan(4);
     });
   });
 

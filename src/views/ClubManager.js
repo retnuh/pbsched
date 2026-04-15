@@ -45,7 +45,7 @@ export function mount(el, params) {
           </div>
           <div class="flex items-center space-x-2">
             ${isCurrent ? `
-              <button data-action="resume-session" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm shadow-blue-100">
+              <button data-action="resume-session" class="btn-primary px-3 py-1.5 rounded-lg text-xs">
                 Resume
               </button>
             ` : ''}
@@ -84,7 +84,7 @@ export function mount(el, params) {
     <!-- Delete club confirmation modal -->
     <div id="delete-club-modal" class="hidden fixed inset-0 z-[200] flex items-end">
       <div id="delete-club-backdrop" class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Delete club?</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">All members and session history for this club will be permanently deleted.</p>
         <div class="flex gap-3 pt-2">

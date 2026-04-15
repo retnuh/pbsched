@@ -107,7 +107,7 @@ export function mount(el, params) {
           <p class="text-sm text-gray-500 dark:text-gray-400 italic">Download or share your data to keep a backup or switch devices.</p>
 
           <div class="space-y-3">
-            <button id="export-data" class="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow-md shadow-blue-100 transition">
+            <button id="export-data" class="w-full py-3 btn-primary rounded-lg transition">
               Share Backup
             </button>
             <div class="grid grid-cols-2 gap-3">
@@ -139,10 +139,27 @@ export function mount(el, params) {
       </div>
     </div>
 
+    <!-- Paste data modal -->
+    <div id="paste-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+      <div id="paste-modal-backdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Paste Backup Data</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Paste your JSON backup below.</p>
+        <textarea id="paste-textarea" rows="6"
+                  class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-mono text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder='{"clubs":...}'></textarea>
+        <p id="paste-error" class="hidden text-xs font-bold text-red-600 dark:text-red-400">Invalid JSON — make sure you pasted the entire backup.</p>
+        <div class="flex gap-3">
+          <button id="paste-modal-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
+          <button id="paste-modal-confirm" class="flex-1 py-3 btn-primary rounded-xl font-bold text-white">Import</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings confirmation modal -->
     <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-end">
       <div id="settings-modal-backdrop" class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
         <h2 id="settings-modal-title" class="text-lg font-bold text-gray-900 dark:text-gray-100"></h2>
         <p id="settings-modal-body" class="text-sm text-gray-500 dark:text-gray-400"></p>
         <div class="flex gap-3 pt-2">
@@ -350,12 +367,25 @@ export function mount(el, params) {
   }
 
   // Paste Data
-  el.querySelector('#paste-btn').addEventListener('click', () => {
-    const raw = prompt('Paste your backup JSON here:');
-    if (!raw) return;
+  const pasteModal = el.querySelector('#paste-modal');
+  const pasteTextarea = el.querySelector('#paste-textarea');
+  const pasteError = el.querySelector('#paste-error');
+  const hidePasteModal = () => { pasteModal.classList.add('hidden'); pasteError.classList.add('hidden'); };
 
+  el.querySelector('#paste-btn').addEventListener('click', () => {
+    pasteTextarea.value = '';
+    pasteError.classList.add('hidden');
+    pasteModal.classList.remove('hidden');
+    pasteTextarea.focus();
+  });
+  el.querySelector('#paste-modal-backdrop').addEventListener('click', hidePasteModal);
+  el.querySelector('#paste-modal-cancel').addEventListener('click', hidePasteModal);
+  el.querySelector('#paste-modal-confirm').addEventListener('click', () => {
+    const raw = pasteTextarea.value.trim();
+    if (!raw) return;
     try {
       const json = JSON.parse(raw);
+      hidePasteModal();
       showSettingsModal(
         'Overwrite your data?',
         'Importing will replace all current clubs and sessions with the pasted data.',
@@ -364,7 +394,7 @@ export function mount(el, params) {
       );
     } catch (err) {
       Haptics.error();
-      alert('Invalid data. Please make sure you pasted the entire JSON string.');
+      pasteError.classList.remove('hidden');
     }
   });
 }

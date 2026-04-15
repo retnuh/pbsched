@@ -285,7 +285,7 @@ describe('Phase 13: Drag interactions', () => {
       setupEditor(makeRoundWithBench())
       const confirmBtn = el.querySelector('#confirm-btn')
       expect(confirmBtn.disabled).toBe(false)
-      expect(confirmBtn.className).toContain('bg-blue-600')
+      expect(confirmBtn.className).toContain('btn-primary')
     })
 
     test('confirm button is disabled when a court has exactly 1 player', () => {
@@ -1061,6 +1061,50 @@ describe('Phase 14: Court Management & Polish', () => {
       expect(el.querySelector('[data-court="19"]')).not.toBeNull()
       // Toast should have fired
       expect(document.getElementById('gsd-toast')).not.toBeNull()
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  describe('BENCH-BADGE-SYNC: sit-badge updates dynamically after drag', () => {
+    test('bench→court drag removes sit-badge from chip', () => {
+      // p5 starts on bench (has sit-badge), drag to court-0-a
+      const session = makeSessionWithHistory()
+      setupEditorWithSession(session, 2)
+      const p5Chip = el.querySelector('[data-zone="bench"] [data-player-id="p5"]')
+      expect(p5Chip.querySelector('.sit-badge')).not.toBeNull()
+
+      const zoneA = el.querySelector('[data-zone="court-0-a"]')
+      zoneA.appendChild(p5Chip)
+      mockSortable.instances[0].options.onEnd({ item: p5Chip })
+
+      expect(p5Chip.querySelector('.sit-badge')).toBeNull()
+    })
+
+    test('court→bench drag adds sit-badge to chip', () => {
+      // p1 starts on court (no badge), drag to bench
+      const session = makeSessionWithHistory()
+      setupEditorWithSession(session, 2)
+      const p1Chip = el.querySelector('[data-zone="court-0-a"] [data-player-id="p1"]')
+      expect(p1Chip.querySelector('.sit-badge')).toBeNull()
+
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+
+      expect(p1Chip.querySelector('.sit-badge')).not.toBeNull()
+    })
+
+    test('badge on newly-benched player shows correct sit-out count', () => {
+      // p1 has never sat out in makeSessionWithHistory — count should be 0
+      const session = makeSessionWithHistory()
+      setupEditorWithSession(session, 2)
+      const p1Chip = el.querySelector('[data-zone="court-0-a"] [data-player-id="p1"]')
+
+      const bench = el.querySelector('[data-zone="bench"]')
+      bench.appendChild(p1Chip)
+      mockSortable.instances[0].options.onEnd({ item: p1Chip })
+
+      expect(p1Chip.querySelector('.sit-badge').textContent).toContain('0×')
     })
   })
 })

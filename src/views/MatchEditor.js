@@ -61,12 +61,9 @@ function validateAndUpdateUI(el) {
     confirmBtn.disabled = anyInvalid;
     confirmBtn.classList.toggle('opacity-50', anyInvalid);
     confirmBtn.classList.toggle('cursor-not-allowed', anyInvalid);
-    confirmBtn.classList.toggle('bg-blue-600', !anyInvalid);
-    confirmBtn.classList.toggle('text-white', !anyInvalid);
-    confirmBtn.classList.toggle('shadow-lg', !anyInvalid);
-    confirmBtn.classList.toggle('shadow-blue-200', !anyInvalid);
+    confirmBtn.classList.toggle('btn-primary', !anyInvalid);
     confirmBtn.classList.toggle('bg-gray-300', anyInvalid);
-    confirmBtn.classList.toggle('text-gray-500', anyInvalid);
+    confirmBtn.classList.toggle('dark:bg-gray-600', anyInvalid);
   }
 }
 
@@ -177,7 +174,7 @@ function buildHTML(draft, round, club, getPlayerName, session) {
     `<div data-player-id="${escapeHTML(id)}"
           class="px-3 py-2 border rounded-full text-sm font-medium text-center min-h-[44px] flex flex-col items-center justify-center cursor-grab">
        <span>${escapeHTML(getPlayerName(id))}</span>
-       <span class="text-xs font-medium text-gray-500">${sitCounts[id] || 0}×</span>
+       <span class="sit-badge text-xs font-medium text-gray-500 dark:text-gray-400">${sitCounts[id] || 0}×</span>
      </div>`;
 
   const emptySlotHTML = '<div class="empty-slot min-h-[44px] border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-full"></div>';
@@ -241,7 +238,7 @@ function buildHTML(draft, round, club, getPlayerName, session) {
           Cancel
         </button>
         <button id="confirm-btn"
-                class="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 dark:shadow-blue-900">
+                class="flex-1 py-4 btn-primary rounded-xl font-bold text-white">
           Confirm
         </button>
       </div>
@@ -249,14 +246,14 @@ function buildHTML(draft, round, club, getPlayerName, session) {
   `;
 
   const discardModalHTML = `
-    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end justify-center pb-48">
+    <div id="discard-modal" class="hidden fixed inset-0 z-[200] flex items-end">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="relative bg-white rounded-2xl mx-4 p-6 w-full max-w-lg space-y-4">
-        <h2 class="text-lg font-bold text-gray-900">Discard changes?</h2>
-        <p class="text-sm text-gray-500">Your edits won't be saved.</p>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Discard changes?</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Your edits won't be saved.</p>
         <div class="flex gap-3 pt-2">
           <button id="discard-keep-btn"
-                  class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm">
+                  class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">
             Keep Editing
           </button>
           <button id="discard-confirm-btn"
@@ -322,9 +319,37 @@ function handleRemoveCourt(courtIndex) {
   rerender(_el);
 }
 
+function syncBenchBadges(el) {
+  const sitCounts = {};
+  _session.rounds.forEach(r => {
+    r.sittingOut.forEach(id => { sitCounts[id] = (sitCounts[id] || 0) + 1; });
+  });
+
+  // Court chips — strip badge if one drifted in from bench
+  el.querySelectorAll('[data-zone^="court-"] [data-player-id]').forEach(chip => {
+    const badge = chip.querySelector('.sit-badge');
+    if (!badge) return;
+    badge.remove();
+    chip.classList.remove('flex-col', 'py-2');
+    chip.classList.add('py-3');
+  });
+
+  // Bench chips — add badge if missing (chip dragged in from court)
+  const bench = el.querySelector('[data-zone="bench"]');
+  if (!bench) return;
+  bench.querySelectorAll('[data-player-id]').forEach(chip => {
+    if (chip.querySelector('.sit-badge')) return;
+    const id = chip.dataset.playerId;
+    chip.innerHTML = `<span>${escapeHTML(_getPlayerName(id))}</span><span class="sit-badge text-xs font-medium text-gray-500 dark:text-gray-400">${sitCounts[id] || 0}×</span>`;
+    chip.classList.add('flex-col', 'py-2');
+    chip.classList.remove('py-3');
+  });
+}
+
 function handleDragEnd(evt) {
   reconcileDraftFromDOM(_el);
   syncEmptySlots(_el);
+  syncBenchBadges(_el);
   validateAndUpdateUI(_el);
   updateRemoveButtonVisibility(_el);  // Phase 14: re-evaluate Remove buttons after drag
   Haptics.medium();                    // Phase 14: haptic on successful drop

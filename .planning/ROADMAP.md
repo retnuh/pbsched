@@ -32,7 +32,7 @@
 ### Milestone 8: Polish & Quality
 
 - [ ] **Phase 15: Dark Mode Foundation** — Storage v2 migration, ThemeService, FOUC prevention script, @custom-variant CSS line; system-preference detection and theme persistence
-- [ ] **Phase 16: Dark Mode Visuals & Toggle** — dark: utilities on all views; zone chip and SortableJS dark overrides; Settings toggle with manual override (light/dark/auto)
+- [x] **Phase 16: Dark Mode Visuals & Toggle** — dark: utilities on all views; zone chip and SortableJS dark overrides; Settings toggle with manual override (light/dark/auto)
 - [ ] **Phase 17: Test Coverage** — Install @vitest/coverage-v8; ThemeService tests, storage migration regression test, club.js/html.js unit tests; coverage report via `npm run coverage`
 - [ ] **Phase 18: Documentation & Copy** — Help screen rewrite; README rewrite; plain-language copy audit across all views
 
@@ -131,7 +131,7 @@ Plans:
 - [x] 16-02-PLAN.md — RoundDisplay.js dark coverage (3 render functions) + MatchEditor.js dark coverage (buildHTML + makeEmptySlot) (DARK-05, DARK-06)
 - [x] 16-03-PLAN.md — Settings.js: Appearance card with ThemeService toggle + all existing card dark overrides (DARK-03, DARK-06)
 - [x] 16-04-PLAN.md — SessionSetup.js, ClubManager.js, MemberEditor.js, Help.js dark coverage (DARK-06)
-- [ ] 16-05-PLAN.md — Human visual verification checkpoint across all views (DARK-03, DARK-05, DARK-06)
+- [x] 16-05-PLAN.md — Human visual verification checkpoint across all views (DARK-03, DARK-05, DARK-06)
 
 ### Phase 17: Test Coverage
 **Goal**: Running `npm run coverage` produces a per-file line and function coverage report; service-layer and new ThemeService paths are exercised

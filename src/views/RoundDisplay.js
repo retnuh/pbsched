@@ -102,7 +102,7 @@ export function mount(el, params) {
         </div>
 
         <div class="fixed fixed-safe-bottom left-0 right-0 p-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-t border-gray-100 dark:border-gray-700 max-w-lg mx-auto z-40">
-          <button id="save-attendees" class="w-full py-4 bg-blue-600 rounded-xl text-white font-bold shadow-lg shadow-blue-200">
+          <button id="save-attendees" class="w-full py-4 btn-primary rounded-xl">
             Update Practice List
           </button>
         </div>
@@ -253,11 +253,11 @@ export function mount(el, params) {
             <p class="text-xs text-gray-500">${club.name}</p>
           </div>
           <div class="flex items-center space-x-2">
-            <a href="#/help" class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100 font-bold text-sm">?</a>
-            <button id="manage-attendees" class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded border border-blue-100">
+            <a href="#/help" class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 font-bold text-sm">?</a>
+            <button id="manage-attendees" class="text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-3 py-1 rounded border border-blue-100 dark:border-blue-800">
               Players
             </button>
-            <button id="close-session" class="text-sm font-bold text-red-500 bg-red-50 px-3 py-1 rounded border border-red-100">
+            <button id="close-session" class="text-sm font-bold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/40 px-3 py-1 rounded border border-red-100 dark:border-red-800">
               End
             </button>
           </div>
@@ -269,7 +269,7 @@ export function mount(el, params) {
       <!-- End session confirmation modal -->
       <div id="end-session-modal" class="hidden fixed inset-0 z-[200] flex items-end">
         <div id="end-session-backdrop" class="absolute inset-0 bg-black/40"></div>
-        <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full p-6 space-y-4 shadow-xl">
+        <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
           <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">End session?</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">You can always review past sessions in history later.</p>
           <div class="flex gap-3 pt-2">
