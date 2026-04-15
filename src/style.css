@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* Only <html> should hold the .dark class. Adding .dark to any other element
+   would apply dark styles to all its descendants, which is not intended. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer components {
@@ -90,6 +92,9 @@
   background-color: transparent !important;
   color: transparent !important;
 }
+/* IMPORTANT: This rule must appear AFTER zone chip rules ([data-zone$="-a"] etc.)
+   Both use !important on border; CSS source order determines the winner.
+   Do not reorder these blocks or extract to a separate file. */
 .dark .sortable-ghost {
   border: 3px dashed #9ca3af !important;
 }
