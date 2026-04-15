@@ -31,7 +31,16 @@ export const ClubService = {
     const clubs = this.getClubs();
     const idx = clubs.findIndex(c => c.id === id);
     if (idx !== -1) {
-      clubs[idx] = { ...clubs[idx], ...updates };
+      // Whitelist: only allow updating genuinely user-editable fields.
+      // Keys like id, members, createdAt are intentionally excluded.
+      const ALLOWED = ['name'];
+      const safeUpdates = {};
+      for (const key of ALLOWED) {
+        if (Object.prototype.hasOwnProperty.call(updates, key)) {
+          safeUpdates[key] = updates[key];
+        }
+      }
+      clubs[idx] = { ...clubs[idx], ...safeUpdates };
       StorageAdapter.set('clubs', clubs);
     }
   },
