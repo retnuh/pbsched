@@ -49,7 +49,7 @@ export function buildPairHistory(playedRounds) {
       }));
 
       const isSingles = teamA.length === 1 && teamB.length === 1;
-      const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
+      const isThreeWay = (teamA.length === 2 && teamB.length === 1) || (teamA.length === 1 && teamB.length === 2);
 
       if (isSingles) {
         [teamA[0], teamB[0]].forEach(p => {
@@ -242,8 +242,10 @@ export function scoreRound(round, history, settings) {
     });
 
     // Short-sided penalties (per D-01, D-02)
+    // NOTE: count and streak below reflect history *before* this candidate round (one-step lag).
+    // They are read from the history object built from previously played rounds only.
     const isSingles = teamA.length === 1 && teamB.length === 1;
-    const isThreeWay = teamA.length + teamB.length === 3 && !isSingles;
+    const isThreeWay = (teamA.length === 2 && teamB.length === 1) || (teamA.length === 1 && teamB.length === 2);
 
     if (isSingles) {
       // Both players are short-sided — each receives the singles penalty (D-02)
@@ -279,7 +281,7 @@ export function scoreRound(round, history, settings) {
 /**
  * Generates a single random candidate round for the given attendees.
  */
-function generateCandidate(attendees, history, settings, index) {
+function generateCandidate(attendees, index) {
   // Fisher-Yates shuffle — avoids biased ordering from sort-based shuffle
   const shuffled = [...attendees];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -336,7 +338,7 @@ export function generateRounds(attendees, playedRounds, countToGenerate, setting
     let bestScore = Infinity;
 
     for (let c = 0; c < settings.candidateCount; c++) {
-      const candidate = generateCandidate(attendees, currentHistory, settings, roundIndex);
+      const candidate = generateCandidate(attendees, roundIndex);
       const score = scoreRound(candidate, currentHistory, settings);
 
       if (score < bestScore) {
@@ -349,6 +351,8 @@ export function generateRounds(attendees, playedRounds, countToGenerate, setting
     
     // Update history for the next round in this batch
     // (Local increment to avoid full rebuild)
+    // Streak updates are intentionally omitted in the fast-path; batch-generated rounds after the
+    // first may slightly underpenalize consecutive assignments.
     bestCandidate.sittingOut.forEach(p => {
       currentHistory.sitOutCount[p] = (currentHistory.sitOutCount[p] || 0) + 1;
     });
@@ -405,7 +409,7 @@ export function getTopAlternatives(attendees, playedRounds, settings, n = 3, for
     : attendees;
 
   for (let c = 0; c < settings.candidateCount * 2; c++) {
-    const candidate = generateCandidate(activeAttendees, history, settings, roundIndex);
+    const candidate = generateCandidate(activeAttendees, roundIndex);
     
     // Add the forced players back into the sittingOut array
     if (forcedSitOutIds) {
