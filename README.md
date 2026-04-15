@@ -45,3 +45,5 @@ This project was built with a collaborative AI workflow:
 ## License
 
 This project is released into the public domain under the [Unlicense](./UNLICENSE). Feel free to use, modify, and distribute it however you like.
+
+*This was entirely vibe coded — I didn't really write any of it, so it felt only fair. (Yes, including this comment.)*
