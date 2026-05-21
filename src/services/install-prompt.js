@@ -19,6 +19,21 @@ let _subscriber = null;
 let _beforeInstallHandler = null;
 let _appInstalledHandler = null;
 
+// Persisted across reloads: once the user installs (via our button OR the
+// browser fires 'appinstalled' OR our prompt resolves 'accepted'), remember
+// that so future visits hide the button even if Brave/Chromium re-fires
+// beforeinstallprompt or matchMedia('(display-mode: standalone)') reports
+// false in the standalone window for whatever reason.
+const INSTALLED_KEY = 'pb:install-completed';
+
+function _setInstalled() {
+  try { localStorage.setItem(INSTALLED_KEY, '1'); } catch (e) { /* storage unavailable */ }
+}
+
+function _wasInstalled() {
+  try { return localStorage.getItem(INSTALLED_KEY) === '1'; } catch (e) { return false; }
+}
+
 function _notify() {
   if (typeof _subscriber === 'function') {
     try { _subscriber(); } catch (e) { /* subscriber errors must not break the service */ }
@@ -42,6 +57,7 @@ export const InstallPromptService = {
     };
 
     _appInstalledHandler = () => {
+      _setInstalled();
       _stashedEvent = null;
       _notify();
     };
@@ -66,14 +82,32 @@ export const InstallPromptService = {
   },
 
   isStandalone() {
+    // Check all display modes that imply "launched as installed app" — Brave
+    // and other Chromium variants don't always report 'standalone' even when
+    // the app is launched from the OS app icon (#PWA-display-mode-quirks).
     try {
-      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-        return true;
+      const mm = window.matchMedia;
+      if (mm) {
+        const queries = [
+          '(display-mode: standalone)',
+          '(display-mode: fullscreen)',
+          '(display-mode: minimal-ui)',
+          '(display-mode: window-controls-overlay)',
+        ];
+        for (const q of queries) {
+          try {
+            if (mm(q).matches) return true;
+          } catch (e) { /* individual query unsupported — try next */ }
+        }
       }
     } catch (e) { /* matchMedia unavailable */ }
     try {
       if (navigator.standalone === true) return true;
     } catch (e) { /* navigator.standalone may not exist */ }
+    try {
+      // Android Trusted Web Activity launches the page with this referrer.
+      if (document.referrer && document.referrer.startsWith('android-app://')) return true;
+    } catch (e) { /* document.referrer unavailable */ }
     return false;
   },
 
@@ -92,7 +126,7 @@ export const InstallPromptService = {
   },
 
   getStatus() {
-    if (this.isStandalone()) return 'installed';
+    if (this.isStandalone() || _wasInstalled()) return 'installed';
     if (_stashedEvent) return 'installable';
     if (this.isIOSSafari()) return 'ios-instructions';
     return 'unsupported';
@@ -112,6 +146,7 @@ export const InstallPromptService = {
       const choice = await evt.userChoice;
       const outcome = choice && choice.outcome ? choice.outcome : 'dismissed';
       if (outcome === 'accepted') {
+        _setInstalled();
         _stashedEvent = null;
         _notify();
       }

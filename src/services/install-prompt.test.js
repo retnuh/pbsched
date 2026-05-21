@@ -51,6 +51,7 @@ beforeEach(() => {
   setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36')
   clearNavigatorStandalone()
   try { delete window.MSStream } catch (e) { /* ignore */ }
+  try { localStorage.removeItem('pb:install-completed') } catch (e) { /* ignore */ }
 })
 
 afterEach(() => {
@@ -84,7 +85,7 @@ describe('InstallPromptService — beforeinstallprompt capture', () => {
     expect(evt.preventDefault).toHaveBeenCalledTimes(1)
   })
 
-  it('Test 3: appinstalled clears stashed event and notifies subscriber', () => {
+  it('Test 3: appinstalled clears stashed event, persists flag, and notifies subscriber', () => {
     InstallPromptService.init()
     const subscriber = vi.fn()
     InstallPromptService.onChange(subscriber)
@@ -94,7 +95,8 @@ describe('InstallPromptService — beforeinstallprompt capture', () => {
     expect(InstallPromptService.getStatus()).toBe('installable')
 
     window.dispatchEvent(new Event('appinstalled'))
-    expect(InstallPromptService.getStatus()).not.toBe('installable')
+    expect(InstallPromptService.getStatus()).toBe('installed')
+    expect(localStorage.getItem('pb:install-completed')).toBe('1')
     // Subscriber was called for both capture and install events.
     expect(subscriber).toHaveBeenCalledTimes(2)
   })
@@ -123,10 +125,36 @@ describe('InstallPromptService — standalone detection', () => {
     InstallPromptService.init()
     expect(InstallPromptService.getStatus()).toBe('installed')
   })
+
+  it('Test 6b: returns "installed" for fullscreen/minimal-ui/window-controls-overlay display modes', () => {
+    // Brave and some Chromium variants don't report 'standalone' for launched
+    // PWAs — they may report fullscreen, minimal-ui, or window-controls-overlay.
+    for (const mode of [
+      '(display-mode: fullscreen)',
+      '(display-mode: minimal-ui)',
+      '(display-mode: window-controls-overlay)',
+    ]) {
+      InstallPromptService.destroy()
+      mockMatchMedia({ [mode]: true })
+      InstallPromptService.init()
+      expect(InstallPromptService.isStandalone(), `display mode ${mode}`).toBe(true)
+      expect(InstallPromptService.getStatus(), `display mode ${mode}`).toBe('installed')
+    }
+  })
+
+  it('Test 6c: returns "installed" when persisted install flag is set (Brave standalone reports false)', () => {
+    // Even if matchMedia and navigator.standalone both report false (Brave quirk),
+    // a previously-stored install flag should still hide the button.
+    localStorage.setItem('pb:install-completed', '1')
+    InstallPromptService.init()
+    // beforeinstallprompt may even re-fire inside the standalone window
+    window.dispatchEvent(makeBeforeInstallPromptEvent())
+    expect(InstallPromptService.getStatus()).toBe('installed')
+  })
 })
 
 describe('InstallPromptService — promptInstall()', () => {
-  it('Test 7: accepted path drops stashed event and resolves accepted', async () => {
+  it('Test 7: accepted path drops stashed event, persists flag, and resolves accepted', async () => {
     InstallPromptService.init()
     const evt = makeBeforeInstallPromptEvent({
       userChoice: Promise.resolve({ outcome: 'accepted', platform: 'web' }),
@@ -137,7 +165,8 @@ describe('InstallPromptService — promptInstall()', () => {
     const result = await InstallPromptService.promptInstall()
     expect(result).toEqual({ outcome: 'accepted' })
     expect(evt.prompt).toHaveBeenCalledTimes(1)
-    expect(InstallPromptService.getStatus()).not.toBe('installable')
+    expect(InstallPromptService.getStatus()).toBe('installed')
+    expect(localStorage.getItem('pb:install-completed')).toBe('1')
   })
 
   it('Test 8: dismissed path preserves stashed event for a retry', async () => {
