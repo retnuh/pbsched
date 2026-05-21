@@ -1,69 +1,74 @@
-const CACHE_NAME = 'pbsched-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './favicon.svg',
-  './manifest.json'
-];
+// Bump this on any caching strategy change so old SWs evict and re-cache.
+const CACHE_NAME = 'pbsched-v3';
 
-// Install: Cache basic shell
+// Precache the app shell (paths relative to SW scope).
+const PRECACHE = ['./', './index.html', './favicon.svg', './manifest.json'];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
 
-// Activate: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
   );
   self.clients.claim();
 });
 
-// Handle update messages
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-// Fetch: Network first, fallback to cache for dynamic assets
-// But for static assets (like the built JS/CSS), cache first is better.
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  const req = event.request;
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
 
-      return fetch(event.request).then((response) => {
-        // Don't cache if not a valid response or from a different origin (external)
+  // Only handle same-origin requests; let everything else hit the network.
+  if (url.origin !== self.location.origin) return;
+
+  // Navigation requests (HTML page loads): network-first with cache fallback.
+  // This is the critical strategy — without it, a cached index.html that
+  // references an old bundle hash gets served forever, locking users to
+  // the build they first installed regardless of new deploys.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // All other same-origin GETs (hash-named JS/CSS assets, icons, manifest):
+  // cache-first is safe because Vite emits content-hashed filenames, so a
+  // new build means a new URL — the old URL's cached response is fine to
+  // keep serving offline.
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
         return response;
-      }).catch(() => {
-        // Offline and no cache
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
       });
     })
   );
