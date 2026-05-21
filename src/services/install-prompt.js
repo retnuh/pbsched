@@ -18,6 +18,14 @@ let _stashedEvent = null;
 let _subscriber = null;
 let _beforeInstallHandler = null;
 let _appInstalledHandler = null;
+let _displayModeListeners = []; // { mql, handler } for cleanup in destroy()
+
+const DISPLAY_MODE_QUERIES = [
+  '(display-mode: standalone)',
+  '(display-mode: fullscreen)',
+  '(display-mode: minimal-ui)',
+  '(display-mode: window-controls-overlay)',
+];
 
 // Persisted across reloads: once the user installs (via our button OR the
 // browser fires 'appinstalled' OR our prompt resolves 'accepted'), remember
@@ -66,6 +74,29 @@ export const InstallPromptService = {
       window.addEventListener('beforeinstallprompt', _beforeInstallHandler);
       window.addEventListener('appinstalled', _appInstalledHandler);
     } catch (e) { /* window unavailable — service is inert */ }
+
+    // Brave (and some Chromium variants) don't set the standalone display
+    // mode until AFTER beforeinstallprompt fires, so the initial syncInstallBtn
+    // sees status='installable' and shows the button — then no event re-syncs
+    // when display-mode finally flips to fullscreen/standalone. Listen for
+    // those media query changes so the UI re-evaluates getStatus().
+    for (const q of DISPLAY_MODE_QUERIES) {
+      try {
+        const mql = window.matchMedia(q);
+        const handler = () => {
+          if (this.isStandalone()) _setInstalled();
+          _notify();
+        };
+        if (typeof mql.addEventListener === 'function') {
+          mql.addEventListener('change', handler);
+          _displayModeListeners.push({ mql, handler });
+        }
+      } catch (e) { /* matchMedia or specific query unavailable — skip */ }
+    }
+
+    // Self-heal: if we're already in a standalone window at init time,
+    // persist the flag immediately.
+    try { if (this.isStandalone()) _setInstalled(); } catch (e) { /* noop */ }
   },
 
   destroy() {
@@ -77,6 +108,10 @@ export const InstallPromptService = {
       try { window.removeEventListener('appinstalled', _appInstalledHandler); } catch (e) { /* noop */ }
       _appInstalledHandler = null;
     }
+    for (const { mql, handler } of _displayModeListeners) {
+      try { mql.removeEventListener('change', handler); } catch (e) { /* noop */ }
+    }
+    _displayModeListeners = [];
     _stashedEvent = null;
     _subscriber = null;
   },
@@ -126,7 +161,11 @@ export const InstallPromptService = {
   },
 
   getStatus() {
-    if (this.isStandalone() || _wasInstalled()) return 'installed';
+    // Self-heal: any check while in standalone persists the flag so future
+    // page loads short-circuit before beforeinstallprompt timing matters.
+    const inStandalone = this.isStandalone();
+    if (inStandalone) _setInstalled();
+    if (inStandalone || _wasInstalled()) return 'installed';
     if (_stashedEvent) return 'installable';
     if (this.isIOSSafari()) return 'ios-instructions';
     return 'unsupported';

@@ -10,20 +10,35 @@ function makeBeforeInstallPromptEvent({ userChoice } = {}) {
   return evt
 }
 
-// Helper: replace window.matchMedia with a controllable mock.
+// Helper: replace window.matchMedia with a controllable mock. Returns a
+// `fire(query)` helper to simulate display-mode change events arriving after
+// the page has loaded (the Brave-on-macOS scenario).
 function mockMatchMedia(matchesByQuery) {
+  const matchesRef = { ...matchesByQuery }
+  const listeners = new Map() // query -> Set<handler>
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
     value: vi.fn().mockImplementation((query) => ({
-      matches: matchesByQuery[query] ?? false,
+      get matches() { return matchesRef[query] ?? false },
       media: query,
       onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn((event, handler) => {
+        if (event !== 'change') return
+        if (!listeners.has(query)) listeners.set(query, new Set())
+        listeners.get(query).add(handler)
+      }),
+      removeEventListener: vi.fn((event, handler) => {
+        if (event !== 'change') return
+        listeners.get(query)?.delete(handler)
+      }),
       dispatchEvent: vi.fn(),
     })),
   })
+  return {
+    set(query, value) { matchesRef[query] = value },
+    fire(query) { listeners.get(query)?.forEach(h => h()) },
+  }
 }
 
 // Snapshot navigator properties we may mutate so we can restore them between tests.
@@ -150,6 +165,39 @@ describe('InstallPromptService — standalone detection', () => {
     // beforeinstallprompt may even re-fire inside the standalone window
     window.dispatchEvent(makeBeforeInstallPromptEvent())
     expect(InstallPromptService.getStatus()).toBe('installed')
+  })
+
+  it('Test 6d: re-syncs and persists when display-mode flips to fullscreen AFTER beforeinstallprompt (Brave race)', () => {
+    // Repro of the Brave-on-macOS bug: at init, display-mode is not yet set.
+    // beforeinstallprompt fires first → button would be 'installable'. Then
+    // Brave finally sets display-mode: fullscreen. The service must catch the
+    // media-query change, notify the subscriber, and persist the install flag.
+    const mm = mockMatchMedia({})
+    InstallPromptService.init()
+    const subscriber = vi.fn()
+    InstallPromptService.onChange(subscriber)
+
+    // beforeinstallprompt fires while display mode is still unset
+    window.dispatchEvent(makeBeforeInstallPromptEvent())
+    expect(InstallPromptService.getStatus()).toBe('installable')
+    expect(subscriber).toHaveBeenCalledTimes(1)
+
+    // Brave belatedly reports the fullscreen display mode
+    mm.set('(display-mode: fullscreen)', true)
+    mm.fire('(display-mode: fullscreen)')
+
+    expect(InstallPromptService.getStatus()).toBe('installed')
+    expect(localStorage.getItem('pb:install-completed')).toBe('1')
+    expect(subscriber).toHaveBeenCalledTimes(2)
+  })
+
+  it('Test 6e: getStatus() self-heals — calling it while standalone persists the flag', () => {
+    mockMatchMedia({ '(display-mode: standalone)': true })
+    InstallPromptService.init()
+    // Wipe the flag set during init() to verify getStatus() also self-heals.
+    localStorage.removeItem('pb:install-completed')
+    InstallPromptService.getStatus()
+    expect(localStorage.getItem('pb:install-completed')).toBe('1')
   })
 })
 
