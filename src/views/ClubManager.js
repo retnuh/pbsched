@@ -66,7 +66,7 @@ export function mount(el, params) {
     <div class="p-4 space-y-6">
       <header class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Your Clubs</h1>
-        <button id="install-app-btn" type="button" class="hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+        <button id="install-app-btn" type="button" hidden class="items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Install App
         </button>
@@ -185,10 +185,18 @@ export function mount(el, params) {
 
   function syncInstallBtn() {
     const status = InstallPromptService.getStatus();
+    // Toggle the HTML `hidden` attribute and the inline-flex display class
+    // together. The attribute sets `display: none` via the browser UA stylesheet
+    // and is overridden only when we explicitly add `inline-flex`. Using the
+    // Tailwind `hidden` utility alongside `inline-flex` causes a collision
+    // where Tailwind's later-emitted `inline-flex` rule wins, making the
+    // button permanently visible regardless of class state.
     if (status === 'installable' || status === 'ios-instructions') {
-      installBtn.classList.remove('hidden');
+      installBtn.hidden = false;
+      installBtn.classList.add('inline-flex');
     } else {
-      installBtn.classList.add('hidden');
+      installBtn.hidden = true;
+      installBtn.classList.remove('inline-flex');
     }
   }
 
