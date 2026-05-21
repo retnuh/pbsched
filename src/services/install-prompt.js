@@ -80,23 +80,21 @@ export const InstallPromptService = {
     // sees status='installable' and shows the button — then no event re-syncs
     // when display-mode finally flips to fullscreen/standalone. Listen for
     // those media query changes so the UI re-evaluates getStatus().
+    //
+    // Crucially: do NOT persist the install flag from display-mode signals.
+    // Brave sometimes reports standalone-ish display modes in regular browser
+    // tabs too, which would trap the button hidden forever even when the user
+    // genuinely wants to install. Persistence is only triggered by the
+    // explicit `appinstalled` event or a 'accepted' promptInstall outcome.
     for (const q of DISPLAY_MODE_QUERIES) {
       try {
         const mql = window.matchMedia(q);
-        const handler = () => {
-          if (this.isStandalone()) _setInstalled();
-          _notify();
-        };
         if (typeof mql.addEventListener === 'function') {
-          mql.addEventListener('change', handler);
-          _displayModeListeners.push({ mql, handler });
+          mql.addEventListener('change', _notify);
+          _displayModeListeners.push({ mql, handler: _notify });
         }
       } catch (e) { /* matchMedia or specific query unavailable — skip */ }
     }
-
-    // Self-heal: if we're already in a standalone window at init time,
-    // persist the flag immediately.
-    try { if (this.isStandalone()) _setInstalled(); } catch (e) { /* noop */ }
   },
 
   destroy() {
@@ -161,11 +159,7 @@ export const InstallPromptService = {
   },
 
   getStatus() {
-    // Self-heal: any check while in standalone persists the flag so future
-    // page loads short-circuit before beforeinstallprompt timing matters.
-    const inStandalone = this.isStandalone();
-    if (inStandalone) _setInstalled();
-    if (inStandalone || _wasInstalled()) return 'installed';
+    if (this.isStandalone() || _wasInstalled()) return 'installed';
     if (_stashedEvent) return 'installable';
     if (this.isIOSSafari()) return 'ios-instructions';
     return 'unsupported';

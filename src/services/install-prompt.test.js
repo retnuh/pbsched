@@ -167,11 +167,14 @@ describe('InstallPromptService — standalone detection', () => {
     expect(InstallPromptService.getStatus()).toBe('installed')
   })
 
-  it('Test 6d: re-syncs and persists when display-mode flips to fullscreen AFTER beforeinstallprompt (Brave race)', () => {
+  it('Test 6d: re-syncs (without persisting) when display-mode flips to fullscreen AFTER beforeinstallprompt (Brave race)', () => {
     // Repro of the Brave-on-macOS bug: at init, display-mode is not yet set.
     // beforeinstallprompt fires first → button would be 'installable'. Then
     // Brave finally sets display-mode: fullscreen. The service must catch the
-    // media-query change, notify the subscriber, and persist the install flag.
+    // media-query change and notify the subscriber so the UI re-evaluates.
+    // It must NOT persist the install flag — display-mode signals are unreliable
+    // in Brave (sometimes match in regular tabs too), so persistence is only
+    // triggered by explicit appinstalled / promptInstall accepted events.
     const mm = mockMatchMedia({})
     InstallPromptService.init()
     const subscriber = vi.fn()
@@ -187,17 +190,18 @@ describe('InstallPromptService — standalone detection', () => {
     mm.fire('(display-mode: fullscreen)')
 
     expect(InstallPromptService.getStatus()).toBe('installed')
-    expect(localStorage.getItem('pb:install-completed')).toBe('1')
     expect(subscriber).toHaveBeenCalledTimes(2)
+    // Critical: flag must NOT be set just because display-mode matched.
+    expect(localStorage.getItem('pb:install-completed')).toBeNull()
   })
 
-  it('Test 6e: getStatus() self-heals — calling it while standalone persists the flag', () => {
+  it('Test 6e: display-mode-only signal does NOT persist the install flag', () => {
+    // Brave reports standalone-ish display modes in regular tabs too, so we
+    // must not trap users by persisting purely on display-mode.
     mockMatchMedia({ '(display-mode: standalone)': true })
     InstallPromptService.init()
-    // Wipe the flag set during init() to verify getStatus() also self-heals.
-    localStorage.removeItem('pb:install-completed')
     InstallPromptService.getStatus()
-    expect(localStorage.getItem('pb:install-completed')).toBe('1')
+    expect(localStorage.getItem('pb:install-completed')).toBeNull()
   })
 })
 
