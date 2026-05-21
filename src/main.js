@@ -1,9 +1,13 @@
 import './style.css'
 import { initRouter } from './router.js'
 import { ThemeService } from './services/theme.js'
+import { InstallPromptService } from './services/install-prompt.js'
 
 // Initialize theme before router mounts any view
 ThemeService.init();
+
+// Capture beforeinstallprompt as early as possible — it fires once per page load
+InstallPromptService.init();
 
 // Initialize the Hash Router
 const appEl = document.querySelector('#app');

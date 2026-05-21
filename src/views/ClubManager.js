@@ -2,6 +2,10 @@ import { ClubService } from '../services/club.js';
 import { SessionService } from '../services/session.js';
 import { navigate } from '../router.js';
 import { Haptics } from '../services/haptics.js';
+import { InstallPromptService } from '../services/install-prompt.js';
+
+// Module-scoped holder for the install-prompt subscriber so unmount() can release it.
+let _unsubscribeInstall = null;
 
 export function mount(el, params) {
   function renderClubs() {
@@ -62,6 +66,10 @@ export function mount(el, params) {
     <div class="p-4 space-y-6">
       <header class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Your Clubs</h1>
+        <button id="install-app-btn" type="button" class="hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Install App
+        </button>
       </header>
       
       <!-- New Club Form -->
@@ -91,6 +99,29 @@ export function mount(el, params) {
           <button id="delete-club-cancel" class="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm">Cancel</button>
           <button id="delete-club-confirm" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm">Delete</button>
         </div>
+      </div>
+    </div>
+
+    <!-- iOS "Add to Home Screen" instructions modal -->
+    <div id="ios-install-modal" class="hidden fixed inset-0 z-[200] flex items-end">
+      <div id="ios-install-backdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-t-2xl w-full max-w-lg mx-auto p-6 space-y-4 shadow-xl">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Install Pickleball Practice Scheduler</h2>
+        <ol class="text-sm text-gray-600 dark:text-gray-300 space-y-3">
+          <li class="flex items-start gap-2">
+            <span class="font-bold text-blue-600 dark:text-blue-400">1.</span>
+            <span class="flex items-center gap-1 flex-wrap">
+              Tap the Share button
+              <svg xmlns="http://www.w3.org/2000/svg" class="inline w-4 h-4 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+              at the bottom of Safari.
+            </span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="font-bold text-blue-600 dark:text-blue-400">2.</span>
+            <span>Scroll down and tap <strong class="text-gray-900 dark:text-gray-100">Add to Home Screen</strong>.</span>
+          </li>
+        </ol>
+        <button id="ios-install-close" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm">Got it</button>
       </div>
     </div>
   `;
@@ -143,8 +174,44 @@ export function mount(el, params) {
       showDeleteModal(id);
     }
   });
+
+  // Install-app button + iOS instructions modal wiring
+  const installBtn = el.querySelector('#install-app-btn');
+  const iosModal = el.querySelector('#ios-install-modal');
+  const showIosModal = () => iosModal.classList.remove('hidden');
+  const hideIosModal = () => iosModal.classList.add('hidden');
+  el.querySelector('#ios-install-backdrop').addEventListener('click', hideIosModal);
+  el.querySelector('#ios-install-close').addEventListener('click', hideIosModal);
+
+  function syncInstallBtn() {
+    const status = InstallPromptService.getStatus();
+    if (status === 'installable' || status === 'ios-instructions') {
+      installBtn.classList.remove('hidden');
+    } else {
+      installBtn.classList.add('hidden');
+    }
+  }
+
+  installBtn.addEventListener('click', async () => {
+    const status = InstallPromptService.getStatus();
+    Haptics.light();
+    if (status === 'ios-instructions') {
+      showIosModal();
+    } else if (status === 'installable') {
+      await InstallPromptService.promptInstall();
+      syncInstallBtn();
+    }
+  });
+
+  syncInstallBtn();
+  // Release any previous subscription before re-binding (mount may be called repeatedly via routing).
+  if (typeof _unsubscribeInstall === 'function') _unsubscribeInstall();
+  _unsubscribeInstall = InstallPromptService.onChange(syncInstallBtn);
 }
 
 export function unmount() {
-  // Any necessary cleanup
+  if (typeof _unsubscribeInstall === 'function') {
+    _unsubscribeInstall();
+    _unsubscribeInstall = null;
+  }
 }
