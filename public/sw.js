@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pbsched-v1';
+const CACHE_NAME = 'pbsched-v2';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
-  '/manifest.json'
+  './',
+  './index.html',
+  './favicon.svg',
+  './manifest.json'
 ];
 
 // Install: Cache basic shell
@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Offline and no cache
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match('./index.html');
         }
       });
     })
