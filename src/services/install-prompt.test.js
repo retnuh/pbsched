@@ -141,9 +141,11 @@ describe('InstallPromptService — standalone detection', () => {
     expect(InstallPromptService.getStatus()).toBe('installed')
   })
 
-  it('Test 6b: returns "installed" for fullscreen/minimal-ui/window-controls-overlay display modes', () => {
-    // Brave and some Chromium variants don't report 'standalone' for launched
-    // PWAs — they may report fullscreen, minimal-ui, or window-controls-overlay.
+  it('Test 6b: does NOT treat fullscreen/minimal-ui/wco as standalone (Brave reports these for regular tabs)', () => {
+    // Brave on macOS reports display-mode: fullscreen even for regular browser
+    // tabs that have a PWA manifest. If we treated those as standalone we'd
+    // hide the install button in every tab and trap users. Only the explicit
+    // 'standalone' media query (or navigator.standalone for iOS) counts.
     for (const mode of [
       '(display-mode: fullscreen)',
       '(display-mode: minimal-ui)',
@@ -152,8 +154,7 @@ describe('InstallPromptService — standalone detection', () => {
       InstallPromptService.destroy()
       mockMatchMedia({ [mode]: true })
       InstallPromptService.init()
-      expect(InstallPromptService.isStandalone(), `display mode ${mode}`).toBe(true)
-      expect(InstallPromptService.getStatus(), `display mode ${mode}`).toBe('installed')
+      expect(InstallPromptService.isStandalone(), `display mode ${mode}`).toBe(false)
     }
   })
 
@@ -167,37 +168,28 @@ describe('InstallPromptService — standalone detection', () => {
     expect(InstallPromptService.getStatus()).toBe('installed')
   })
 
-  it('Test 6d: re-syncs (without persisting) when display-mode flips to fullscreen AFTER beforeinstallprompt (Brave race)', () => {
-    // Repro of the Brave-on-macOS bug: at init, display-mode is not yet set.
-    // beforeinstallprompt fires first → button would be 'installable'. Then
-    // Brave finally sets display-mode: fullscreen. The service must catch the
-    // media-query change and notify the subscriber so the UI re-evaluates.
-    // It must NOT persist the install flag — display-mode signals are unreliable
-    // in Brave (sometimes match in regular tabs too), so persistence is only
-    // triggered by explicit appinstalled / promptInstall accepted events.
+  it('Test 6d: re-syncs (without persisting) when display-mode flips to standalone AFTER beforeinstallprompt', () => {
+    // Race: page loads with display-mode unset, beforeinstallprompt fires
+    // (status='installable'), then display-mode flips to standalone. The
+    // media-query listener must re-notify so the UI re-evaluates.
     const mm = mockMatchMedia({})
     InstallPromptService.init()
     const subscriber = vi.fn()
     InstallPromptService.onChange(subscriber)
 
-    // beforeinstallprompt fires while display mode is still unset
     window.dispatchEvent(makeBeforeInstallPromptEvent())
     expect(InstallPromptService.getStatus()).toBe('installable')
-    expect(subscriber).toHaveBeenCalledTimes(1)
 
-    // Brave belatedly reports the fullscreen display mode
-    mm.set('(display-mode: fullscreen)', true)
-    mm.fire('(display-mode: fullscreen)')
+    mm.set('(display-mode: standalone)', true)
+    mm.fire('(display-mode: standalone)')
 
     expect(InstallPromptService.getStatus()).toBe('installed')
     expect(subscriber).toHaveBeenCalledTimes(2)
-    // Critical: flag must NOT be set just because display-mode matched.
+    // Display-mode signals never persist — only appinstalled / accepted prompt.
     expect(localStorage.getItem('pb:install-completed')).toBeNull()
   })
 
   it('Test 6e: display-mode-only signal does NOT persist the install flag', () => {
-    // Brave reports standalone-ish display modes in regular tabs too, so we
-    // must not trap users by persisting purely on display-mode.
     mockMatchMedia({ '(display-mode: standalone)': true })
     InstallPromptService.init()
     InstallPromptService.getStatus()

@@ -115,23 +115,16 @@ export const InstallPromptService = {
   },
 
   isStandalone() {
-    // Check all display modes that imply "launched as installed app" — Brave
-    // and other Chromium variants don't always report 'standalone' even when
-    // the app is launched from the OS app icon (#PWA-display-mode-quirks).
+    // Only trust '(display-mode: standalone)'. Brave on macOS reports
+    // 'fullscreen' for regular browser tabs that have a PWA manifest, which
+    // would trap users by hiding the install button in every tab. Real
+    // Chromium-launched PWAs match 'standalone' (since our manifest declares
+    // display: standalone). The cost: Brave's launched PWA reports fullscreen
+    // too and won't be detected here — but after install the appinstalled
+    // event sets pb:install-completed and that takes over.
     try {
-      const mm = window.matchMedia;
-      if (mm) {
-        const queries = [
-          '(display-mode: standalone)',
-          '(display-mode: fullscreen)',
-          '(display-mode: minimal-ui)',
-          '(display-mode: window-controls-overlay)',
-        ];
-        for (const q of queries) {
-          try {
-            if (mm(q).matches) return true;
-          } catch (e) { /* individual query unsupported — try next */ }
-        }
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+        return true;
       }
     } catch (e) { /* matchMedia unavailable */ }
     try {
