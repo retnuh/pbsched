@@ -66,10 +66,15 @@ export function mount(el, params) {
     <div class="p-4 space-y-6">
       <header class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Your Clubs</h1>
-        <button id="install-app-btn" type="button" hidden class="items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Install App
-        </button>
+        <div id="install-app-wrap" hidden class="items-center gap-1">
+          <button id="install-app-btn" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Install
+          </button>
+          <button id="install-app-dismiss" type="button" aria-label="Hide install button" title="Hide install button" class="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
       </header>
       
       <!-- New Club Form -->
@@ -176,7 +181,9 @@ export function mount(el, params) {
   });
 
   // Install-app button + iOS instructions modal wiring
+  const installWrap = el.querySelector('#install-app-wrap');
   const installBtn = el.querySelector('#install-app-btn');
+  const dismissBtn = el.querySelector('#install-app-dismiss');
   const iosModal = el.querySelector('#ios-install-modal');
   const showIosModal = () => iosModal.classList.remove('hidden');
   const hideIosModal = () => iosModal.classList.add('hidden');
@@ -185,18 +192,16 @@ export function mount(el, params) {
 
   function syncInstallBtn() {
     const status = InstallPromptService.getStatus();
-    // Toggle the HTML `hidden` attribute and the inline-flex display class
-    // together. The attribute sets `display: none` via the browser UA stylesheet
-    // and is overridden only when we explicitly add `inline-flex`. Using the
-    // Tailwind `hidden` utility alongside `inline-flex` causes a collision
-    // where Tailwind's later-emitted `inline-flex` rule wins, making the
-    // button permanently visible regardless of class state.
+    // Toggle the HTML `hidden` attribute and the inline-flex display class on
+    // the wrapper. The attribute sets `display: none` via the UA stylesheet
+    // and is overridden only when we explicitly add `inline-flex` — avoiding
+    // any Tailwind `hidden`-vs-display class collision.
     if (status === 'installable' || status === 'ios-instructions') {
-      installBtn.hidden = false;
-      installBtn.classList.add('inline-flex');
+      installWrap.hidden = false;
+      installWrap.classList.add('inline-flex');
     } else {
-      installBtn.hidden = true;
-      installBtn.classList.remove('inline-flex');
+      installWrap.hidden = true;
+      installWrap.classList.remove('inline-flex');
     }
   }
 
@@ -209,6 +214,14 @@ export function mount(el, params) {
       await InstallPromptService.promptInstall();
       syncInstallBtn();
     }
+  });
+
+  dismissBtn.addEventListener('click', (e) => {
+    // Prevent the click bubbling to the install button (they're siblings, but
+    // belt and braces against future markup changes).
+    e.stopPropagation();
+    Haptics.light();
+    InstallPromptService.markDismissed();
   });
 
   syncInstallBtn();

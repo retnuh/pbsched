@@ -254,4 +254,21 @@ describe('InstallPromptService — subscriber lifecycle', () => {
     window.dispatchEvent(makeBeforeInstallPromptEvent())
     expect(subscriber).toHaveBeenCalledTimes(1)
   })
+
+  it('Test 12: markDismissed() persists the install flag and notifies subscriber', () => {
+    InstallPromptService.init()
+    const subscriber = vi.fn()
+    InstallPromptService.onChange(subscriber)
+
+    // Simulate a captured event so we can also verify it gets cleared.
+    window.dispatchEvent(makeBeforeInstallPromptEvent())
+    expect(InstallPromptService.getStatus()).toBe('installable')
+    subscriber.mockClear()
+
+    InstallPromptService.markDismissed()
+
+    expect(localStorage.getItem('pb:install-completed')).toBe('1')
+    expect(InstallPromptService.getStatus()).toBe('installed')
+    expect(subscriber).toHaveBeenCalledTimes(1)
+  })
 })

@@ -186,6 +186,16 @@ export const InstallPromptService = {
     }
   },
 
+  // Manual dismiss path — sets the persisted install flag so the button stays
+  // hidden across reloads. Used as an escape hatch for browsers (Brave) that
+  // don't fire appinstalled or report display-mode correctly, leaving the
+  // button stuck visible after install.
+  markDismissed() {
+    _setInstalled();
+    _stashedEvent = null;
+    _notify();
+  },
+
   onChange(callback) {
     _subscriber = typeof callback === 'function' ? callback : null;
     return () => {
