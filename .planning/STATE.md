@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 18-04-PLAN.md
-last_updated: "2026-04-15T12:38:18.176Z"
-last_activity: 2026-04-15
+last_updated: "2026-05-21T10:50:00.000Z"
+last_activity: 2026-05-21
 progress:
   total_phases: 9
   completed_phases: 8
@@ -20,7 +20,7 @@ progress:
 
 **Phase:** Phase 18 — Docs (ready to plan)
 **Status:** Ready to execute
-**Last activity:** 2026-04-15
+**Last activity:** 2026-05-21 - Completed quick task 260521-g6t: PWA install button on first screen
 
 ## Active Phase
 
@@ -60,6 +60,12 @@ Progress: [░░░░░░░░░░] 0% (Milestone 8)
 ### Blockers/Concerns
 
 - None
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260521-g6t | Add PWA install / Add to Home Screen button on first screen (smart auto-detect: Android/desktop `beforeinstallprompt`, iOS Safari instructions modal) | 2026-05-21 | 91bcfbe | [260521-g6t-add-a-button-on-first-screen-to-create-a](./quick/260521-g6t-add-a-button-on-first-screen-to-create-a/) |
 
 ## Deferred Items
 
